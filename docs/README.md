@@ -1,4 +1,9 @@
 # OpenFusionAPI
-Dedicated software to make it easy to create APIs that connect to multiple database engines or how to convert from SOAP to REST services, or you can combine multiple calls to different services to consolidate the results.
+**OpenFusionAPI** uses Svelte as a framework for the frontend in conjunction with the adapter-node.
 
-![image](https://github.com/edwinspire/OpenFusionAPI/assets/3129446/91c49c71-a604-4a96-9387-0d2cf054483f)
+This makes development easier by creating reusable and reactive components.
+
+To learn about Svelte you can visit the following [tutorial](https://svelte.dev/tutorial/basics).
+
+
+If on the other hand you need to learn how to create APIs from the web interface you can find a detailed tutorial at [libapiserver](https://github.com/edwinspire/libapiserver).
