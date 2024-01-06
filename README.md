@@ -23,7 +23,7 @@ Create a file called .env in the root of the project with the following content:
     PORT  = 3000
 	BUILD_DB_ON_START  = true
 	DATABASE_URI_API  =  "sqlite::memory:"
-	JWT_KEY  =  "98989898*9*9-894"
+	JWT_KEY  =  "X98989898*9*9-894"
 	EXPOSE_DEV_API  =  "true"
 	EXPOSE_QA_API  =  "true"
 	EXPOSE_PROD_API  =  "true"
