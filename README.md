@@ -22,8 +22,8 @@ Create a file called .env in the root of the project with the following content:
 
     PORT  = 3000
 	BUILD_DB_ON_START  = true
-	DATABASE_URI_API  =  "sqlite://apirest.sqlite3/"
-	JWT_KEY  =  "jnhcueyrle"
+	DATABASE_URI_API  =  "sqlite::memory:"
+	JWT_KEY  =  "98989898*9*9-894"
 	EXPOSE_DEV_API  =  "true"
 	EXPOSE_QA_API  =  "true"
 	EXPOSE_PROD_API  =  "true"
@@ -80,3 +80,4 @@ To learn more about how to create the APIs, you can visit the following [tutoria
 
 #
 It is a project under construction that has served me a lot as a base for other personal projects, and I am sure that it can be useful to someone else.
+
