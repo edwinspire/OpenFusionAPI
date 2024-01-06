@@ -77,3 +77,6 @@ Once you have entered you can select the "Application", there are two: "system" 
 
 #
 To learn more about how to create the APIs, you can visit the following [tutorial](docs/README.md).
+
+#
+It is a project under construction that has served me a lot as a base for other personal projects, and I am sure that it can be useful to someone else.
