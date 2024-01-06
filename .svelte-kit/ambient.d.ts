@@ -26,6 +26,14 @@
  * ```
  */
 declare module '$env/static/private' {
+	export const PORT: string;
+	export const BUILD_DB_ON_START: string;
+	export const JWT_KEY: string;
+	export const EXPOSE_DEV_API: string;
+	export const EXPOSE_QA_API: string;
+	export const EXPOSE_PROD_API: string;
+	export const MQTT_ENABLED: string;
+	export const PATH_APP_FUNCTIONS: string;
 	export const QT_SCALE_FACTOR: string;
 	export const LANGUAGE: string;
 	export const USER: string;
@@ -140,6 +148,14 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
+		PORT: string;
+		BUILD_DB_ON_START: string;
+		JWT_KEY: string;
+		EXPOSE_DEV_API: string;
+		EXPOSE_QA_API: string;
+		EXPOSE_PROD_API: string;
+		MQTT_ENABLED: string;
+		PATH_APP_FUNCTIONS: string;
 		QT_SCALE_FACTOR: string;
 		LANGUAGE: string;
 		USER: string;
