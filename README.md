@@ -11,7 +11,7 @@ It is easy to use and uses the power of Javascript for the backend and if you wa
 To install the project locally, you are required to have a minimum of NodeJS v20 previously installed. Then we follow the following steps:
   
 
-	    npm install https://github.com/edwinspire/OpenFusionAPI.git
+	    git clone https://github.com/edwinspire/OpenFusionAPI.git
 	    cd OpenFusionAPI
 	    npm install
 	    npm run build
@@ -67,10 +67,13 @@ Now from your browser you can enter http://localhost:3000/openfusionapi
 ![login](docs/img/login.png)
 
 By default the credentials are:
+
 **User:** superuser
+
 **Password:** superuser
+
 
 Once you have entered you can select the "Application", there are two: "system" and "demo".
 
-
-To learn more about how to create the APIs, you can visit the following [tutorial](docs/readme.md).
+#
+To learn more about how to create the APIs, you can visit the following [tutorial](docs/README.md).
