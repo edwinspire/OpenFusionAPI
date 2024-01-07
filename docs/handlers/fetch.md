@@ -24,4 +24,4 @@ We will use the following public testing service:
 
 Use the GET method and receive "userId" as a parameter.
 
-[Video tutorial](youtube.com)
+[Video tutorial](https://youtu.be/d_aR-s62S5I)
