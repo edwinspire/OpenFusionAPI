@@ -10,11 +10,13 @@ The manager has a built-in code editor, which makes your work easier.
 
 **$_RETURN_DATA_** is the internal variable that contains the data that will be returned to the user.
 
+
+## Examples
+
   ### Basic without params
 
 	$_RETURN_DATA_ = new Date();
 
-## Examples
 
 ### Basic with params GET Method
 
