@@ -43,3 +43,7 @@ The manager has a built-in code editor, which makes your work easier.
 		let uf = new $_UFETCH_();
 		let r1 = await uf.GET({url: "https://fakestoreapi.com/carts", data: {userId: $_REQUEST_.body.userId}});
 		$_RETURN_DATA_ = await r1.json();
+
+
+
+[Video tutorial](https://youtu.be/azPkwKMLmhU)
