@@ -19,12 +19,27 @@ We provide you with a list of videos that can help you create your own APIs in a
 [Preview](https://youtu.be/GpjXgEJV1bI)
 
 ## Install
+Before starting, remember to have at least NodeJS v20 installed. It is also recommended to use VSCode, although you can use any text editor.
+
 [Installation process](https://youtu.be/L-DC6mIL9oM)
 
 
 ## Exploring the demo
 
 ## Create your own application
+
+It is common to have a large number of APIs for different projects. To keep the APIs in order it has been decided to group them into "applications", therefore the first step is to create an application.
+
+![Create app](img/create_app.png)
+
+
+ 1. Press the "New App" button
+ 2. Put a name in the application, keep in mind that spaces or special characters are not allowed.
+ 3. Enable the application
+ 4. Press "Save"
+
+Now you can search for it in the list of applications and select it.
+
 
 ## Handlers
 ### Javascript
@@ -43,6 +58,7 @@ You can store the data for the connection to the database in an application vari
 
 ### Fetch
 The **fetch handler** allows you to access and manipulate parts of the HTTP channel, such as requests and responses, using universal-fetch, a layer on top of the fetch standard that makes it easier to use.
+
 
 With it you can make calls to other internal OpenFusionAPI APIs or external services.
 
