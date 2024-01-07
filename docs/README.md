@@ -19,7 +19,7 @@ We provide you with a list of videos that can help you create your own APIs in a
 [Preview](https://youtu.be/GpjXgEJV1bI)
 
 ## Install
-[Installation process](https://youtu.be/8BNOX1SJSqs)
+[Installation process](https://youtu.be/L-DC6mIL9oM)
 
 
 ## Exploring the demo
