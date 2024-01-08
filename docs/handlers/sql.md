@@ -55,7 +55,7 @@ We will use a table called **"users"** in which we will perform a CRUD.
 	DECLARE @UserID INT = $iduser;
 	DELETE FROM users WHERE iduser = @UserID;
 
-[Video Tutorial](https://you.cm)
+[Video Tutorial](https://youtu.be/av52Gfkegys)
 
 #
 These are just very basic examples of what you can do, the complexity of your APIs depends on your needs.
