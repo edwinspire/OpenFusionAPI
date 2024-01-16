@@ -30,6 +30,16 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@edwinspire/libapiserver": "github:edwinspire/libapiserver"
+		"@codemirror/lang-javascript": "^6.1.9",
+		"@codemirror/lang-json": "^6.0.1",
+		"@codemirror/lang-sql": "^6.5.0",
+		"@codemirror/lint": "^6.2.2",
+		"@edwinspire/libopenfusionapi": "github:edwinspire/libOpenFusionAPI",
+		"@edwinspire/svelte-components": "github:edwinspire/svelte-components",
+		"@sveltejs/adapter-static": "^3.0.1",
+		"bulma": "^0.9.4",
+		"codemirror": "^6.0.1",
+		"d3": "^7.8.5",
+		"jsonwebtoken": "^9.0.0"
 	}
 }

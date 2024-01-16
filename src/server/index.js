@@ -1,12 +1,11 @@
-import { handler } from '../../build/handler.js';
-import { ServerAPI } from '@edwinspire/libapiserver';
+import  OpenFusionAPI  from '@edwinspire/libopenfusionapi';
 
 //
 
 try {
-	const server = new ServerAPI(true, handler);
+	const server = new OpenFusionAPI();
 
-	server.listen();
+	console.log(process.cwd());
 
 } catch (error) {
 	console.trace(error);

@@ -1,0 +1,1 @@
+export const env={"PUBLIC_ENVIRONMENT":"DEV","PUBLIC_URL_DEVELOPMENT_API":"http://localhost:3000"}

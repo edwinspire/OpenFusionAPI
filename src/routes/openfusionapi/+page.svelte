@@ -1,5 +1,5 @@
 <script>
-    import APIServerGUI from "@edwinspire/libapiserver/src/lib/api/gui/index.svelte";
+    import APIServerGUI from "$lib/OpenFusionAPI/index.svelte";
 </script>
 
 <APIServerGUI></APIServerGUI>
