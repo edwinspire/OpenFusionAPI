@@ -134,14 +134,14 @@ function add_attribute(name, value, boolean) {
 }
 export {
   setContext as a,
-  subscribe as b,
+  createEventDispatcher as b,
   create_ssr_component as c,
-  createEventDispatcher as d,
+  add_attribute as d,
   escape as e,
-  add_attribute as f,
+  safe_not_equal as f,
   getContext as g,
   missing_component as m,
   noop as n,
-  safe_not_equal as s,
+  subscribe as s,
   validate_component as v
 };

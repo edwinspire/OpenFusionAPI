@@ -1,6 +1,7 @@
-import { c as create_ssr_component } from "../../chunks/ssr.js";
+import { c as create_ssr_component, v as validate_component } from "../../chunks/ssr.js";
+import { O as OpenFusionAPI } from "../../chunks/index.js";
 const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  return `<h1 data-svelte-h="svelte-yyjjjs">Welcome to SvelteKit</h1> <p data-svelte-h="svelte-jl9sbz">Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>`;
+  return `<a href="/test" data-svelte-h="svelte-105f0lh">Hola</a> ${validate_component(OpenFusionAPI, "APIServerGUI").$$render($$result, {}, {}, {})}`;
 });
 export {
   Page as default

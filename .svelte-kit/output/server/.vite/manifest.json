@@ -22,7 +22,7 @@
       "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
     ],
     "css": [
-      "_app/immutable/assets/index._Vv5Azie.css"
+      "_app/immutable/assets/index.HdaaX47U.css"
     ],
     "file": "chunks/index.js",
     "imports": [
@@ -97,6 +97,16 @@
     "isEntry": true,
     "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js"
   },
+  "src/routes/+layout.js": {
+    "file": "entries/pages/_layout.js",
+    "isEntry": true,
+    "src": "src/routes/+layout.js"
+  },
+  "src/routes/+page.js": {
+    "file": "entries/pages/_page.js",
+    "isEntry": true,
+    "src": "src/routes/+page.js"
+  },
   "src/routes/+page.svelte": {
     "file": "entries/pages/_page.svelte.js",
     "imports": [
@@ -106,11 +116,37 @@
     "isEntry": true,
     "src": "src/routes/+page.svelte"
   },
-  "src/routes/test/+page.svelte": {
-    "file": "entries/pages/test/_page.svelte.js",
+  "src/routes/openfusionapi/+page.js": {
+    "file": "entries/pages/openfusionapi/_page.js",
+    "isEntry": true,
+    "src": "src/routes/openfusionapi/+page.js"
+  },
+  "src/routes/openfusionapi/+page.svelte": {
+    "file": "entries/pages/openfusionapi/_page.svelte.js",
     "imports": [
       "_ssr.js",
       "_index.js"
+    ],
+    "isEntry": true,
+    "src": "src/routes/openfusionapi/+page.svelte"
+  },
+  "src/routes/openfusionapi/main/+page.svelte": {
+    "file": "entries/pages/openfusionapi/main/_page.svelte.js",
+    "imports": [
+      "_ssr.js"
+    ],
+    "isEntry": true,
+    "src": "src/routes/openfusionapi/main/+page.svelte"
+  },
+  "src/routes/test/+page.js": {
+    "file": "entries/pages/test/_page.js",
+    "isEntry": true,
+    "src": "src/routes/test/+page.js"
+  },
+  "src/routes/test/+page.svelte": {
+    "file": "entries/pages/test/_page.svelte.js",
+    "imports": [
+      "_ssr.js"
     ],
     "isEntry": true,
     "src": "src/routes/test/+page.svelte"

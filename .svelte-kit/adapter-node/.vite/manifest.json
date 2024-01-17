@@ -7,6 +7,28 @@
     "isEntry": true,
     "src": ".svelte-kit/generated/server/internal.js"
   },
+  "_exports.js": {
+    "file": "chunks/exports.js"
+  },
+  "_index.js": {
+    "assets": [
+      "_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2",
+      "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
+      "_app/immutable/assets/fa-regular-400.DjrD39cY.woff2",
+      "_app/immutable/assets/fa-regular-400.TBaJECdl.ttf",
+      "_app/immutable/assets/fa-solid-900.wCNuHzbQ.woff2",
+      "_app/immutable/assets/fa-solid-900.zNLXiXYJ.ttf",
+      "_app/immutable/assets/fa-v4compatibility.Gkfbzimj.woff2",
+      "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
+    ],
+    "css": [
+      "_app/immutable/assets/index.HdaaX47U.css"
+    ],
+    "file": "chunks/index.js",
+    "imports": [
+      "_ssr.js"
+    ]
+  },
   "_internal.js": {
     "file": "chunks/internal.js",
     "imports": [
@@ -51,7 +73,8 @@
   "node_modules/@sveltejs/kit/src/runtime/components/error.svelte": {
     "file": "entries/fallbacks/error.svelte.js",
     "imports": [
-      "_ssr.js"
+      "_ssr.js",
+      "_exports.js"
     ],
     "isEntry": true,
     "src": "node_modules/@sveltejs/kit/src/runtime/components/error.svelte"
@@ -68,38 +91,51 @@
     "file": "index.js",
     "imports": [
       "_internal.js",
+      "_exports.js",
       "_ssr.js"
     ],
     "isEntry": true,
     "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js"
   },
+  "src/routes/+page.js": {
+    "file": "entries/pages/_page.js",
+    "isEntry": true,
+    "src": "src/routes/+page.js"
+  },
   "src/routes/+page.svelte": {
     "file": "entries/pages/_page.svelte.js",
     "imports": [
-      "_ssr.js"
+      "_ssr.js",
+      "_index.js"
     ],
     "isEntry": true,
     "src": "src/routes/+page.svelte"
   },
+  "src/routes/openfusionapi/+page.js": {
+    "file": "entries/pages/openfusionapi/_page.js",
+    "isEntry": true,
+    "src": "src/routes/openfusionapi/+page.js"
+  },
   "src/routes/openfusionapi/+page.svelte": {
-    "assets": [
-      "_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2",
-      "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
-      "_app/immutable/assets/fa-regular-400.DjrD39cY.woff2",
-      "_app/immutable/assets/fa-regular-400.TBaJECdl.ttf",
-      "_app/immutable/assets/fa-solid-900.wCNuHzbQ.woff2",
-      "_app/immutable/assets/fa-solid-900.zNLXiXYJ.ttf",
-      "_app/immutable/assets/fa-v4compatibility.Gkfbzimj.woff2",
-      "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
-    ],
-    "css": [
-      "_app/immutable/assets/_page.HdaaX47U.css"
-    ],
     "file": "entries/pages/openfusionapi/_page.svelte.js",
+    "imports": [
+      "_ssr.js",
+      "_index.js"
+    ],
+    "isEntry": true,
+    "src": "src/routes/openfusionapi/+page.svelte"
+  },
+  "src/routes/test/+page.js": {
+    "file": "entries/pages/test/_page.js",
+    "isEntry": true,
+    "src": "src/routes/test/+page.js"
+  },
+  "src/routes/test/+page.svelte": {
+    "file": "entries/pages/test/_page.svelte.js",
     "imports": [
       "_ssr.js"
     ],
     "isEntry": true,
-    "src": "src/routes/openfusionapi/+page.svelte"
+    "src": "src/routes/test/+page.svelte"
   }
 }

@@ -9,10 +9,7 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
-		adapter: adapter({ fallback: 'index.html', pages: "./www/ofapi"}),
-		paths: { base: '/ofapi' },
-		prerender: { entries: [] }
-		
+		adapter: adapter({ pages: "./www"}),
 	}
 };
 

@@ -1,4 +1,4 @@
-import { c as create_ssr_component, d as createEventDispatcher, f as add_attribute, v as validate_component } from "./ssr.js";
+import { c as create_ssr_component, b as createEventDispatcher, d as add_attribute, v as validate_component } from "./ssr.js";
 import uFetch from "@edwinspire/universal-fetch";
 import "events";
 import "d3";
