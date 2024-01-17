@@ -1,4 +1,4 @@
-import { c as create_ssr_component, f as createEventDispatcher, d as add_attribute, v as validate_component } from "../../../chunks/ssr.js";
+import { c as create_ssr_component, d as createEventDispatcher, f as add_attribute, v as validate_component } from "./ssr.js";
 import uFetch from "@edwinspire/universal-fetch";
 import "events";
 import "d3";
@@ -17,9 +17,6 @@ const Login = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 const OpenFusionAPI = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   return `${`${validate_component(Login, "Login").$$render($$result, {}, {}, {})}`}`;
 });
-const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  return `${validate_component(OpenFusionAPI, "APIServerGUI").$$render($$result, {}, {}, {})}`;
-});
 export {
-  Page as default
+  OpenFusionAPI as O
 };

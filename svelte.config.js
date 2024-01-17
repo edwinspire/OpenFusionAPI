@@ -9,8 +9,8 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
-		adapter: adapter({ fallback: 'index.html', pages: "./www/openfusionapi"}),
-		paths: { base: '/openfusionapi' },
+		adapter: adapter({ fallback: 'index.html', pages: "./www/ofapi"}),
+		paths: { base: '/ofapi' },
 		prerender: { entries: [] }
 		
 	}
