@@ -19,6 +19,14 @@
   "_ssr.js": {
     "file": "chunks/ssr.js"
   },
+  "_start_page.svelte_svelte_type_style_lang.js": {
+    "file": "_app/immutable/assets/start_page.s9fWK2Ly.css",
+    "src": "_start_page.svelte_svelte_type_style_lang.js"
+  },
+  "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png": {
+    "file": "_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png",
+    "src": "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png"
+  },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf": {
     "file": "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf"
@@ -83,14 +91,20 @@
     "isEntry": true,
     "src": "src/routes/+layout.js"
   },
-  "src/routes/+page.js": {
-    "file": "entries/pages/_page.js",
-    "isEntry": true,
-    "src": "src/routes/+page.js"
-  },
   "src/routes/+page.svelte": {
+    "assets": [
+      "_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png",
+      "_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2",
+      "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
+      "_app/immutable/assets/fa-regular-400.DjrD39cY.woff2",
+      "_app/immutable/assets/fa-regular-400.TBaJECdl.ttf",
+      "_app/immutable/assets/fa-solid-900.wCNuHzbQ.woff2",
+      "_app/immutable/assets/fa-solid-900.zNLXiXYJ.ttf",
+      "_app/immutable/assets/fa-v4compatibility.Gkfbzimj.woff2",
+      "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
+    ],
     "css": [
-      "_app/immutable/assets/_page.d3lc-b3z.css"
+      "_app/immutable/assets/start_page.s9fWK2Ly.css"
     ],
     "file": "entries/pages/_page.svelte.js",
     "imports": [
@@ -98,11 +112,6 @@
     ],
     "isEntry": true,
     "src": "src/routes/+page.svelte"
-  },
-  "src/routes/openfusionapi/+page.js": {
-    "file": "entries/pages/openfusionapi/_page.js",
-    "isEntry": true,
-    "src": "src/routes/openfusionapi/+page.js"
   },
   "src/routes/openfusionapi/+page.svelte": {
     "assets": [
@@ -116,7 +125,7 @@
       "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
     ],
     "css": [
-      "_app/immutable/assets/_page.HdaaX47U.css"
+      "_app/immutable/assets/start_page.s9fWK2Ly.css"
     ],
     "file": "entries/pages/openfusionapi/_page.svelte.js",
     "imports": [

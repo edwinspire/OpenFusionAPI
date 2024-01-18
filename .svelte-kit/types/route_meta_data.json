@@ -1,11 +1,9 @@
 {
 	"/": [
-		"src/routes/+page.js",
 		"src/routes/+layout.js",
 		"src/routes/+layout.js"
 	],
 	"/openfusionapi": [
-		"src/routes/openfusionapi/+page.js",
 		"src/routes/+layout.js"
 	],
 	"/test": [

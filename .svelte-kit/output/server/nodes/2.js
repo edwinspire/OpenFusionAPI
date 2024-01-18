@@ -1,10 +1,8 @@
-import * as universal from '../entries/pages/_page.js';
+
 
 export const index = 2;
 let component_cache;
 export const component = async () => component_cache ??= (await import('../entries/pages/_page.svelte.js')).default;
-export { universal };
-export const universal_id = "src/routes/+page.js";
-export const imports = ["_app/immutable/nodes/2.FfA-0NUS.js","_app/immutable/chunks/scheduler.yl3IrFfE.js","_app/immutable/chunks/each.VyktvrLf.js","_app/immutable/chunks/index.OqqfaFZJ.js"];
-export const stylesheets = ["_app/immutable/assets/2.d3lc-b3z.css"];
-export const fonts = [];
+export const imports = ["_app/immutable/nodes/2.J22n-FZp.js","_app/immutable/chunks/scheduler.T1Qci29S.js","_app/immutable/chunks/index.eN9X5dgL.js","_app/immutable/chunks/start_page.svelte_svelte_type_style_lang.g_HnNuyH.js"];
+export const stylesheets = ["_app/immutable/assets/start_page.6AP988dy.css"];
+export const fonts = ["_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2","_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf","_app/immutable/assets/fa-regular-400.DjrD39cY.woff2","_app/immutable/assets/fa-regular-400.TBaJECdl.ttf","_app/immutable/assets/fa-solid-900.wCNuHzbQ.woff2","_app/immutable/assets/fa-solid-900.zNLXiXYJ.ttf","_app/immutable/assets/fa-v4compatibility.Gkfbzimj.woff2","_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"];

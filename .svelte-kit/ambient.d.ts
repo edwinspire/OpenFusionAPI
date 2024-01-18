@@ -123,8 +123,7 @@ declare module '$env/static/private' {
  * ```
  */
 declare module '$env/static/public' {
-	export const PUBLIC_ENVIRONMENT: string;
-	export const PUBLIC_URL_DEVELOPMENT_API: string;
+	export const PUBLIC_API_SERVER_HOST: string;
 }
 
 /**
@@ -247,8 +246,7 @@ declare module '$env/dynamic/private' {
  */
 declare module '$env/dynamic/public' {
 	export const env: {
-		PUBLIC_ENVIRONMENT: string;
-		PUBLIC_URL_DEVELOPMENT_API: string;
+		PUBLIC_API_SERVER_HOST: string;
 		[key: `PUBLIC_${string}`]: string | undefined;
 	}
 }
