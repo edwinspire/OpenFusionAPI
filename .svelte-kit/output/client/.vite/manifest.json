@@ -7,30 +7,30 @@
       ".svelte-kit/generated/client-optimized/nodes/3.js",
       ".svelte-kit/generated/client-optimized/nodes/4.js"
     ],
-    "file": "_app/immutable/entry/app.gznGo0KS.js",
+    "file": "_app/immutable/entry/app.BXBigB7r.js",
     "imports": [
-      "_scheduler.T1Qci29S.js",
-      "_index.eN9X5dgL.js"
+      "_scheduler.bmkUwG6Y.js",
+      "_index.73M9pBEw.js"
     ],
     "isEntry": true,
     "src": ".svelte-kit/generated/client-optimized/app.js"
   },
   ".svelte-kit/generated/client-optimized/nodes/0.js": {
-    "file": "_app/immutable/nodes/0.tqivUBnl.js",
+    "file": "_app/immutable/nodes/0.ICcIfCg0.js",
     "imports": [
-      "_scheduler.T1Qci29S.js",
-      "_index.eN9X5dgL.js"
+      "_scheduler.bmkUwG6Y.js",
+      "_index.73M9pBEw.js"
     ],
     "isDynamicEntry": true,
     "isEntry": true,
     "src": ".svelte-kit/generated/client-optimized/nodes/0.js"
   },
   ".svelte-kit/generated/client-optimized/nodes/1.js": {
-    "file": "_app/immutable/nodes/1.oE0JkULn.js",
+    "file": "_app/immutable/nodes/1.S2R_q3Tg.js",
     "imports": [
-      "_scheduler.T1Qci29S.js",
-      "_index.eN9X5dgL.js",
-      "_entry.MshBYjMK.js"
+      "_scheduler.bmkUwG6Y.js",
+      "_index.73M9pBEw.js",
+      "_entry.ROlAp2z_.js"
     ],
     "isDynamicEntry": true,
     "isEntry": true,
@@ -38,67 +38,68 @@
   },
   ".svelte-kit/generated/client-optimized/nodes/2.js": {
     "assets": [
-      "_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png"
+      "_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png",
+      "_app/immutable/assets/flame.KSOL5w7N.png"
     ],
-    "file": "_app/immutable/nodes/2.J22n-FZp.js",
+    "file": "_app/immutable/nodes/2.UnGfEo_a.js",
     "imports": [
-      "_scheduler.T1Qci29S.js",
-      "_index.eN9X5dgL.js",
-      "_start_page.svelte_svelte_type_style_lang.g_HnNuyH.js"
+      "_scheduler.bmkUwG6Y.js",
+      "_index.73M9pBEw.js",
+      "_start_page.svelte_svelte_type_style_lang.Hft0gQji.js"
     ],
     "isDynamicEntry": true,
     "isEntry": true,
     "src": ".svelte-kit/generated/client-optimized/nodes/2.js"
   },
   ".svelte-kit/generated/client-optimized/nodes/3.js": {
-    "file": "_app/immutable/nodes/3.HoR-Gqii.js",
+    "file": "_app/immutable/nodes/3.BFZus-Xv.js",
     "imports": [
-      "_scheduler.T1Qci29S.js",
-      "_index.eN9X5dgL.js",
-      "_start_page.svelte_svelte_type_style_lang.g_HnNuyH.js",
-      "_index.UJdxz6Cg.js"
+      "_scheduler.bmkUwG6Y.js",
+      "_index.73M9pBEw.js",
+      "_start_page.svelte_svelte_type_style_lang.Hft0gQji.js",
+      "_index.NW74_ujy.js"
     ],
     "isDynamicEntry": true,
     "isEntry": true,
     "src": ".svelte-kit/generated/client-optimized/nodes/3.js"
   },
   ".svelte-kit/generated/client-optimized/nodes/4.js": {
-    "file": "_app/immutable/nodes/4.aDhscES-.js",
+    "file": "_app/immutable/nodes/4.IjWdHJNG.js",
     "imports": [
-      "_scheduler.T1Qci29S.js",
-      "_index.eN9X5dgL.js"
+      "_scheduler.bmkUwG6Y.js",
+      "_index.73M9pBEw.js"
     ],
     "isDynamicEntry": true,
     "isEntry": true,
     "src": ".svelte-kit/generated/client-optimized/nodes/4.js"
   },
-  "_entry.MshBYjMK.js": {
-    "file": "_app/immutable/chunks/entry.MshBYjMK.js",
+  "_entry.ROlAp2z_.js": {
+    "file": "_app/immutable/chunks/entry.ROlAp2z_.js",
     "imports": [
-      "_scheduler.T1Qci29S.js",
-      "_index.UJdxz6Cg.js"
+      "_scheduler.bmkUwG6Y.js",
+      "_index.NW74_ujy.js"
     ]
   },
-  "_index.UJdxz6Cg.js": {
-    "file": "_app/immutable/chunks/index.UJdxz6Cg.js",
+  "_index.73M9pBEw.js": {
+    "file": "_app/immutable/chunks/index.73M9pBEw.js",
     "imports": [
-      "_scheduler.T1Qci29S.js"
+      "_scheduler.bmkUwG6Y.js"
     ]
   },
-  "_index.eN9X5dgL.js": {
-    "file": "_app/immutable/chunks/index.eN9X5dgL.js",
+  "_index.NW74_ujy.js": {
+    "file": "_app/immutable/chunks/index.NW74_ujy.js",
     "imports": [
-      "_scheduler.T1Qci29S.js"
+      "_scheduler.bmkUwG6Y.js"
     ]
   },
-  "_scheduler.T1Qci29S.js": {
-    "file": "_app/immutable/chunks/scheduler.T1Qci29S.js"
+  "_scheduler.bmkUwG6Y.js": {
+    "file": "_app/immutable/chunks/scheduler.bmkUwG6Y.js"
   },
   "_start_page.svelte_svelte_type_style_lang.!~{00c}~.js": {
-    "file": "_app/immutable/assets/start_page.6AP988dy.css",
+    "file": "_app/immutable/assets/start_page.LQCskpOw.css",
     "src": "_start_page.svelte_svelte_type_style_lang.!~{00c}~.js"
   },
-  "_start_page.svelte_svelte_type_style_lang.g_HnNuyH.js": {
+  "_start_page.svelte_svelte_type_style_lang.Hft0gQji.js": {
     "assets": [
       "_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2",
       "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
@@ -110,13 +111,17 @@
       "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
     ],
     "css": [
-      "_app/immutable/assets/start_page.6AP988dy.css"
+      "_app/immutable/assets/start_page.LQCskpOw.css"
     ],
-    "file": "_app/immutable/chunks/start_page.svelte_svelte_type_style_lang.g_HnNuyH.js"
+    "file": "_app/immutable/chunks/start_page.svelte_svelte_type_style_lang.Hft0gQji.js"
   },
   "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png": {
     "file": "_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png",
     "src": "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png"
+  },
+  "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/flame.png": {
+    "file": "_app/immutable/assets/flame.KSOL5w7N.png",
+    "src": "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/flame.png"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf": {
     "file": "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
@@ -151,9 +156,9 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "node_modules/@sveltejs/kit/src/runtime/client/entry.js": {
-    "file": "_app/immutable/entry/start.XKbXizFy.js",
+    "file": "_app/immutable/entry/start.HRTOOCZG.js",
     "imports": [
-      "_entry.MshBYjMK.js"
+      "_entry.ROlAp2z_.js"
     ],
     "isEntry": true,
     "src": "node_modules/@sveltejs/kit/src/runtime/client/entry.js"
