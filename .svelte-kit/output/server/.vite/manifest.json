@@ -20,47 +20,47 @@
     "file": "chunks/ssr.js"
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
-    "file": "_app/immutable/assets/start_page.nPPYuAA9.css",
+    "file": "_app/immutable/assets/start_page.ZjHIR6M0.css",
     "src": "_start_page.svelte_svelte_type_style_lang.js"
   },
   "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png": {
-    "file": "_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png",
+    "file": "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
     "src": "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png"
   },
   "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/flame.png": {
-    "file": "_app/immutable/assets/flame.KSOL5w7N.png",
+    "file": "_app/immutable/assets/flame.pI4vnDs3.png",
     "src": "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/flame.png"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf": {
-    "file": "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
+    "file": "_app/immutable/assets/fa-brands-400.DtZKBM2a.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2": {
-    "file": "_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2",
+    "file": "_app/immutable/assets/fa-brands-400.C99Yv4gD.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.ttf": {
-    "file": "_app/immutable/assets/fa-regular-400.TBaJECdl.ttf",
+    "file": "_app/immutable/assets/fa-regular-400.BMFokQJ2.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2": {
-    "file": "_app/immutable/assets/fa-regular-400.DjrD39cY.woff2",
+    "file": "_app/immutable/assets/fa-regular-400.OOsPf1xj.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf": {
-    "file": "_app/immutable/assets/fa-solid-900.zNLXiXYJ.ttf",
+    "file": "_app/immutable/assets/fa-solid-900.DM0teJdg.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2": {
-    "file": "_app/immutable/assets/fa-solid-900.wCNuHzbQ.woff2",
+    "file": "_app/immutable/assets/fa-solid-900.DAI24fNt.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.ttf": {
-    "file": "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf",
+    "file": "_app/immutable/assets/fa-v4compatibility.F0dlVTLQ.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2": {
-    "file": "_app/immutable/assets/fa-v4compatibility.Gkfbzimj.woff2",
+    "file": "_app/immutable/assets/fa-v4compatibility.aR9vOKaP.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "node_modules/@sveltejs/kit/src/runtime/components/error.svelte": {
@@ -103,19 +103,19 @@
       "_ssr.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.nPPYuAA9.css"
+      "_app/immutable/assets/start_page.ZjHIR6M0.css"
     ],
     "assets": [
-      "_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png",
-      "_app/immutable/assets/flame.KSOL5w7N.png",
-      "_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2",
-      "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
-      "_app/immutable/assets/fa-regular-400.DjrD39cY.woff2",
-      "_app/immutable/assets/fa-regular-400.TBaJECdl.ttf",
-      "_app/immutable/assets/fa-solid-900.wCNuHzbQ.woff2",
-      "_app/immutable/assets/fa-solid-900.zNLXiXYJ.ttf",
-      "_app/immutable/assets/fa-v4compatibility.Gkfbzimj.woff2",
-      "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
+      "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
+      "_app/immutable/assets/flame.pI4vnDs3.png",
+      "_app/immutable/assets/fa-brands-400.C99Yv4gD.woff2",
+      "_app/immutable/assets/fa-brands-400.DtZKBM2a.ttf",
+      "_app/immutable/assets/fa-regular-400.OOsPf1xj.woff2",
+      "_app/immutable/assets/fa-regular-400.BMFokQJ2.ttf",
+      "_app/immutable/assets/fa-solid-900.DAI24fNt.woff2",
+      "_app/immutable/assets/fa-solid-900.DM0teJdg.ttf",
+      "_app/immutable/assets/fa-v4compatibility.aR9vOKaP.woff2",
+      "_app/immutable/assets/fa-v4compatibility.F0dlVTLQ.ttf"
     ]
   },
   "src/routes/openfusionapi/+page.svelte": {
@@ -126,17 +126,17 @@
       "_ssr.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.nPPYuAA9.css"
+      "_app/immutable/assets/start_page.ZjHIR6M0.css"
     ],
     "assets": [
-      "_app/immutable/assets/fa-brands-400.vfWL-IA9.woff2",
-      "_app/immutable/assets/fa-brands-400.7WSgTNmj.ttf",
-      "_app/immutable/assets/fa-regular-400.DjrD39cY.woff2",
-      "_app/immutable/assets/fa-regular-400.TBaJECdl.ttf",
-      "_app/immutable/assets/fa-solid-900.wCNuHzbQ.woff2",
-      "_app/immutable/assets/fa-solid-900.zNLXiXYJ.ttf",
-      "_app/immutable/assets/fa-v4compatibility.Gkfbzimj.woff2",
-      "_app/immutable/assets/fa-v4compatibility.BdHZVUy0.ttf"
+      "_app/immutable/assets/fa-brands-400.C99Yv4gD.woff2",
+      "_app/immutable/assets/fa-brands-400.DtZKBM2a.ttf",
+      "_app/immutable/assets/fa-regular-400.OOsPf1xj.woff2",
+      "_app/immutable/assets/fa-regular-400.BMFokQJ2.ttf",
+      "_app/immutable/assets/fa-solid-900.DAI24fNt.woff2",
+      "_app/immutable/assets/fa-solid-900.DM0teJdg.ttf",
+      "_app/immutable/assets/fa-v4compatibility.aR9vOKaP.woff2",
+      "_app/immutable/assets/fa-v4compatibility.F0dlVTLQ.ttf"
     ]
   },
   "src/routes/test/+page.js": {

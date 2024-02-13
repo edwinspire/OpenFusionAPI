@@ -3,8 +3,8 @@ import { c as create_ssr_component, a as add_attribute, e as escape, v as valida
 import "@edwinspire/universal-fetch";
 import "events";
 import "d3";
-const logo = "/_app/immutable/assets/android-chrome-512x512.6tSliZMZ.png";
-const flame = "/_app/immutable/assets/flame.KSOL5w7N.png";
+const logo = "/_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png";
+const flame = "/_app/immutable/assets/flame.pI4vnDs3.png";
 const css = {
   code: ".xcontainer.svelte-ffrl52{display:flex;align-items:center;justify-content:center;height:100vh;width:100%;background-color:black;color:white}.main.svelte-ffrl52{display:flex;justify-content:center;align-items:center}.span01.svelte-ffrl52{height:300px;width:100%;background-position:0 -1000px;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:svelte-ffrl52-fire 4s linear infinite}@keyframes svelte-ffrl52-fire{0%{background-position:0% -50%}100%{background-position:0% -25%}}",
   map: null
