@@ -104,6 +104,10 @@ const Root = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   } while (!$$settled);
   return $$rendered;
 });
+function set_read_implementation(fn) {
+}
+function set_manifest(_) {
+}
 const options = {
   app_dir: "_app",
   app_template_contains_nonce: false,
@@ -190,7 +194,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "72l7ej"
+  version_hash: "9wtf6c"
 };
 async function get_hooks() {
   return {};
@@ -206,7 +210,9 @@ export {
   set_safe_public_env as h,
   set_assets as i,
   set_building as j,
-  set_prerendering as k,
+  set_manifest as k,
+  set_prerendering as l,
+  set_read_implementation as m,
   override as o,
   public_env as p,
   reset as r,
