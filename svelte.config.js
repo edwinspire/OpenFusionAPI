@@ -9,8 +9,7 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
-		adapter: adapter({ pages: "./www"}),
-		prerender: {entries: []}
+		adapter: adapter({ pages: "./www"})
 	}
 };
 
