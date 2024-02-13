@@ -10,6 +10,7 @@ const config = {
 
 	kit: {
 		adapter: adapter({ pages: "./www"}),
+		prerender: {entries: []}
 	}
 };
 
