@@ -1,8 +1,8 @@
 import { c as create_ssr_component, a as add_attribute, e as escape, v as validate_component } from "../../chunks/ssr.js";
 /* empty css                                                    */
 import "@edwinspire/universal-fetch";
-import "events";
 import "d3";
+import "events";
 const logo = "/_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png";
 const flame = "/_app/immutable/assets/flame.pI4vnDs3.png";
 const css = {

@@ -20,7 +20,7 @@
     "file": "chunks/ssr.js"
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
-    "file": "_app/immutable/assets/start_page.ZjHIR6M0.css",
+    "file": "_app/immutable/assets/start_page.D41LJE29.css",
     "src": "_start_page.svelte_svelte_type_style_lang.js"
   },
   "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png": {
@@ -103,7 +103,7 @@
       "_ssr.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.ZjHIR6M0.css"
+      "_app/immutable/assets/start_page.D41LJE29.css"
     ],
     "assets": [
       "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
@@ -126,7 +126,7 @@
       "_ssr.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.ZjHIR6M0.css"
+      "_app/immutable/assets/start_page.D41LJE29.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.C99Yv4gD.woff2",
