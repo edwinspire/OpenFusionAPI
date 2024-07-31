@@ -3,6 +3,6 @@
 export const index = 3;
 let component_cache;
 export const component = async () => component_cache ??= (await import('../entries/pages/openfusionapi/_page.svelte.js')).default;
-export const imports = ["_app/immutable/nodes/3.vI-geXAd.js","_app/immutable/chunks/scheduler.cNKgFY5f.js","_app/immutable/chunks/index.Cpa88Hvf.js","_app/immutable/chunks/start_page.svelte_svelte_type_style_lang.Crju3x7j.js","_app/immutable/chunks/index.CPDth8z_.js"];
-export const stylesheets = ["_app/immutable/assets/start_page.LFShET9E.css"];
-export const fonts = ["_app/immutable/assets/fa-brands-400.C99Yv4gD.woff2","_app/immutable/assets/fa-brands-400.DtZKBM2a.ttf","_app/immutable/assets/fa-regular-400.OOsPf1xj.woff2","_app/immutable/assets/fa-regular-400.BMFokQJ2.ttf","_app/immutable/assets/fa-solid-900.DAI24fNt.woff2","_app/immutable/assets/fa-solid-900.DM0teJdg.ttf","_app/immutable/assets/fa-v4compatibility.aR9vOKaP.woff2","_app/immutable/assets/fa-v4compatibility.F0dlVTLQ.ttf"];
+export const imports = ["_app/immutable/nodes/3.BhNeSV98.js","_app/immutable/chunks/scheduler.CMydny4p.js","_app/immutable/chunks/index.DDvhOMj1.js","_app/immutable/chunks/start_page.svelte_svelte_type_style_lang.BUbCOGle.js","_app/immutable/chunks/index.aqt54Tl-.js"];
+export const stylesheets = ["_app/immutable/assets/start_page.B2n8nTFQ.css"];
+export const fonts = ["_app/immutable/assets/fa-brands-400.Ch568Ea9.woff2","_app/immutable/assets/fa-brands-400.DHHcbFjz.ttf","_app/immutable/assets/fa-regular-400.9VThgXHM.woff2","_app/immutable/assets/fa-regular-400.C54-fRIQ.ttf","_app/immutable/assets/fa-solid-900.QWY35r5r.woff2","_app/immutable/assets/fa-solid-900.Cm9M9sZB.ttf","_app/immutable/assets/fa-v4compatibility.BRdYr4HJ.woff2","_app/immutable/assets/fa-v4compatibility.DLBX5pNp.ttf"];

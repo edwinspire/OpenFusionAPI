@@ -2489,10 +2489,13 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
         const set_cookie = response.headers.get("set-cookie");
         if (set_cookie) {
           for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
-            const { name, value, ...options3 } = set_cookie_parser.parseString(str);
+            const { name, value, ...options3 } = set_cookie_parser.parseString(str, {
+              decodeValues: false
+            });
             const path = options3.path ?? (url.pathname.split("/").slice(0, -1).join("/") || "/");
             set_internal(name, value, {
               path,
+              encode: (value2) => value2,
               .../** @type {import('cookie').CookieSerializeOptions} */
               options3
             });

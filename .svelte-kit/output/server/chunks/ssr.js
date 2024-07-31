@@ -127,9 +127,9 @@ function create_ssr_component(fn) {
   };
 }
 function add_attribute(name, value, boolean) {
-  if (value == null || boolean && !value)
+  if (value == null || boolean)
     return "";
-  const assignment = boolean && value === true ? "" : `="${escape(value, true)}"`;
+  const assignment = `="${escape(value, true)}"`;
   return ` ${name}${assignment}`;
 }
 export {
