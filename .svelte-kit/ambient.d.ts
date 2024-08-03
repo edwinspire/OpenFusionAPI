@@ -26,6 +26,16 @@
  * ```
  */
 declare module '$env/static/private' {
+	export const PORT: string;
+	export const BUILD_DB: string;
+	export const DATABASE_URI_API: string;
+	export const JWT_KEY: string;
+	export const EXPOSE_DEV_API: string;
+	export const EXPOSE_QA_API: string;
+	export const EXPOSE_PROD_API: string;
+	export const MQTT_ENABLED: string;
+	export const PATH_APP_FUNCTIONS: string;
+	export const EXPRESSJS_SERVER_TIMEOUT: string;
 	export const ACLOCAL_PATH: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
@@ -65,6 +75,7 @@ declare module '$env/static/private' {
 	export const MSYSTEM_CHOST: string;
 	export const MSYSTEM_PREFIX: string;
 	export const NODE: string;
+	export const NODE_ENV: string;
 	export const npm_command: string;
 	export const npm_config_cache: string;
 	export const npm_config_globalconfig: string;
@@ -81,15 +92,8 @@ declare module '$env/static/private' {
 	export const npm_lifecycle_event: string;
 	export const npm_lifecycle_script: string;
 	export const npm_node_execpath: string;
-	export const npm_package_dev: string;
-	export const npm_package_dev_optional: string;
-	export const npm_package_engines_node: string;
-	export const npm_package_integrity: string;
 	export const npm_package_json: string;
 	export const npm_package_name: string;
-	export const npm_package_optional: string;
-	export const npm_package_peer: string;
-	export const npm_package_resolved: string;
 	export const npm_package_version: string;
 	export const NUMBER_OF_PROCESSORS: string;
 	export const OneDrive: string;
@@ -114,9 +118,7 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
-	export const QIP15192: string;
-	export const QIP18236: string;
-	export const SESSIONNAME: string;
+	export const QIP1832: string;
 	export const SHELL: string;
 	export const SHLVL: string;
 	export const SSH_ASKPASS: string;
@@ -152,7 +154,7 @@ declare module '$env/static/private' {
  * ```
  */
 declare module '$env/static/public' {
-	
+	export const PUBLIC_API_SERVER_HOST: string;
 }
 
 /**
@@ -171,6 +173,16 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
+		PORT: string;
+		BUILD_DB: string;
+		DATABASE_URI_API: string;
+		JWT_KEY: string;
+		EXPOSE_DEV_API: string;
+		EXPOSE_QA_API: string;
+		EXPOSE_PROD_API: string;
+		MQTT_ENABLED: string;
+		PATH_APP_FUNCTIONS: string;
+		EXPRESSJS_SERVER_TIMEOUT: string;
 		ACLOCAL_PATH: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
@@ -210,6 +222,7 @@ declare module '$env/dynamic/private' {
 		MSYSTEM_CHOST: string;
 		MSYSTEM_PREFIX: string;
 		NODE: string;
+		NODE_ENV: string;
 		npm_command: string;
 		npm_config_cache: string;
 		npm_config_globalconfig: string;
@@ -226,15 +239,8 @@ declare module '$env/dynamic/private' {
 		npm_lifecycle_event: string;
 		npm_lifecycle_script: string;
 		npm_node_execpath: string;
-		npm_package_dev: string;
-		npm_package_dev_optional: string;
-		npm_package_engines_node: string;
-		npm_package_integrity: string;
 		npm_package_json: string;
 		npm_package_name: string;
-		npm_package_optional: string;
-		npm_package_peer: string;
-		npm_package_resolved: string;
 		npm_package_version: string;
 		NUMBER_OF_PROCESSORS: string;
 		OneDrive: string;
@@ -259,9 +265,7 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
-		QIP15192: string;
-		QIP18236: string;
-		SESSIONNAME: string;
+		QIP1832: string;
 		SHELL: string;
 		SHLVL: string;
 		SSH_ASKPASS: string;
@@ -304,6 +308,7 @@ declare module '$env/dynamic/private' {
  */
 declare module '$env/dynamic/public' {
 	export const env: {
+		PUBLIC_API_SERVER_HOST: string;
 		[key: `PUBLIC_${string}`]: string | undefined;
 	}
 }

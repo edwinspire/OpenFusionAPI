@@ -10,14 +10,12 @@ WORKDIR /
 # Copiar los archivos de la aplicación al contenedor
 # COPY . .
 
-
 # Variables de Entorno
 ENV HOST=:: 
 ENV PUBLIC_API_SERVER_HOST=""    
 ENV PORT=3000
 ENV BUILD_DB=true
     
-
 # Actualizar los paquetes y herramientas del sistema
 RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
 
