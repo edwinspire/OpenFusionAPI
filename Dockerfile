@@ -1,5 +1,5 @@
 # Usar una imagen base oficial de Node.js
-FROM node:21-bullseye-slim
+FROM node:lts-bookworm-slim
 
 # Declarar variables de entorno
 # ENV NODE_ENV development
