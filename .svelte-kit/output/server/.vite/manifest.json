@@ -8,6 +8,13 @@
       "_internal.js"
     ]
   },
+  "_client.js": {
+    "file": "chunks/client.js",
+    "name": "client",
+    "imports": [
+      "_exports.js"
+    ]
+  },
   "_exports.js": {
     "file": "chunks/exports.js",
     "name": "exports"
@@ -24,8 +31,21 @@
     "name": "ssr"
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
-    "file": "_app/immutable/assets/start_page.C9roy8F7.css",
-    "src": "_start_page.svelte_svelte_type_style_lang.js"
+    "file": "chunks/start_page.svelte_svelte_type_style_lang.js",
+    "name": "start_page.svelte_svelte_type_style_lang",
+    "css": [
+      "_app/immutable/assets/start_page.DLUOZAXD.css"
+    ],
+    "assets": [
+      "_app/immutable/assets/fa-brands-400.O7nZalfM.woff2",
+      "_app/immutable/assets/fa-brands-400.Dur5g48u.ttf",
+      "_app/immutable/assets/fa-regular-400.DgEfZSYE.woff2",
+      "_app/immutable/assets/fa-regular-400.Bf3rG5Nx.ttf",
+      "_app/immutable/assets/fa-solid-900.DOQJEhcS.woff2",
+      "_app/immutable/assets/fa-solid-900.BV3CbEM2.ttf",
+      "_app/immutable/assets/fa-v4compatibility.BX8XWJtE.woff2",
+      "_app/immutable/assets/fa-v4compatibility.B9MWI-E6.ttf"
+    ]
   },
   "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png": {
     "file": "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
@@ -74,7 +94,7 @@
     "isEntry": true,
     "imports": [
       "_ssr.js",
-      "_exports.js"
+      "_client.js"
     ]
   },
   "node_modules/@sveltejs/kit/src/runtime/components/layout.svelte": {
@@ -109,22 +129,13 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_ssr.js"
-    ],
-    "css": [
-      "_app/immutable/assets/start_page.C9roy8F7.css"
+      "_ssr.js",
+      "_start_page.svelte_svelte_type_style_lang.js",
+      "_client.js"
     ],
     "assets": [
       "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
-      "_app/immutable/assets/flame.pI4vnDs3.png",
-      "_app/immutable/assets/fa-brands-400.O7nZalfM.woff2",
-      "_app/immutable/assets/fa-brands-400.Dur5g48u.ttf",
-      "_app/immutable/assets/fa-regular-400.DgEfZSYE.woff2",
-      "_app/immutable/assets/fa-regular-400.Bf3rG5Nx.ttf",
-      "_app/immutable/assets/fa-solid-900.DOQJEhcS.woff2",
-      "_app/immutable/assets/fa-solid-900.BV3CbEM2.ttf",
-      "_app/immutable/assets/fa-v4compatibility.BX8XWJtE.woff2",
-      "_app/immutable/assets/fa-v4compatibility.B9MWI-E6.ttf"
+      "_app/immutable/assets/flame.pI4vnDs3.png"
     ]
   },
   "src/routes/openfusionapi/+page.svelte": {
@@ -133,20 +144,9 @@
     "src": "src/routes/openfusionapi/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_ssr.js"
-    ],
-    "css": [
-      "_app/immutable/assets/start_page.C9roy8F7.css"
-    ],
-    "assets": [
-      "_app/immutable/assets/fa-brands-400.O7nZalfM.woff2",
-      "_app/immutable/assets/fa-brands-400.Dur5g48u.ttf",
-      "_app/immutable/assets/fa-regular-400.DgEfZSYE.woff2",
-      "_app/immutable/assets/fa-regular-400.Bf3rG5Nx.ttf",
-      "_app/immutable/assets/fa-solid-900.DOQJEhcS.woff2",
-      "_app/immutable/assets/fa-solid-900.BV3CbEM2.ttf",
-      "_app/immutable/assets/fa-v4compatibility.BX8XWJtE.woff2",
-      "_app/immutable/assets/fa-v4compatibility.B9MWI-E6.ttf"
+      "_ssr.js",
+      "_start_page.svelte_svelte_type_style_lang.js",
+      "_client.js"
     ]
   },
   "src/routes/test/+page.js": {

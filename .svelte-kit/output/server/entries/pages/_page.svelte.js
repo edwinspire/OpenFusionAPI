@@ -1,8 +1,24 @@
 import { c as create_ssr_component, a as add_attribute, e as escape, v as validate_component } from "../../chunks/ssr.js";
 import "@edwinspire/universal-fetch";
-/* empty css                                                    */
-import "d3";
+import "../../chunks/start_page.svelte_svelte_type_style_lang.js";
 import "events";
+import "d3";
+import "../../chunks/client.js";
+import "prettier";
+import "prettier/parser-babel";
+import "prettier/plugins/babel";
+import "prettier/parser-html";
+import "prettier/parser-postcss";
+import "acorn";
+import "code-red";
+import "locate-character";
+import "estree-walker";
+import "is-reference";
+import "periscopic";
+import "@ampproject/remapping";
+import "@jridgewell/trace-mapping";
+import "magic-string";
+import "@jridgewell/sourcemap-codec";
 const logo = "/_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png";
 const flame = "/_app/immutable/assets/flame.pI4vnDs3.png";
 const css = {
