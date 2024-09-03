@@ -1,21 +1,15 @@
 # Usar una imagen base oficial de Node.js
 FROM node:lts-bookworm-slim
 
-# Declarar variables de entorno
-# ENV NODE_ENV development
-
-# Establecer el directorio de trabajo
-WORKDIR /
-
-# Copiar los archivos de la aplicación al contenedor
-# COPY . .
-
 # Variables de Entorno
 ENV HOST=:: 
 ENV PUBLIC_API_SERVER_HOST=""    
 ENV PORT=3000
 ENV BUILD_DB=true
-    
+
+# Establecer el directorio de trabajo
+WORKDIR /
+
 # Actualizar los paquetes y herramientas del sistema
 RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
 
