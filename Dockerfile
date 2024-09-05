@@ -4,7 +4,7 @@ FROM node:lts-bookworm-slim
 # Variables de Entorno
 ENV HOST=:: 
 ENV PUBLIC_API_SERVER_HOST=""    
-ENV PORT=3000
+ENV PORT=3030
 ENV BUILD_DB=true
 
 # Establecer el directorio de trabajo
