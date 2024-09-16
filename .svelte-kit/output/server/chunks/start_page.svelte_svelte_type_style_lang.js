@@ -1,3 +1,4 @@
+import "@edwinspire/universal-fetch";
 import { x } from "code-red";
 import { fork } from "css-tree";
 import { Delim, Ident, RightParenthesis, Colon, Function as Function$1, Dimension, Number as Number$1, EOF, WhiteSpace, LeftCurlyBracket, LeftParenthesis, Comment } from "css-tree/tokenizer";
@@ -7,6 +8,18 @@ import "periscopic";
 import "acorn";
 import { roles, elementRoles } from "aria-query";
 import { AXObjects, elementAXObjects } from "axobject-query";
+validateBaseUrl("");
+function validateBaseUrl(baseUrl) {
+  try {
+    const url = new URL(baseUrl);
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return baseUrl;
+    }
+    return "";
+  } catch (e) {
+    return "";
+  }
+}
 const name$6 = "Comparison";
 const structure$6 = {
   value: String
