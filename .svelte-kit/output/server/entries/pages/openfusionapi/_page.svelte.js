@@ -7,6 +7,7 @@ import "../../../chunks/client.js";
 import "prettier";
 import "prettier/parser-babel";
 import "prettier/plugins/babel";
+import "prettier/plugins/estree.js";
 import "prettier/parser-html";
 import "prettier/parser-postcss";
 import "acorn";
