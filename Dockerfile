@@ -1,3 +1,5 @@
+# OPEN FUZION API
+# edwinspire@gmail.com
 # Usar una imagen base oficial de Node.js
 FROM node:lts-bookworm-slim
 
