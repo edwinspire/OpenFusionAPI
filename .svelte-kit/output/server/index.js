@@ -1,4 +1,4 @@
-import { b as base, a as assets, o as override, r as reset, p as public_env, s as safe_public_env, c as options, d as set_private_env, e as prerendering, f as set_public_env, g as get_hooks, h as set_safe_public_env } from "./chunks/internal.js";
+import { b as base, a as assets, o as override, r as reset, p as public_env, s as safe_public_env, c as read_implementation, d as options, e as set_private_env, f as prerendering, g as set_public_env, h as get_hooks, i as set_safe_public_env, j as set_read_implementation } from "./chunks/internal.js";
 import { m as make_trackable, d as disable_search, n as normalize_path, a as add_data_suffix, r as resolve, b as decode_pathname, h as has_data_suffix, s as strip_data_suffix, c as decode_params, v as validate_layout_server_exports, e as validate_layout_exports, f as validate_page_server_exports, g as validate_page_exports, i as validate_server_exports } from "./chunks/exports.js";
 import * as devalue from "devalue";
 import { n as noop, f as safe_not_equal } from "./chunks/ssr.js";
@@ -444,7 +444,7 @@ async function handle_action_request(event, server) {
 function check_named_default_separate(actions) {
   if (actions.default && Object.keys(actions).length > 1) {
     throw new Error(
-      "When using named actions, the default action cannot be used. See the docs for more info: https://kit.svelte.dev/docs/form-actions#named-actions"
+      "When using named actions, the default action cannot be used. See the docs for more info: https://svelte.dev/docs/kit/form-actions#named-actions"
     );
   }
 }
@@ -497,6 +497,11 @@ function try_deserialize(data, fn, route_id) {
       /** @type {any} */
       e
     );
+    if (data instanceof Response) {
+      throw new Error(
+        `Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`
+      );
+    }
     if ("path" in error) {
       let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
       if (error.path !== "") message += ` (data.${error.path})`;
@@ -725,7 +730,7 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
           const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
           if (!included) {
             throw new Error(
-              `Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://kit.svelte.dev/docs/hooks#server-hooks-handle (at ${event.route.id})`
+              `Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#Server-hooks-handle (at ${event.route.id})`
             );
           }
         }
@@ -1428,6 +1433,7 @@ async function render_response({
     event,
     options2,
     branch.map((b) => b.server_data),
+    csp,
     global
   );
   if (page_config.ssr && page_config.csr) {
@@ -1610,13 +1616,11 @@ ${indent}}`);
       type: "bytes"
     }),
     {
-      headers: {
-        "content-type": "text/html"
-      }
+      headers: headers2
     }
   );
 }
-function get_data(event, options2, nodes, global) {
+function get_data(event, options2, nodes, csp, global) {
   let promise_id = 1;
   let count = 0;
   const { iterator, push, done } = create_async_iterator();
@@ -1650,7 +1654,8 @@ function get_data(event, options2, nodes, global) {
             data = void 0;
             str = devalue.uneval({ id, data, error }, replacer);
           }
-          push(`<script>${global}.resolve(${str})<\/script>
+          const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : "";
+          push(`<script${nonce}>${global}.resolve(${str})<\/script>
 `);
           if (count === 0) done();
         }
@@ -2033,6 +2038,7 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
     state.prerender_default = should_prerender;
     const fetched = [];
     if (get_option(nodes, "ssr") === false && !(state.prerendering && should_prerender_data)) {
+      if (DEV && action_result && !event.request.headers.has("x-sveltekit-action")) ;
       return await render_response({
         branch: [],
         fetched,
@@ -2412,14 +2418,23 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
         const decoded = decodeURIComponent(url.pathname);
         const filename = (decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded).slice(1);
         const filename_html = `${filename}/index.html`;
-        const is_asset = manifest.assets.has(filename);
-        const is_asset_html = manifest.assets.has(filename_html);
+        const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+        const is_asset_html = manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
         if (is_asset || is_asset_html) {
           const file = is_asset ? filename : filename_html;
           if (state.read) {
             const type = is_asset ? manifest.mimeTypes[filename.slice(filename.lastIndexOf("."))] : "text/html";
             return new Response(state.read(file), {
               headers: type ? { "content-type": type } : {}
+            });
+          } else if (read_implementation && file in manifest._.server_assets) {
+            const length = manifest._.server_assets[file];
+            const type = manifest.mimeTypes[file.slice(file.lastIndexOf("."))];
+            return new Response(read_implementation(file), {
+              headers: {
+                "Content-Length": "" + length,
+                "Content-Type": type
+              }
             });
           }
           return await fetch(request);
@@ -2553,7 +2568,9 @@ async function respond(request, options2, manifest, state) {
     return get_public_env(request);
   }
   if (decoded.startsWith(`/${options2.app_dir}`)) {
-    return text("Not found", { status: 404 });
+    const headers22 = new Headers();
+    headers22.set("cache-control", "public, max-age=0, must-revalidate");
+    return text("Not found", { status: 404, headers: headers22 });
   }
   const is_data_request = has_data_suffix(decoded);
   let invalidated_data_nodes;
@@ -2670,6 +2687,11 @@ async function respond(request, options2, manifest, state) {
           event.platform = await state.emulator.platform({ config, prerender });
         }
       }
+    } else if (state.emulator?.platform) {
+      event.platform = await state.emulator.platform({
+        config: {},
+        prerender: !!state.prerendering?.fallback
+      });
     }
     const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
       request,
@@ -2927,6 +2949,9 @@ class Server {
       prerendering ? new Proxy({ type: "public" }, prerender_env_handler) : public_env2
     );
     set_safe_public_env(public_env2);
+    if (read) {
+      set_read_implementation(read);
+    }
     if (!this.#options.hooks) {
       try {
         const module = await get_hooks();

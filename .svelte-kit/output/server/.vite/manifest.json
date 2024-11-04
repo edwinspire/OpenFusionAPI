@@ -34,7 +34,7 @@
     "file": "chunks/start_page.svelte_svelte_type_style_lang.js",
     "name": "start_page.svelte_svelte_type_style_lang",
     "css": [
-      "_app/immutable/assets/start_page.DLUOZAXD.css"
+      "_app/immutable/assets/start_page.D9Bsbd0d.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.O7nZalfM.woff2",
@@ -87,20 +87,20 @@
     "file": "_app/immutable/assets/fa-v4compatibility.BX8XWJtE.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
-  "node_modules/@sveltejs/kit/src/runtime/components/error.svelte": {
+  "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/error.svelte": {
     "file": "entries/fallbacks/error.svelte.js",
     "name": "entries/fallbacks/error.svelte",
-    "src": "node_modules/@sveltejs/kit/src/runtime/components/error.svelte",
+    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/error.svelte",
     "isEntry": true,
     "imports": [
       "_ssr.js",
       "_client.js"
     ]
   },
-  "node_modules/@sveltejs/kit/src/runtime/components/layout.svelte": {
+  "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/layout.svelte": {
     "file": "entries/fallbacks/layout.svelte.js",
     "name": "entries/fallbacks/layout.svelte",
-    "src": "node_modules/@sveltejs/kit/src/runtime/components/layout.svelte",
+    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/layout.svelte",
     "isEntry": true,
     "imports": [
       "_ssr.js"

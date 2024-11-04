@@ -1,5 +1,4 @@
 import "./exports.js";
-import "devalue";
 function get(key, parse = JSON.parse) {
   try {
     return parse(sessionStorage[key]);
