@@ -118,9 +118,7 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
-	export const QIP14688: string;
-	export const QIP3720: string;
-	export const SESSIONNAME: string;
+	export const QIP16732: string;
 	export const SHELL: string;
 	export const SHLVL: string;
 	export const SSH_ASKPASS: string;
@@ -267,9 +265,7 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
-		QIP14688: string;
-		QIP3720: string;
-		SESSIONNAME: string;
+		QIP16732: string;
 		SHELL: string;
 		SHLVL: string;
 		SSH_ASKPASS: string;

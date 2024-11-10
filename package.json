@@ -29,7 +29,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@edwinspire/libopenfusionapi": "github:edwinspire/libOpenFusionAPI#v.0.0.2",
+		"@edwinspire/libopenfusionapi": "github:edwinspire/libOpenFusionAPI#v0.0.3",
 		"@edwinspire/libopenfusionapigui": "github:edwinspire/libOpenFusionAPIGUI#v1.0.2",
 		"@sveltejs/adapter-static": "^3.0.1",
 		"jsonwebtoken": "^9.0.0"
