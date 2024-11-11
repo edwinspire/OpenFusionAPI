@@ -1,39 +1,39 @@
 # OPEN FUZION API
 # edwinspire@gmail.com
-
-# Usar una imagen base ligera de Node.js
-FROM node:lts-alpine
+# Usar una imagen base oficial de Node.js
+FROM node:lts-bookworm-slim
 
 # Variables de Entorno
-ENV HOST="::" \
-    PUBLIC_API_SERVER_HOST="" \
-    PORT=3000 \
-    BUILD_DB=true
+ENV HOST=:: 
+ENV PUBLIC_API_SERVER_HOST=""    
+ENV PORT=3000
+ENV BUILD_DB=true
 
-# Instalar Git (y otras herramientas si es necesario)
-RUN apk add --no-cache git
+# Establecer el directorio de trabajo
+WORKDIR /
 
-# Crear y establecer el directorio de trabajo para la aplicación
-WORKDIR /app
+# Actualizar los paquetes y herramientas del sistema
+RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clonar el repositorio de la aplicación
-RUN git clone https://github.com/edwinspire/OpenFusionAPI.git /app
+# Eliminar node_modules y package-lock.json
+RUN rm -rf node_modules package-lock.json
 
-# Cambiar al directorio de la aplicación
-WORKDIR /app
+# Descarga la aplicación 
+RUN git clone https://github.com/edwinspire/OpenFusionAPI.git
 
-# Limpiar posibles instalaciones previas y el caché de npm
-RUN rm -rf node_modules package-lock.json && \
-    npm cache clean --force
+WORKDIR /OpenFusionAPI
 
-# Instalar las dependencias sin auditoría ni fondos
-RUN npm install --no-fund --no-audit
+# Eliminar node_modules y package-lock.json
+RUN rm -rf node_modules package-lock.json
 
-# Instalar PM2 globalmente sin auditoría
-# RUN npm install pm2 -g --no-fund --no-audit
+# Instalar las dependencias de la aplicación
+RUN npm install
 
-# Compilar la aplicación
-# RUN npm run build
+# Instalar PM2 globalmente
+RUN npm install pm2 -g
+
+# Ejecutar la compilación de la aplicación
+RUN npm run build
 
 # Exponer el puerto en el que correrá la aplicación
 EXPOSE 3000
