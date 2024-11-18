@@ -189,7 +189,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "2j8pea"
+  version_hash: "kvtkmp"
 };
 async function get_hooks() {
   return {};
@@ -199,12 +199,12 @@ export {
   base as b,
   read_implementation as c,
   options as d,
-  set_private_env as e,
-  prerendering as f,
-  set_public_env as g,
-  get_hooks as h,
-  set_safe_public_env as i,
-  set_read_implementation as j,
+  set_public_env as e,
+  set_safe_public_env as f,
+  get_hooks as g,
+  set_read_implementation as h,
+  set_private_env as i,
+  prerendering as j,
   set_assets as k,
   set_building as l,
   set_manifest as m,
