@@ -13,7 +13,7 @@ ENV BUILD_DB=true
 WORKDIR /
 
 # Actualizar los paquetes y herramientas del sistema
-RUN apt-get update && apt-get install -y git && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git nano && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Eliminar node_modules y package-lock.json
 RUN rm -rf node_modules package-lock.json
