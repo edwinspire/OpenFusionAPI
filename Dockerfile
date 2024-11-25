@@ -25,6 +25,7 @@ WORKDIR /OpenFusionAPI
 
 # Eliminar node_modules y package-lock.json
 RUN rm -rf node_modules package-lock.json
+#RUN rm -rf node_modules/@edwinspire package-lock.json
 
 # Instalar las dependencias de la aplicación
 RUN npm install

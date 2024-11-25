@@ -29,8 +29,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@edwinspire/libopenfusionapi": "github:edwinspire/libOpenFusionAPI",
-		"@edwinspire/libopenfusionapigui": "github:edwinspire/libOpenFusionAPIGUI",
+		"@edwinspire/libopenfusionapi": "https://github.com/edwinspire/libOpenFusionAPI.git",
+		"@edwinspire/libopenfusionapigui": "https://github.com/edwinspire/libOpenFusionAPIGUI.git",
 		"@sveltejs/adapter-static": "^3.0.1",
 		"jsonwebtoken": "^9.0.0"
 	}
