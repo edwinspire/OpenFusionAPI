@@ -8,43 +8,51 @@
       "_internal.js"
     ]
   },
-  "_client.js": {
-    "file": "chunks/client.js",
-    "name": "client",
-    "imports": [
-      "_exports.js"
-    ]
+  "_equality.js": {
+    "file": "chunks/equality.js",
+    "name": "equality"
+  },
+  "_escaping.js": {
+    "file": "chunks/escaping.js",
+    "name": "escaping"
   },
   "_exports.js": {
     "file": "chunks/exports.js",
-    "name": "exports"
+    "name": "exports",
+    "imports": [
+      "_equality.js"
+    ]
+  },
+  "_index.js": {
+    "file": "chunks/index.js",
+    "name": "index"
   },
   "_internal.js": {
     "file": "chunks/internal.js",
     "name": "internal",
     "imports": [
-      "_ssr.js"
+      "_equality.js",
+      "_index.js"
     ]
-  },
-  "_ssr.js": {
-    "file": "chunks/ssr.js",
-    "name": "ssr"
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
     "file": "chunks/start_page.svelte_svelte_type_style_lang.js",
     "name": "start_page.svelte_svelte_type_style_lang",
+    "imports": [
+      "_escaping.js"
+    ],
     "css": [
-      "_app/immutable/assets/start_page.D9Bsbd0d.css"
+      "_app/immutable/assets/start_page.CNaCZuAe.css"
     ],
     "assets": [
-      "_app/immutable/assets/fa-brands-400.O7nZalfM.woff2",
-      "_app/immutable/assets/fa-brands-400.Dur5g48u.ttf",
-      "_app/immutable/assets/fa-regular-400.DgEfZSYE.woff2",
-      "_app/immutable/assets/fa-regular-400.Bf3rG5Nx.ttf",
-      "_app/immutable/assets/fa-solid-900.DOQJEhcS.woff2",
-      "_app/immutable/assets/fa-solid-900.BV3CbEM2.ttf",
-      "_app/immutable/assets/fa-v4compatibility.BX8XWJtE.woff2",
-      "_app/immutable/assets/fa-v4compatibility.B9MWI-E6.ttf"
+      "_app/immutable/assets/fa-brands-400.D_cYUPeE.woff2",
+      "_app/immutable/assets/fa-brands-400.D1LuMI3I.ttf",
+      "_app/immutable/assets/fa-regular-400.BjRzuEpd.woff2",
+      "_app/immutable/assets/fa-regular-400.DZaxPHgR.ttf",
+      "_app/immutable/assets/fa-solid-900.CTAAxXor.woff2",
+      "_app/immutable/assets/fa-solid-900.D0aA9rwL.ttf",
+      "_app/immutable/assets/fa-v4compatibility.C9RhG_FT.woff2",
+      "_app/immutable/assets/fa-v4compatibility.CCth-dXg.ttf"
     ]
   },
   "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/android-chrome-512x512.png": {
@@ -56,54 +64,56 @@
     "src": "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/flame.png"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf": {
-    "file": "_app/immutable/assets/fa-brands-400.Dur5g48u.ttf",
+    "file": "_app/immutable/assets/fa-brands-400.D1LuMI3I.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2": {
-    "file": "_app/immutable/assets/fa-brands-400.O7nZalfM.woff2",
+    "file": "_app/immutable/assets/fa-brands-400.D_cYUPeE.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.ttf": {
-    "file": "_app/immutable/assets/fa-regular-400.Bf3rG5Nx.ttf",
+    "file": "_app/immutable/assets/fa-regular-400.DZaxPHgR.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2": {
-    "file": "_app/immutable/assets/fa-regular-400.DgEfZSYE.woff2",
+    "file": "_app/immutable/assets/fa-regular-400.BjRzuEpd.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf": {
-    "file": "_app/immutable/assets/fa-solid-900.BV3CbEM2.ttf",
+    "file": "_app/immutable/assets/fa-solid-900.D0aA9rwL.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2": {
-    "file": "_app/immutable/assets/fa-solid-900.DOQJEhcS.woff2",
+    "file": "_app/immutable/assets/fa-solid-900.CTAAxXor.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.ttf": {
-    "file": "_app/immutable/assets/fa-v4compatibility.B9MWI-E6.ttf",
+    "file": "_app/immutable/assets/fa-v4compatibility.CCth-dXg.ttf",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.ttf"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2": {
-    "file": "_app/immutable/assets/fa-v4compatibility.BX8XWJtE.woff2",
+    "file": "_app/immutable/assets/fa-v4compatibility.C9RhG_FT.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
-  "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/error.svelte": {
+  "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte": {
     "file": "entries/fallbacks/error.svelte.js",
     "name": "entries/fallbacks/error.svelte",
-    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/error.svelte",
+    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte",
     "isEntry": true,
     "imports": [
-      "_ssr.js",
-      "_client.js"
+      "_escaping.js",
+      "_index.js",
+      "_equality.js",
+      "_exports.js"
     ]
   },
-  "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/layout.svelte": {
+  "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/layout.svelte": {
     "file": "entries/fallbacks/layout.svelte.js",
     "name": "entries/fallbacks/layout.svelte",
-    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-4/layout.svelte",
+    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/layout.svelte",
     "isEntry": true,
     "imports": [
-      "_ssr.js"
+      "_index.js"
     ]
   },
   "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
@@ -113,8 +123,7 @@
     "isEntry": true,
     "imports": [
       "_internal.js",
-      "_exports.js",
-      "_ssr.js"
+      "_exports.js"
     ]
   },
   "src/routes/+layout.js": {
@@ -129,9 +138,8 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_ssr.js",
       "_start_page.svelte_svelte_type_style_lang.js",
-      "_client.js"
+      "_index.js"
     ],
     "assets": [
       "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
@@ -144,9 +152,8 @@
     "src": "src/routes/openfusionapi/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_ssr.js",
-      "_start_page.svelte_svelte_type_style_lang.js",
-      "_client.js"
+      "_index.js",
+      "_start_page.svelte_svelte_type_style_lang.js"
     ]
   },
   "src/routes/test/+page.js": {
@@ -159,9 +166,6 @@
     "file": "entries/pages/test/_page.svelte.js",
     "name": "entries/pages/test/_page.svelte",
     "src": "src/routes/test/+page.svelte",
-    "isEntry": true,
-    "imports": [
-      "_ssr.js"
-    ]
+    "isEntry": true
   }
 }

@@ -28,6 +28,7 @@
 declare module '$env/static/private' {
 	export const PORT: string;
 	export const BUILD_DB: string;
+	export const DATABASE_URI_API: string;
 	export const JWT_KEY: string;
 	export const EXPOSE_DEV_API: string;
 	export const EXPOSE_QA_API: string;
@@ -118,7 +119,8 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
-	export const QIP12724: string;
+	export const QIP14140: string;
+	export const QIP15236: string;
 	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
@@ -176,6 +178,7 @@ declare module '$env/dynamic/private' {
 	export const env: {
 		PORT: string;
 		BUILD_DB: string;
+		DATABASE_URI_API: string;
 		JWT_KEY: string;
 		EXPOSE_DEV_API: string;
 		EXPOSE_QA_API: string;
@@ -266,7 +269,8 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
-		QIP12724: string;
+		QIP14140: string;
+		QIP15236: string;
 		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;

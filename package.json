@@ -1,6 +1,6 @@
 {
 	"name": "openfusionapi",
-	"version": "0.0.4",
+	"version": "0.1.0",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -13,25 +13,28 @@
 		"build_start": "vite build && node ./server/index.js"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^3.0.0",
+		"@eslint/compat": "^1.2.3",
+		"@eslint/js": "^9.17.0",
+		"@fontsource/fira-mono": "^5.0.0",
+		"@neoconfetti/svelte": "^2.0.0",
+		"@sveltejs/adapter-static": "^3.0.8",
 		"@sveltejs/kit": "^2.0.0",
-		"@sveltejs/vite-plugin-svelte": "^3.0.0",
-		"@types/eslint": "8.56.0",
-		"eslint": "^8.56.0",
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"eslint": "^9.7.0",
 		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.35.1",
-		"prettier": "^3.1.1",
-		"prettier-plugin-svelte": "^3.1.2",
-		"svelte": "^4.2.7",
-		"svelte-check": "^3.6.0",
+		"eslint-plugin-svelte": "^2.36.0",
+		"globals": "^15.0.0",
+		"prettier": "^3.3.2",
+		"prettier-plugin-svelte": "^3.2.6",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.0",
 		"typescript": "^5.0.0",
-		"vite": "^5.0.3"
+		"vite": "^5.4.11"
 	},
 	"type": "module",
 	"dependencies": {
 		"@edwinspire/libopenfusionapi": "https://github.com/edwinspire/libOpenFusionAPI.git",
 		"@edwinspire/libopenfusionapigui": "https://github.com/edwinspire/libOpenFusionAPIGUI.git",
-		"@sveltejs/adapter-static": "^3.0.1",
 		"jsonwebtoken": "^9.0.0"
 	}
 }
