@@ -27,7 +27,6 @@
  */
 declare module '$env/static/private' {
 	export const PORT: string;
-	export const BUILD_DB: string;
 	export const DATABASE_URI_API: string;
 	export const JWT_KEY: string;
 	export const EXPOSE_DEV_API: string;
@@ -53,8 +52,6 @@ declare module '$env/static/private' {
 	export const EDITOR: string;
 	export const ESET_OPTIONS: string;
 	export const EXEPATH: string;
-	export const FPS_BROWSER_APP_PROFILE_STRING: string;
-	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
@@ -119,8 +116,7 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
-	export const QIP14140: string;
-	export const QIP15236: string;
+	export const QIP14084: string;
 	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
@@ -177,7 +173,6 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		PORT: string;
-		BUILD_DB: string;
 		DATABASE_URI_API: string;
 		JWT_KEY: string;
 		EXPOSE_DEV_API: string;
@@ -203,8 +198,6 @@ declare module '$env/dynamic/private' {
 		EDITOR: string;
 		ESET_OPTIONS: string;
 		EXEPATH: string;
-		FPS_BROWSER_APP_PROFILE_STRING: string;
-		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
 		HOME: string;
 		HOMEDRIVE: string;
@@ -269,8 +262,7 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
-		QIP14140: string;
-		QIP15236: string;
+		QIP14084: string;
 		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
