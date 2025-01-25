@@ -1,7 +1,7 @@
 # OPEN FUSION API
 # edwinspire@gmail.com
 # Usar una imagen base oficial de Node.js basada en Alpine (más ligera)
-FROM node:lts-alpine
+FROM node:20-bookworm-slim
 
 # Variables de Entorno
 ENV HOST=:: \
@@ -14,7 +14,13 @@ WORKDIR /app
 
 # Instalar herramientas adicionales necesarias
 # Incluye git y nano; agrega bash si es necesario para scripts complejos
-RUN apk add --no-cache git nano bash
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    git \
+    nano \
+    wget \
+    curl \
+    bash && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Clonar la aplicación desde el repositorio
 RUN git clone https://github.com/edwinspire/OpenFusionAPI.git .
