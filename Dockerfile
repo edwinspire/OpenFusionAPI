@@ -28,8 +28,7 @@ RUN git clone https://github.com/edwinspire/OpenFusionAPI.git .
 # Eliminar archivos previos (node_modules y package-lock.json)
 RUN rm -rf node_modules package-lock.json
 
-# Instalar las dependencias de la aplicación
-RUN npm install --production
+RUN npm install 
 
 # Instalar PM2 globalmente
 RUN npm install pm2 -g
