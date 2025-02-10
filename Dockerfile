@@ -19,11 +19,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     nano \
     wget \
     curl \
+    logrotate \
     bash && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Clonar la aplicación desde el repositorio
 RUN git clone https://github.com/edwinspire/OpenFusionAPI.git .
+
+# Instalar el módulo de rotación de logs de PM2
+RUN pm2 install pm2-logrotate \
+    && pm2 set pm2-logrotate:max_days 2 \
+    && pm2 set pm2-logrotate:retain 2
 
 # Eliminar archivos previos (node_modules y package-lock.json)
 RUN rm -rf node_modules package-lock.json

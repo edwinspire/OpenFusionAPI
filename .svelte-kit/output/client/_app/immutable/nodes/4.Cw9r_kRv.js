@@ -1,1 +1,0 @@
-import{a as o,t as a}from"../chunks/disclose-version.DE3B7_8X.js";import"../chunks/legacy.CNaPTmXt.js";const l=Object.freeze(Object.defineProperty({__proto__:null},Symbol.toStringTag,{value:"Module"}));var r=a("<h1>Test</h1>");function s(e){var t=r();o(e,t)}export{s as component,l as universal};

@@ -87,7 +87,7 @@ function head(payload, fn) {
   head_payload.out += BLOCK_CLOSE;
 }
 function stringify(value) {
-  return typeof value === "string" ? value : value == null ? "" : value + "";
+  return true ? value : value == null ? "" : value + "";
 }
 export {
   HYDRATION_ERROR as H,
