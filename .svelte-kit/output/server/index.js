@@ -1,4 +1,5 @@
-import { b as base, a as app_dir, c as assets, p as public_env, s as safe_public_env, o as override, r as reset, D as DEV, d as read_implementation, e as options, g as get_hooks, f as set_private_env, h as prerendering, i as set_public_env, j as set_safe_public_env, k as set_read_implementation } from "./chunks/internal.js";
+import { a as assets, b as base, c as app_dir, p as public_env, s as safe_public_env, o as override, r as reset, D as DEV, d as read_implementation, e as options, g as get_hooks, f as set_private_env, h as prerendering, i as set_public_env, j as set_safe_public_env, k as set_read_implementation } from "./chunks/internal.js";
+import { j as json, t as text } from "./chunks/index.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, r as readable, w as writable, n as normalize_path, b as resolve, c as decode_pathname, v as validate_layout_server_exports, e as validate_layout_exports, f as validate_page_server_exports, g as validate_page_exports, h as validate_server_exports } from "./chunks/exports.js";
 import { parse, serialize } from "cookie";
@@ -103,36 +104,6 @@ class ActionFailure {
     this.status = status;
     this.data = data;
   }
-}
-function json(data, init2) {
-  const body2 = JSON.stringify(data);
-  const headers2 = new Headers(init2?.headers);
-  if (!headers2.has("content-length")) {
-    headers2.set("content-length", encoder$3.encode(body2).byteLength.toString());
-  }
-  if (!headers2.has("content-type")) {
-    headers2.set("content-type", "application/json");
-  }
-  return new Response(body2, {
-    ...init2,
-    headers: headers2
-  });
-}
-const encoder$3 = new TextEncoder();
-function text(body2, init2) {
-  const headers2 = new Headers(init2?.headers);
-  if (!headers2.has("content-length")) {
-    const encoded = encoder$3.encode(body2);
-    headers2.set("content-length", encoded.byteLength.toString());
-    return new Response(encoded, {
-      ...init2,
-      headers: headers2
-    });
-  }
-  return new Response(body2, {
-    ...init2,
-    headers: headers2
-  });
 }
 function coalesce_to_error(err) {
   return err instanceof Error || err && /** @type {any} */
@@ -346,17 +317,15 @@ function strip_data_suffix(pathname) {
   }
   return pathname.slice(0, -DATA_SUFFIX.length);
 }
-const ROUTE_PREFIX = `${base}/${app_dir}/route`;
-function has_resolution_prefix(pathname) {
-  return pathname === `${ROUTE_PREFIX}.js` || pathname.startsWith(`${ROUTE_PREFIX}/`);
+const ROUTE_SUFFIX = "/__route.js";
+function has_resolution_suffix(pathname) {
+  return pathname.endsWith(ROUTE_SUFFIX);
 }
-function add_resolution_prefix(pathname) {
-  let normalized = pathname.slice(base.length);
-  if (normalized.endsWith("/")) normalized = normalized.slice(0, -1);
-  return `${ROUTE_PREFIX}${normalized}.js`;
+function add_resolution_suffix(pathname) {
+  return pathname.replace(/\/$/, "") + ROUTE_SUFFIX;
 }
-function strip_resolution_prefix(pathname) {
-  return base + (pathname.slice(ROUTE_PREFIX.length, -3) || "/");
+function strip_resolution_suffix(pathname) {
+  return pathname.slice(0, -ROUTE_SUFFIX.length);
 }
 function is_action_json_request(event) {
   const accept = negotiate(event.request.headers.get("accept") ?? "*/*", [
@@ -1585,7 +1554,7 @@ async function render_response({
       }
     }
     if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
-      const pathname = add_resolution_prefix(event.url.pathname);
+      const pathname = add_resolution_suffix(event.url.pathname);
       state.prerendering.dependencies.set(
         pathname,
         create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
@@ -2678,10 +2647,10 @@ async function respond(request, options2, manifest, state) {
     return text("Not found", { status: 404 });
   }
   let invalidated_data_nodes;
-  const is_route_resolution_request = has_resolution_prefix(url.pathname);
+  const is_route_resolution_request = has_resolution_suffix(url.pathname);
   const is_data_request = has_data_suffix(url.pathname);
   if (is_route_resolution_request) {
-    url.pathname = strip_resolution_prefix(url.pathname);
+    url.pathname = strip_resolution_suffix(url.pathname);
   } else if (is_data_request) {
     url.pathname = strip_data_suffix(url.pathname) + (url.searchParams.get(TRAILING_SLASH_PARAM) === "1" ? "/" : "") || "/";
     url.searchParams.delete(TRAILING_SLASH_PARAM);

@@ -1,6 +1,6 @@
 import { e as escape_html } from "../../chunks/escaping.js";
 import "clsx";
-import { g as getContext, p as pop, a as push } from "../../chunks/index.js";
+import { g as getContext, p as pop, a as push } from "../../chunks/index2.js";
 import { n as noop } from "../../chunks/equality.js";
 import { w as writable } from "../../chunks/exports.js";
 const SNAPSHOT_KEY = "sveltekit:snapshot";

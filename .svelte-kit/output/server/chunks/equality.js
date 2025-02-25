@@ -5,6 +5,11 @@ var define_property = Object.defineProperty;
 var get_descriptor = Object.getOwnPropertyDescriptor;
 const noop = () => {
 };
+function run_all(arr) {
+  for (var i = 0; i < arr.length; i++) {
+    arr[i]();
+  }
+}
 function equals(value) {
   return value === this.v;
 }
@@ -23,5 +28,6 @@ export {
   get_descriptor as g,
   index_of as i,
   noop as n,
+  run_all as r,
   safe_not_equal as s
 };

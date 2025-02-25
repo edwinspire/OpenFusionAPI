@@ -27,12 +27,16 @@
     "file": "chunks/index.js",
     "name": "index"
   },
+  "_index2.js": {
+    "file": "chunks/index2.js",
+    "name": "index"
+  },
   "_internal.js": {
     "file": "chunks/internal.js",
     "name": "internal",
     "imports": [
       "_equality.js",
-      "_index.js"
+      "_index2.js"
     ]
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
@@ -102,7 +106,7 @@
     "isEntry": true,
     "imports": [
       "_escaping.js",
-      "_index.js",
+      "_index2.js",
       "_equality.js",
       "_exports.js"
     ]
@@ -120,6 +124,7 @@
     "isEntry": true,
     "imports": [
       "_internal.js",
+      "_index.js",
       "_exports.js"
     ]
   },
@@ -136,7 +141,8 @@
     "isEntry": true,
     "imports": [
       "_start_page.svelte_svelte_type_style_lang.js",
-      "_index.js"
+      "_index.js",
+      "_index2.js"
     ],
     "assets": [
       "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
@@ -149,8 +155,9 @@
     "src": "src/routes/openfusionapi/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_index.js",
-      "_start_page.svelte_svelte_type_style_lang.js"
+      "_index2.js",
+      "_start_page.svelte_svelte_type_style_lang.js",
+      "_index.js"
     ]
   },
   "src/routes/test/+page.js": {
