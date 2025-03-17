@@ -12,20 +12,16 @@
     "file": "chunks/equality.js",
     "name": "equality"
   },
-  "_escaping.js": {
-    "file": "chunks/escaping.js",
-    "name": "escaping"
-  },
   "_exports.js": {
     "file": "chunks/exports.js",
-    "name": "exports",
-    "imports": [
-      "_equality.js"
-    ]
+    "name": "exports"
   },
   "_index.js": {
     "file": "chunks/index.js",
-    "name": "index"
+    "name": "index",
+    "imports": [
+      "_equality.js"
+    ]
   },
   "_index2.js": {
     "file": "chunks/index2.js",
@@ -42,11 +38,8 @@
   "_start_page.svelte_svelte_type_style_lang.js": {
     "file": "chunks/start_page.svelte_svelte_type_style_lang.js",
     "name": "start_page.svelte_svelte_type_style_lang",
-    "imports": [
-      "_escaping.js"
-    ],
     "css": [
-      "_app/immutable/assets/start_page.CmHSAQ-E.css"
+      "_app/immutable/assets/start_page.CNQ2pKbi.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.D_cYUPeE.woff2",
@@ -105,10 +98,10 @@
     "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte",
     "isEntry": true,
     "imports": [
-      "_escaping.js",
       "_index2.js",
       "_equality.js",
-      "_exports.js"
+      "_exports.js",
+      "_index.js"
     ]
   },
   "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/layout.svelte": {
@@ -124,8 +117,8 @@
     "isEntry": true,
     "imports": [
       "_internal.js",
-      "_index.js",
-      "_exports.js"
+      "_exports.js",
+      "_index.js"
     ]
   },
   "src/routes/+layout.js": {
@@ -141,7 +134,6 @@
     "isEntry": true,
     "imports": [
       "_start_page.svelte_svelte_type_style_lang.js",
-      "_index.js",
       "_index2.js"
     ],
     "assets": [

@@ -1,24 +1,11 @@
-import { e as escape_html } from "./escaping.js";
-import "clsx";
 import "@edwinspire/universal-fetch";
+import "clsx";
 import * as acorn from "acorn";
 import "zimmerframe";
-import { tsPlugin } from "acorn-typescript";
+import { tsPlugin } from "@sveltejs/acorn-typescript";
 import { roles, elementRoles } from "aria-query";
 import { AXObjects, elementAXObjects } from "axobject-query";
 import { getLocator } from "locate-character";
-const replacements = {
-  translate: /* @__PURE__ */ new Map([
-    [true, "yes"],
-    [false, "no"]
-  ])
-};
-function attr(name, value, is_boolean = false) {
-  if (value == null || !value && is_boolean || value === "" && name === "class") return "";
-  const normalized = name in replacements && replacements[name].get(value) || value;
-  const assignment = is_boolean ? "" : `="${escape_html(normalized, true)}"`;
-  return ` ${name}${assignment}`;
-}
 validateBaseUrl("");
 function validateBaseUrl(baseUrl) {
   try {
@@ -146,7 +133,7 @@ function options_renamed_ssr_dom(node) {
   w(node, "options_renamed_ssr_dom", `\`generate: "dom"\` and \`generate: "ssr"\` options have been renamed to "client" and "server" respectively
 https://svelte.dev/e/options_renamed_ssr_dom`);
 }
-acorn.Parser.extend(tsPlugin({ allowSatisfies: true }));
+acorn.Parser.extend(tsPlugin());
 class InternalCompileError extends Error {
   message = "";
   // ensure this property is enumerable
@@ -2461,7 +2448,7 @@ const non_interactive_roles = non_abstract_roles.filter((name) => {
     // focusable tabpanel elements are recommended if any panels in a set contain content where the first element in the panel is not focusable.
     // 'generic' is meant to have no semantic meaning.
     // 'cell' is treated as CellRole by the AXObject which is interactive, so we treat 'cell' it as interactive as well.
-    !["toolbar", "tabpanel", "generic", "cell"].includes(name) && !role?.superClass.some((classes) => classes.includes("widget"))
+    !["toolbar", "tabpanel", "generic", "cell"].includes(name) && !role?.superClass.some((classes) => classes.includes("widget") || classes.includes("window"))
   );
 }).concat(
   // The `progressbar` is descended from `widget`, but in practice, its
@@ -2692,6 +2679,3 @@ function fun(fallback) {
 function throw_error(msg) {
   options_invalid_value(null, msg);
 }
-export {
-  attr as a
-};

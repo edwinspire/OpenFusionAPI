@@ -1,7 +1,7 @@
 import { a as assets, b as base, c as app_dir, p as public_env, s as safe_public_env, o as override, r as reset, D as DEV, d as read_implementation, e as options, g as get_hooks, f as set_private_env, h as prerendering, i as set_public_env, j as set_safe_public_env, k as set_read_implementation } from "./chunks/internal.js";
-import { j as json, t as text } from "./chunks/index.js";
 import * as devalue from "devalue";
-import { m as make_trackable, d as disable_search, a as decode_params, r as readable, w as writable, n as normalize_path, b as resolve, c as decode_pathname, v as validate_layout_server_exports, e as validate_layout_exports, f as validate_page_server_exports, g as validate_page_exports, h as validate_server_exports } from "./chunks/exports.js";
+import { m as make_trackable, d as disable_search, a as decode_params, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
+import { r as readable, w as writable } from "./chunks/index.js";
 import { parse, serialize } from "cookie";
 import * as set_cookie_parser from "set-cookie-parser";
 const SVELTE_KIT_ASSETS = "/_svelte_kit_assets";
@@ -104,6 +104,61 @@ class ActionFailure {
     this.status = status;
     this.data = data;
   }
+}
+const DATA_SUFFIX = "/__data.json";
+const HTML_DATA_SUFFIX = ".html__data.json";
+function has_data_suffix(pathname) {
+  return pathname.endsWith(DATA_SUFFIX) || pathname.endsWith(HTML_DATA_SUFFIX);
+}
+function add_data_suffix(pathname) {
+  if (pathname.endsWith(".html")) return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
+  return pathname.replace(/\/$/, "") + DATA_SUFFIX;
+}
+function strip_data_suffix(pathname) {
+  if (pathname.endsWith(HTML_DATA_SUFFIX)) {
+    return pathname.slice(0, -HTML_DATA_SUFFIX.length) + ".html";
+  }
+  return pathname.slice(0, -DATA_SUFFIX.length);
+}
+const ROUTE_SUFFIX = "/__route.js";
+function has_resolution_suffix(pathname) {
+  return pathname.endsWith(ROUTE_SUFFIX);
+}
+function add_resolution_suffix(pathname) {
+  return pathname.replace(/\/$/, "") + ROUTE_SUFFIX;
+}
+function strip_resolution_suffix(pathname) {
+  return pathname.slice(0, -ROUTE_SUFFIX.length);
+}
+function json(data, init2) {
+  const body2 = JSON.stringify(data);
+  const headers2 = new Headers(init2?.headers);
+  if (!headers2.has("content-length")) {
+    headers2.set("content-length", encoder$3.encode(body2).byteLength.toString());
+  }
+  if (!headers2.has("content-type")) {
+    headers2.set("content-type", "application/json");
+  }
+  return new Response(body2, {
+    ...init2,
+    headers: headers2
+  });
+}
+const encoder$3 = new TextEncoder();
+function text(body2, init2) {
+  const headers2 = new Headers(init2?.headers);
+  if (!headers2.has("content-length")) {
+    const encoded = encoder$3.encode(body2);
+    headers2.set("content-length", encoded.byteLength.toString());
+    return new Response(encoded, {
+      ...init2,
+      headers: headers2
+    });
+  }
+  return new Response(body2, {
+    ...init2,
+    headers: headers2
+  });
 }
 function coalesce_to_error(err) {
   return err instanceof Error || err && /** @type {any} */
@@ -235,6 +290,9 @@ function stringify_uses(node) {
   if (node.uses?.url) uses.push('"url":1');
   return `"uses":{${uses.join(",")}}`;
 }
+function has_prerendered_path(manifest, pathname) {
+  return manifest._.prerendered_routes.has(pathname) || pathname.at(-1) === "/" && manifest._.prerendered_routes.has(pathname.slice(0, -1));
+}
 async function render_endpoint(event, mod, state) {
   const method = (
     /** @type {import('types').HttpMethod} */
@@ -301,31 +359,6 @@ function compact(arr) {
     /** @returns {val is NonNullable<T>} */
     (val) => val != null
   );
-}
-const DATA_SUFFIX = "/__data.json";
-const HTML_DATA_SUFFIX = ".html__data.json";
-function has_data_suffix(pathname) {
-  return pathname.endsWith(DATA_SUFFIX) || pathname.endsWith(HTML_DATA_SUFFIX);
-}
-function add_data_suffix(pathname) {
-  if (pathname.endsWith(".html")) return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
-  return pathname.replace(/\/$/, "") + DATA_SUFFIX;
-}
-function strip_data_suffix(pathname) {
-  if (pathname.endsWith(HTML_DATA_SUFFIX)) {
-    return pathname.slice(0, -HTML_DATA_SUFFIX.length) + ".html";
-  }
-  return pathname.slice(0, -DATA_SUFFIX.length);
-}
-const ROUTE_SUFFIX = "/__route.js";
-function has_resolution_suffix(pathname) {
-  return pathname.endsWith(ROUTE_SUFFIX);
-}
-function add_resolution_suffix(pathname) {
-  return pathname.replace(/\/$/, "") + ROUTE_SUFFIX;
-}
-function strip_resolution_suffix(pathname) {
-  return pathname.slice(0, -ROUTE_SUFFIX.length);
 }
 function is_action_json_request(event) {
   const accept = negotiate(event.request.headers.get("accept") ?? "*/*", [
@@ -701,7 +734,7 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
         dependency = { response, body: null };
         state.prerendering.dependencies.set(url.pathname, dependency);
       }
-    } else {
+    } else if (url.protocol === "https:" || url.protocol === "http:") {
       const mode = input instanceof Request ? input.mode : init2?.mode ?? "cors";
       if (mode === "no-cors") {
         response = new Response("", {
@@ -1359,11 +1392,29 @@ function create_server_routing_response(route, params, url, manifest) {
   });
   if (route) {
     const csr_route = generate_route_object(route, url, manifest);
-    const body2 = `export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
+    const body2 = `${create_css_import(route, url, manifest)}
+export const route = ${csr_route}; export const params = ${JSON.stringify(params)};`;
     return { response: text(body2, { headers: headers2 }), body: body2 };
   } else {
     return { response: text("", { headers: headers2 }), body: "" };
   }
+}
+function create_css_import(route, url, manifest) {
+  const { errors, layouts, leaf } = route;
+  let css = "";
+  for (const node of [...errors, ...layouts.map((l) => l?.[1]), leaf[1]]) {
+    if (typeof node !== "number") continue;
+    const node_css = manifest._.client.css?.[node];
+    for (const css_path of node_css ?? []) {
+      css += `'${assets || base}/${css_path}',`;
+    }
+  }
+  if (!css) return "";
+  return `${create_client_import(
+    /** @type {string} */
+    manifest._.client.start,
+    url
+  )}.then(x => x.load_css([${css}]));`;
 }
 const updated = {
   ...readable(false),
@@ -1421,7 +1472,14 @@ async function render_response({
         navigating: writable(null),
         updated
       },
-      constructors: await Promise.all(branch.map(({ node }) => node.component())),
+      constructors: await Promise.all(
+        branch.map(({ node }) => {
+          if (!node.component) {
+            throw new Error(`Missing +page.svelte component for route ${event.route.id}`);
+          }
+          return node.component();
+        })
+      ),
       form: form_value
     };
     let data2 = {};
@@ -1802,17 +1860,97 @@ function get_data(event, options2, nodes, csp, global) {
     ));
   }
 }
-function get_option(nodes, option) {
-  return nodes.reduce(
-    (value, node) => {
-      return (
-        /** @type {Value} TypeScript's too dumb to understand this */
-        node?.universal?.[option] ?? node?.server?.[option] ?? value
+class PageNodes {
+  data;
+  /**
+   * @param {Array<import('types').SSRNode | undefined>} nodes
+   */
+  constructor(nodes) {
+    this.data = nodes;
+  }
+  layouts() {
+    return this.data.slice(0, -1);
+  }
+  page() {
+    return this.data.at(-1);
+  }
+  validate() {
+    for (const layout of this.layouts()) {
+      if (layout) {
+        validate_layout_server_exports(
+          layout.server,
+          /** @type {string} */
+          layout.server_id
+        );
+        validate_layout_exports(
+          layout.universal,
+          /** @type {string} */
+          layout.universal_id
+        );
+      }
+    }
+    const page = this.page();
+    if (page) {
+      validate_page_server_exports(
+        page.server,
+        /** @type {string} */
+        page.server_id
       );
-    },
-    /** @type {Value | undefined} */
-    void 0
-  );
+      validate_page_exports(
+        page.universal,
+        /** @type {string} */
+        page.universal_id
+      );
+    }
+  }
+  /**
+   * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
+   * @template {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value
+   * @param {Option} option
+   * @returns {Value | undefined}
+   */
+  #get_option(option) {
+    return this.data.reduce(
+      (value, node) => {
+        return (
+          /** @type {Value} TypeScript's too dumb to understand this */
+          node?.universal?.[option] ?? node?.server?.[option] ?? value
+        );
+      },
+      /** @type {Value | undefined} */
+      void 0
+    );
+  }
+  csr() {
+    return this.#get_option("csr") ?? true;
+  }
+  ssr() {
+    return this.#get_option("ssr") ?? true;
+  }
+  prerender() {
+    return this.#get_option("prerender") ?? false;
+  }
+  trailing_slash() {
+    return this.#get_option("trailingSlash") ?? "never";
+  }
+  get_config() {
+    let current = {};
+    for (const node of this.data) {
+      if (!node?.universal?.config && !node?.server?.config) continue;
+      current = {
+        ...current,
+        ...node?.universal?.config,
+        ...node?.server?.config
+      };
+    }
+    return Object.keys(current).length ? current : void 0;
+  }
+  should_prerender_data() {
+    return this.data.some(
+      // prerender in case of trailingSlash because the client retrieves that value from the server
+      (node) => node?.server?.load || node?.server?.trailingSlash !== void 0
+    );
+  }
 }
 async function respond_with_error({
   event,
@@ -1835,8 +1973,9 @@ async function respond_with_error({
   try {
     const branch = [];
     const default_layout = await manifest._.nodes[0]();
-    const ssr = get_option([default_layout], "ssr") ?? true;
-    const csr = get_option([default_layout], "csr") ?? true;
+    const nodes = new PageNodes([default_layout]);
+    const ssr = nodes.ssr();
+    const csr = nodes.csr();
     if (ssr) {
       state.error = true;
       const server_data_promise = load_server_data({
@@ -2108,15 +2247,8 @@ function get_data_json(event, options2, nodes) {
     ));
   }
 }
-function load_page_nodes(page, manifest) {
-  return Promise.all([
-    // we use == here rather than === because [undefined] serializes as "[null]"
-    ...page.layouts.map((n) => n == void 0 ? n : manifest._.nodes[n]()),
-    manifest._.nodes[page.leaf]()
-  ]);
-}
 const MAX_DEPTH = 10;
-async function render_page(event, page, options2, manifest, state, resolve_opts) {
+async function render_page(event, page, options2, manifest, state, nodes, resolve_opts) {
   if (state.depth > MAX_DEPTH) {
     return text(`Not found: ${event.url.pathname}`, {
       status: 404
@@ -2128,10 +2260,9 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
     return handle_action_json_request(event, options2, node?.server);
   }
   try {
-    const nodes = await load_page_nodes(page, manifest);
     const leaf_node = (
       /** @type {import('types').SSRNode} */
-      nodes.at(-1)
+      nodes.page()
     );
     let status = 200;
     let action_result = void 0;
@@ -2147,12 +2278,7 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
         status = action_result.status;
       }
     }
-    const should_prerender_data = nodes.some(
-      // prerender in case of trailingSlash because the client retrieves that value from the server
-      (node) => node?.server?.load || node?.server?.trailingSlash !== void 0
-    );
-    const data_pathname = add_data_suffix(event.url.pathname);
-    const should_prerender = get_option(nodes, "prerender") ?? false;
+    const should_prerender = nodes.prerender();
     if (should_prerender) {
       const mod = leaf_node.server;
       if (mod?.actions) {
@@ -2164,15 +2290,17 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
       });
     }
     state.prerender_default = should_prerender;
+    const should_prerender_data = nodes.should_prerender_data();
+    const data_pathname = add_data_suffix(event.url.pathname);
     const fetched = [];
-    if (get_option(nodes, "ssr") === false && !(state.prerendering && should_prerender_data)) {
+    if (nodes.ssr() === false && !(state.prerendering && should_prerender_data)) {
       if (DEV && action_result && !event.request.headers.has("x-sveltekit-action")) ;
       return await render_response({
         branch: [],
         fetched,
         page_config: {
           ssr: false,
-          csr: get_option(nodes, "csr") ?? true
+          csr: nodes.csr()
         },
         status,
         error: null,
@@ -2185,7 +2313,7 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
     }
     const branch = [];
     let load_error = null;
-    const server_promises = nodes.map((node, i) => {
+    const server_promises = nodes.data.map((node, i) => {
       if (load_error) {
         throw load_error;
       }
@@ -2214,8 +2342,8 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
         }
       });
     });
-    const csr = get_option(nodes, "csr") ?? true;
-    const load_promises = nodes.map((node, i) => {
+    const csr = nodes.csr();
+    const load_promises = nodes.data.map((node, i) => {
       if (load_error) throw load_error;
       return Promise.resolve().then(async () => {
         try {
@@ -2246,8 +2374,8 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
     });
     for (const p of load_promises) p.catch(() => {
     });
-    for (let i = 0; i < nodes.length; i += 1) {
-      const node = nodes[i];
+    for (let i = 0; i < nodes.data.length; i += 1) {
+      const node = nodes.data[i];
       if (node) {
         try {
           const server_data = await server_promises[i];
@@ -2319,7 +2447,7 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
         body: data
       });
     }
-    const ssr = get_option(nodes, "ssr") ?? true;
+    const ssr = nodes.ssr();
     return await render_response({
       event,
       options: options2,
@@ -2327,7 +2455,7 @@ async function render_page(event, page, options2, manifest, state, resolve_opts)
       state,
       resolve_opts,
       page_config: {
-        csr: get_option(nodes, "csr") ?? true,
+        csr: nodes.csr(),
         ssr
       },
       status,
@@ -2354,10 +2482,10 @@ function validate_options(options2) {
     throw new Error("You must specify a `path` when setting, deleting or serializing cookies");
   }
 }
-function get_cookies(request, url, trailing_slash) {
+function get_cookies(request, url) {
   const header = request.headers.get("cookie") ?? "";
   const initial_cookies = parse(header, { decode: (value) => value });
-  const normalized_url = normalize_path(url.pathname, trailing_slash);
+  let normalized_url;
   const new_cookies = {};
   const defaults = {
     httpOnly: true,
@@ -2428,6 +2556,9 @@ function get_cookies(request, url, trailing_slash) {
       validate_options(options2);
       let path = options2.path;
       if (!options2.domain || options2.domain === url.hostname) {
+        if (!normalized_url) {
+          throw new Error("Cannot serialize cookies until after the route is determined");
+        }
         path = resolve(normalized_url, path);
       }
       return serialize(name, value, { ...defaults, ...options2, path });
@@ -2453,14 +2584,23 @@ function get_cookies(request, url, trailing_slash) {
     }
     return Object.entries(combined_cookies).map(([name, value]) => `${name}=${value}`).join("; ");
   }
+  const internal_queue = [];
   function set_internal(name, value, options2) {
+    if (!normalized_url) {
+      internal_queue.push(() => set_internal(name, value, options2));
+      return;
+    }
     let path = options2.path;
     if (!options2.domain || options2.domain === url.hostname) {
       path = resolve(normalized_url, path);
     }
     new_cookies[name] = { name, value, options: { ...options2, path } };
   }
-  return { cookies, new_cookies, get_cookie_header, set_internal };
+  function set_trailing_slash(trailing_slash) {
+    normalized_url = normalize_path(url.pathname, trailing_slash);
+    internal_queue.forEach((fn) => fn());
+  }
+  return { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash };
 }
 function domain_matches(hostname, constraint) {
   if (!constraint) return true;
@@ -2537,7 +2677,7 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
           }
           return await fetch(request);
         }
-        if (manifest._.prerendered_routes.has(decoded) || decoded.at(-1) === "/" && manifest._.prerendered_routes.has(decoded.slice(0, -1))) {
+        if (has_prerendered_path(manifest, base + decoded)) {
           return await fetch(request);
         }
         if (credentials !== "omit") {
@@ -2611,18 +2751,6 @@ function get_public_env(request) {
   }
   return new Response(body, { headers });
 }
-function get_page_config(nodes) {
-  let current = {};
-  for (const node of nodes) {
-    if (!node?.universal?.config && !node?.server?.config) continue;
-    current = {
-      ...current,
-      ...node?.universal?.config,
-      ...node?.server?.config
-    };
-  }
-  return Object.keys(current).length ? current : void 0;
-}
 const default_transform = ({ html }) => html;
 const default_filter = () => false;
 const default_preload = ({ type }) => type === "js" || type === "css";
@@ -2657,9 +2785,65 @@ async function respond(request, options2, manifest, state) {
     invalidated_data_nodes = url.searchParams.get(INVALIDATED_PARAM)?.split("").map((node) => node === "1");
     url.searchParams.delete(INVALIDATED_PARAM);
   }
+  const headers2 = {};
+  const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
+    request,
+    url
+  );
+  const event = {
+    cookies,
+    // @ts-expect-error `fetch` needs to be created after the `event` itself
+    fetch: null,
+    getClientAddress: state.getClientAddress || (() => {
+      throw new Error(
+        `${"@sveltejs/adapter-static"} does not specify getClientAddress. Please raise an issue`
+      );
+    }),
+    locals: {},
+    params: {},
+    platform: state.platform,
+    request,
+    route: { id: null },
+    setHeaders: (new_headers) => {
+      for (const key2 in new_headers) {
+        const lower = key2.toLowerCase();
+        const value = new_headers[key2];
+        if (lower === "set-cookie") {
+          throw new Error(
+            "Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies"
+          );
+        } else if (lower in headers2) {
+          throw new Error(`"${key2}" header is already set`);
+        } else {
+          headers2[lower] = value;
+          if (state.prerendering && lower === "cache-control") {
+            state.prerendering.cache = /** @type {string} */
+            value;
+          }
+        }
+      }
+    },
+    url,
+    isDataRequest: is_data_request,
+    isSubRequest: state.depth > 0
+  };
+  event.fetch = create_fetch({
+    event,
+    options: options2,
+    manifest,
+    state,
+    get_cookie_header,
+    set_internal
+  });
+  if (state.emulator?.platform) {
+    event.platform = await state.emulator.platform({
+      config: {},
+      prerender: !!state.prerendering?.fallback
+    });
+  }
   let resolved_path;
   try {
-    resolved_path = options2.hooks.reroute({ url: new URL(url) }) ?? url.pathname;
+    resolved_path = await options2.hooks.reroute({ url: new URL(url), fetch: event.fetch }) ?? url.pathname;
   } catch {
     return text("Internal Server Error", {
       status: 500
@@ -2670,8 +2854,22 @@ async function respond(request, options2, manifest, state) {
   } catch {
     return text("Malformed URI", { status: 400 });
   }
+  if (resolved_path !== url.pathname && !state.prerendering?.fallback && has_prerendered_path(manifest, resolved_path)) {
+    const url2 = new URL(request.url);
+    url2.pathname = is_data_request ? add_data_suffix(resolved_path) : is_route_resolution_request ? add_resolution_suffix(resolved_path) : resolved_path;
+    const response = await fetch(url2, request);
+    const headers22 = new Headers(response.headers);
+    if (headers22.has("content-encoding")) {
+      headers22.delete("content-encoding");
+      headers22.delete("content-length");
+    }
+    return new Response(response.body, {
+      headers: headers22,
+      status: response.status,
+      statusText: response.statusText
+    });
+  }
   let route = null;
-  let params = {};
   if (base && !state.prerendering?.fallback) {
     if (!resolved_path.startsWith(base)) {
       return text("Not found", { status: 404 });
@@ -2697,72 +2895,33 @@ async function respond(request, options2, manifest, state) {
       const matched = exec(match, candidate.params, matchers);
       if (matched) {
         route = candidate;
-        params = decode_params(matched);
+        event.route = { id: route.id };
+        event.params = decode_params(matched);
         break;
       }
     }
   }
-  let trailing_slash = void 0;
-  const headers2 = {};
-  let cookies_to_add = {};
-  const event = {
-    // @ts-expect-error `cookies` and `fetch` need to be created after the `event` itself
-    cookies: null,
-    // @ts-expect-error
-    fetch: null,
-    getClientAddress: state.getClientAddress || (() => {
-      throw new Error(
-        `${"@sveltejs/adapter-static"} does not specify getClientAddress. Please raise an issue`
-      );
-    }),
-    locals: {},
-    params,
-    platform: state.platform,
-    request,
-    route: { id: route?.id ?? null },
-    setHeaders: (new_headers) => {
-      for (const key2 in new_headers) {
-        const lower = key2.toLowerCase();
-        const value = new_headers[key2];
-        if (lower === "set-cookie") {
-          throw new Error(
-            "Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies"
-          );
-        } else if (lower in headers2) {
-          throw new Error(`"${key2}" header is already set`);
-        } else {
-          headers2[lower] = value;
-          if (state.prerendering && lower === "cache-control") {
-            state.prerendering.cache = /** @type {string} */
-            value;
-          }
-        }
-      }
-    },
-    url,
-    isDataRequest: is_data_request,
-    isSubRequest: state.depth > 0
-  };
   let resolve_opts = {
     transformPageChunk: default_transform,
     filterSerializedResponseHeaders: default_filter,
     preload: default_preload
   };
+  let trailing_slash = "never";
   try {
+    const page_nodes = route?.page ? new PageNodes(await load_page_nodes(route.page, manifest)) : void 0;
     if (route) {
       if (url.pathname === base || url.pathname === base + "/") {
         trailing_slash = "always";
-      } else if (route.page) {
-        const nodes = await load_page_nodes(route.page, manifest);
+      } else if (page_nodes) {
         if (DEV) ;
-        trailing_slash = get_option(nodes, "trailingSlash");
+        trailing_slash = page_nodes.trailing_slash();
       } else if (route.endpoint) {
         const node = await route.endpoint();
-        trailing_slash = node.trailingSlash;
+        trailing_slash = node.trailingSlash ?? "never";
         if (DEV) ;
       }
       if (!is_data_request) {
-        const normalized = normalize_path(url.pathname, trailing_slash ?? "never");
+        const normalized = normalize_path(url.pathname, trailing_slash);
         if (normalized !== url.pathname && !state.prerendering?.fallback) {
           return new Response(void 0, {
             status: 308,
@@ -2783,10 +2942,9 @@ async function respond(request, options2, manifest, state) {
           const node = await route.endpoint();
           config = node.config ?? config;
           prerender = node.prerender ?? prerender;
-        } else if (route.page) {
-          const nodes = await load_page_nodes(route.page, manifest);
-          config = get_page_config(nodes) ?? config;
-          prerender = get_option(nodes, "prerender") ?? false;
+        } else if (page_nodes) {
+          config = page_nodes.get_config() ?? config;
+          prerender = page_nodes.prerender();
         }
         if (state.before_handle) {
           state.before_handle(event, config, prerender);
@@ -2795,31 +2953,12 @@ async function respond(request, options2, manifest, state) {
           event.platform = await state.emulator.platform({ config, prerender });
         }
       }
-    } else if (state.emulator?.platform) {
-      event.platform = await state.emulator.platform({
-        config: {},
-        prerender: !!state.prerendering?.fallback
-      });
     }
-    const { cookies, new_cookies, get_cookie_header, set_internal } = get_cookies(
-      request,
-      url,
-      trailing_slash ?? "never"
-    );
-    cookies_to_add = new_cookies;
-    event.cookies = cookies;
-    event.fetch = create_fetch({
-      event,
-      options: options2,
-      manifest,
-      state,
-      get_cookie_header,
-      set_internal
-    });
+    set_trailing_slash(trailing_slash);
     if (state.prerendering && !state.prerendering.fallback) disable_search(url);
     const response = await options2.hooks.handle({
       event,
-      resolve: (event2, opts) => resolve2(event2, opts).then((response2) => {
+      resolve: (event2, opts) => resolve2(event2, page_nodes, opts).then((response2) => {
         for (const key2 in headers2) {
           const value = headers2[key2];
           response2.headers.set(
@@ -2828,7 +2967,7 @@ async function respond(request, options2, manifest, state) {
             value
           );
         }
-        add_cookies_to_headers(response2.headers, Object.values(cookies_to_add));
+        add_cookies_to_headers(response2.headers, Object.values(new_cookies));
         if (state.prerendering && event2.route.id !== null) {
           response2.headers.set("x-sveltekit-routeid", encodeURI(event2.route.id));
         }
@@ -2877,12 +3016,12 @@ async function respond(request, options2, manifest, state) {
   } catch (e) {
     if (e instanceof Redirect) {
       const response = is_data_request ? redirect_json_response(e) : route?.page && is_action_json_request(event) ? action_json_redirect(e) : redirect_response(e.status, e.location);
-      add_cookies_to_headers(response.headers, Object.values(cookies_to_add));
+      add_cookies_to_headers(response.headers, Object.values(new_cookies));
       return response;
     }
     return await handle_fatal_error(event, options2, e);
   }
-  async function resolve2(event2, opts) {
+  async function resolve2(event2, page_nodes, opts) {
     try {
       if (opts) {
         resolve_opts = {
@@ -2919,13 +3058,23 @@ async function respond(request, options2, manifest, state) {
             manifest,
             state,
             invalidated_data_nodes,
-            trailing_slash ?? "never"
+            trailing_slash
           );
         } else if (route.endpoint && (!route.page || is_endpoint_request(event2))) {
           response = await render_endpoint(event2, await route.endpoint(), state);
         } else if (route.page) {
-          if (page_methods.has(method)) {
-            response = await render_page(event2, route.page, options2, manifest, state, resolve_opts);
+          if (!page_nodes) {
+            throw new Error("page_nodes not found. This should never happen");
+          } else if (page_methods.has(method)) {
+            response = await render_page(
+              event2,
+              route.page,
+              options2,
+              manifest,
+              state,
+              page_nodes,
+              resolve_opts
+            );
           } else {
             const allowed_methods2 = new Set(allowed_page_methods);
             const node = await manifest._.nodes[route.page.leaf]();
@@ -2952,7 +3101,7 @@ async function respond(request, options2, manifest, state) {
             }
           }
         } else {
-          throw new Error("This should never happen");
+          throw new Error("Route is neither page nor endpoint. This should never happen");
         }
         if (request.method === "GET" && route.page && route.endpoint) {
           const vary = response.headers.get("vary")?.split(",")?.map((v) => v.trim().toLowerCase());
@@ -3003,6 +3152,13 @@ async function respond(request, options2, manifest, state) {
       };
     }
   }
+}
+function load_page_nodes(page, manifest) {
+  return Promise.all([
+    // we use == here rather than === because [undefined] serializes as "[null]"
+    ...page.layouts.map((n) => n == void 0 ? n : manifest._.nodes[n]()),
+    manifest._.nodes[page.leaf]()
+  ]);
 }
 function filter_private_env(env, { public_prefix, private_prefix }) {
   return Object.fromEntries(

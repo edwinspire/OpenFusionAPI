@@ -1,5 +1,5 @@
 import { a as safe_equals, e as equals, g as get_descriptor, r as run_all, i as index_of, d as define_property, b as is_array, c as array_from } from "./equality.js";
-import { H as HYDRATION_ERROR, b as HYDRATION_START, c as HYDRATION_END, r as render, a as push$1, d as setContext, p as pop$1 } from "./index2.js";
+import { H as HYDRATION_ERROR, j as HYDRATION_START, k as HYDRATION_END, r as render, e as push$1, l as setContext, p as pop$1 } from "./index2.js";
 import "clsx";
 const DEV = false;
 let base = "";
@@ -77,15 +77,19 @@ function set_component_context(context) {
   component_context = context;
 }
 function push(props, runes = false, fn) {
-  component_context = {
+  var ctx = component_context = {
     p: component_context,
     c: null,
+    d: false,
     e: null,
     m: false,
     s: props,
     x: null,
     l: null
   };
+  teardown(() => {
+    ctx.d = true;
+  });
 }
 function pop(component) {
   const context_stack_item = component_context;
@@ -118,6 +122,7 @@ function pop(component) {
 function is_runes() {
   return true;
 }
+const old_values = /* @__PURE__ */ new Map();
 function source(v, stack) {
   var signal = {
     f: 0,
@@ -148,7 +153,12 @@ function set(source2, value) {
 }
 function internal_set(source2, value) {
   if (!source2.equals(value)) {
-    source2.v;
+    var old_value = source2.v;
+    if (is_destroying_effect) {
+      old_values.set(source2, value);
+    } else {
+      old_values.set(source2, old_value);
+    }
     source2.v = value;
     source2.wv = increment_write_version();
     mark_reactions(source2, DIRTY);
@@ -220,7 +230,7 @@ function init_operations() {
   element_prototype.__click = void 0;
   element_prototype.__className = void 0;
   element_prototype.__attributes = null;
-  element_prototype.__styles = null;
+  element_prototype.__style = void 0;
   element_prototype.__e = void 0;
   Text.prototype.__t = void 0;
 }
@@ -297,8 +307,7 @@ function push_effect(effect2, parent_effect) {
   }
 }
 function create_effect(type, fn, sync, push2 = true) {
-  var is_root = (type & ROOT_EFFECT) !== 0;
-  var parent_effect = active_effect;
+  var parent = active_effect;
   var effect2 = {
     ctx: component_context,
     deps: null,
@@ -309,7 +318,7 @@ function create_effect(type, fn, sync, push2 = true) {
     fn,
     last: null,
     next: null,
-    parent: is_root ? null : parent_effect,
+    parent,
     prev: null,
     teardown: null,
     transitions: null,
@@ -327,9 +336,9 @@ function create_effect(type, fn, sync, push2 = true) {
     schedule_effect(effect2);
   }
   var inert = sync && effect2.deps === null && effect2.first === null && effect2.nodes_start === null && effect2.teardown === null && (effect2.f & (EFFECT_HAS_DERIVED | BOUNDARY_EFFECT)) === 0;
-  if (!inert && !is_root && push2) {
-    if (parent_effect !== null) {
-      push_effect(effect2, parent_effect);
+  if (!inert && push2) {
+    if (parent !== null) {
+      push_effect(effect2, parent);
     }
     if (active_reaction !== null && (active_reaction.f & DERIVED) !== 0) {
       var derived = (
@@ -339,6 +348,12 @@ function create_effect(type, fn, sync, push2 = true) {
       (derived.effects ??= []).push(effect2);
     }
   }
+  return effect2;
+}
+function teardown(fn) {
+  const effect2 = create_effect(RENDER_EFFECT, null, false);
+  set_signal_status(effect2, CLEAN);
+  effect2.teardown = fn;
   return effect2;
 }
 function component_root(fn) {
@@ -364,13 +379,16 @@ function branch(fn, push2 = true) {
   return create_effect(RENDER_EFFECT | BRANCH_EFFECT, fn, true, push2);
 }
 function execute_effect_teardown(effect2) {
-  var teardown = effect2.teardown;
-  if (teardown !== null) {
+  var teardown2 = effect2.teardown;
+  if (teardown2 !== null) {
+    const previously_destroying_effect = is_destroying_effect;
     const previous_reaction = active_reaction;
+    set_is_destroying_effect(true);
     set_active_reaction(null);
     try {
-      teardown.call(null);
+      teardown2.call(null);
     } finally {
+      set_is_destroying_effect(previously_destroying_effect);
       set_active_reaction(previous_reaction);
     }
   }
@@ -380,7 +398,11 @@ function destroy_effect_children(signal, remove_dom = false) {
   signal.first = signal.last = null;
   while (effect2 !== null) {
     var next = effect2.next;
-    destroy_effect(effect2, remove_dom);
+    if ((effect2.f & ROOT_EFFECT) !== 0) {
+      effect2.parent = null;
+    } else {
+      destroy_effect(effect2, remove_dom);
+    }
     effect2 = next;
   }
 }
@@ -497,6 +519,10 @@ let is_throwing_error = false;
 let is_flushing = false;
 let last_scheduled_effect = null;
 let is_updating_effect = false;
+let is_destroying_effect = false;
+function set_is_destroying_effect(value) {
+  is_destroying_effect = value;
+}
 let queued_root_effects = [];
 let dev_effect_stack = [];
 let active_reaction = null;
@@ -696,6 +722,14 @@ function update_reaction(reaction) {
     }
     if (previous_reaction !== null) {
       read_version++;
+      if (untracked_writes !== null) {
+        if (previous_untracked_writes === null) {
+          previous_untracked_writes = untracked_writes;
+        } else {
+          previous_untracked_writes.push(.../** @type {Source[]} */
+          untracked_writes);
+        }
+      }
     }
     return result;
   } finally {
@@ -767,8 +801,8 @@ function update_effect(effect2) {
       destroy_effect_children(effect2);
     }
     execute_effect_teardown(effect2);
-    var teardown = update_reaction(effect2);
-    effect2.teardown = typeof teardown === "function" ? teardown : null;
+    var teardown2 = update_reaction(effect2);
+    effect2.teardown = typeof teardown2 === "function" ? teardown2 : null;
     effect2.wv = write_version;
     var deps = effect2.deps;
     var dep;
@@ -795,8 +829,10 @@ function infinite_loop_guard() {
   }
 }
 function flush_queued_root_effects() {
+  var was_updating_effect = is_updating_effect;
   try {
     var flush_count = 0;
+    is_updating_effect = true;
     while (queued_root_effects.length > 0) {
       if (flush_count++ > 1e3) {
         infinite_loop_guard();
@@ -805,17 +841,15 @@ function flush_queued_root_effects() {
       var length = root_effects.length;
       queued_root_effects = [];
       for (var i = 0; i < length; i++) {
-        var root2 = root_effects[i];
-        if ((root2.f & CLEAN) === 0) {
-          root2.f ^= CLEAN;
-        }
-        var collected_effects = process_effects(root2);
+        var collected_effects = process_effects(root_effects[i]);
         flush_queued_effects(collected_effects);
       }
     }
   } finally {
     is_flushing = false;
+    is_updating_effect = was_updating_effect;
     last_scheduled_effect = null;
+    old_values.clear();
   }
 }
 function flush_queued_effects(effects) {
@@ -857,53 +891,43 @@ function schedule_effect(signal) {
   }
   queued_root_effects.push(effect2);
 }
-function process_effects(effect2) {
+function process_effects(root2) {
   var effects = [];
-  var current_effect = effect2.first;
-  main_loop: while (current_effect !== null) {
-    var flags = current_effect.f;
-    var is_branch = (flags & BRANCH_EFFECT) !== 0;
+  var effect2 = root2;
+  while (effect2 !== null) {
+    var flags = effect2.f;
+    var is_branch = (flags & (BRANCH_EFFECT | ROOT_EFFECT)) !== 0;
     var is_skippable_branch = is_branch && (flags & CLEAN) !== 0;
-    var sibling = current_effect.next;
     if (!is_skippable_branch && (flags & INERT) === 0) {
       if ((flags & EFFECT) !== 0) {
-        effects.push(current_effect);
+        effects.push(effect2);
       } else if (is_branch) {
-        current_effect.f ^= CLEAN;
+        effect2.f ^= CLEAN;
       } else {
         var previous_active_reaction = active_reaction;
         try {
-          active_reaction = current_effect;
-          if (check_dirtiness(current_effect)) {
-            update_effect(current_effect);
+          active_reaction = effect2;
+          if (check_dirtiness(effect2)) {
+            update_effect(effect2);
           }
         } catch (error) {
-          handle_error(error, current_effect, null, current_effect.ctx);
+          handle_error(error, effect2, null, effect2.ctx);
         } finally {
           active_reaction = previous_active_reaction;
         }
       }
-      var child = current_effect.first;
+      var child = effect2.first;
       if (child !== null) {
-        current_effect = child;
+        effect2 = child;
         continue;
       }
     }
-    if (sibling === null) {
-      let parent = current_effect.parent;
-      while (parent !== null) {
-        if (effect2 === parent) {
-          break main_loop;
-        }
-        var parent_sibling = parent.next;
-        if (parent_sibling !== null) {
-          current_effect = parent_sibling;
-          continue main_loop;
-        }
-        parent = parent.parent;
-      }
+    var parent = effect2.parent;
+    effect2 = effect2.next;
+    while (effect2 === null && parent !== null) {
+      effect2 = parent.next;
+      parent = parent.parent;
     }
-    current_effect = sibling;
   }
   return effects;
 }
@@ -956,6 +980,9 @@ function get(signal) {
     if (check_dirtiness(derived)) {
       update_derived(derived);
     }
+  }
+  if (is_destroying_effect && old_values.has(signal)) {
+    return old_values.get(signal);
   }
   return signal.v;
 }
@@ -1019,7 +1046,7 @@ function handle_event_propagation(event) {
       current_target.host || null;
       try {
         var delegated = current_target["__" + event_name];
-        if (delegated !== void 0 && (!/** @type {any} */
+        if (delegated != null && (!/** @type {any} */
         current_target.disabled || // DOM could've been updated already by the time this is reached, so we check this as well
         // -> the target could not have been disabled because it emits the event in the first place
         event.target === current_target)) {
@@ -1467,7 +1494,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "1su8gz7"
+  version_hash: "1v9tmeu"
 };
 async function get_hooks() {
   let handle;

@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     nano \
     wget \
     curl \
+    iputils-ping \
     logrotate \
     bash && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -36,8 +37,8 @@ RUN npm install pm2 -g
 
 # Instalar el módulo de rotación de logs de PM2
 RUN pm2 install pm2-logrotate \
-    && pm2 set pm2-logrotate:max_days 1 \
-    && pm2 set pm2-logrotate:retain 1
+    && pm2 set pm2-logrotate:max_days 2 \
+    && pm2 set pm2-logrotate:retain 2
 
 # Ejecutar la compilación de la aplicación
 RUN npm run build
