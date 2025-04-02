@@ -2,6 +2,7 @@ import "clsx";
 const HYDRATION_START = "[";
 const HYDRATION_END = "]";
 const HYDRATION_ERROR = {};
+const UNINITIALIZED = Symbol();
 function lifecycle_outside_component(name) {
   {
     throw new Error(`https://svelte.dev/e/lifecycle_outside_component`);
@@ -181,6 +182,7 @@ function ensure_array_like(array_like_or_iterator) {
 }
 export {
   HYDRATION_ERROR as H,
+  UNINITIALIZED as U,
   attr as a,
   attr_style as b,
   attr_class as c,

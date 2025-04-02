@@ -3,6 +3,10 @@ var index_of = Array.prototype.indexOf;
 var array_from = Array.from;
 var define_property = Object.defineProperty;
 var get_descriptor = Object.getOwnPropertyDescriptor;
+var object_prototype = Object.prototype;
+var array_prototype = Array.prototype;
+var get_prototype_of = Object.getPrototypeOf;
+var is_extensible = Object.isExtensible;
 const noop = () => {
 };
 function run_all(arr) {
@@ -20,14 +24,18 @@ function safe_equals(value) {
   return !safe_not_equal(value, this.v);
 }
 export {
-  safe_equals as a,
-  is_array as b,
-  array_from as c,
-  define_property as d,
+  array_prototype as a,
+  get_prototype_of as b,
+  safe_equals as c,
+  is_extensible as d,
   equals as e,
+  index_of as f,
   get_descriptor as g,
-  index_of as i,
+  define_property as h,
+  is_array as i,
+  array_from as j,
   noop as n,
+  object_prototype as o,
   run_all as r,
   safe_not_equal as s
 };

@@ -1,4 +1,4 @@
-import { a as assets, b as base, c as app_dir, p as public_env, s as safe_public_env, o as override, r as reset, D as DEV, d as read_implementation, e as options, g as get_hooks, f as set_private_env, h as prerendering, i as set_public_env, j as set_safe_public_env, k as set_read_implementation } from "./chunks/internal.js";
+import { D as DEV, a as assets, b as base, c as app_dir, p as public_env, s as safe_public_env, o as override, r as reset, d as read_implementation, e as options, g as get_hooks, f as set_private_env, h as prerendering, i as set_public_env, j as set_safe_public_env, k as set_read_implementation } from "./chunks/internal.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
 import { r as readable, w as writable } from "./chunks/index.js";
@@ -53,6 +53,18 @@ function is_form_content_type(request) {
     "multipart/form-data",
     "text/plain"
   );
+}
+let request_event = null;
+let als;
+import("node:async_hooks").then((hooks) => als = new hooks.AsyncLocalStorage()).catch(() => {
+});
+function with_event(event, fn) {
+  try {
+    request_event = event;
+    return als ? als.run(event, fn) : fn();
+  } finally {
+    request_event = null;
+  }
 }
 class HttpError {
   /**
@@ -309,7 +321,7 @@ async function render_endpoint(event, mod, state) {
   if (prerender && (mod.POST || mod.PATCH || mod.PUT || mod.DELETE)) {
     throw new Error("Cannot prerender endpoints that have mutative methods");
   }
-  if (state.prerendering && !prerender) {
+  if (state.prerendering && !state.prerendering.inside_reroute && !prerender) {
     if (state.depth > 0) {
       throw new Error(`${event.route.id} is not prerenderable`);
     } else {
@@ -317,22 +329,37 @@ async function render_endpoint(event, mod, state) {
     }
   }
   try {
-    let response = await handler(
-      /** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */
-      event
+    const response = await with_event(
+      event,
+      () => handler(
+        /** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */
+        event
+      )
     );
     if (!(response instanceof Response)) {
       throw new Error(
         `Invalid response from route ${event.url.pathname}: handler should return a Response object`
       );
     }
-    if (state.prerendering) {
-      response = new Response(response.body, {
+    if (state.prerendering && (!state.prerendering.inside_reroute || prerender)) {
+      const cloned = new Response(response.clone().body, {
         status: response.status,
         statusText: response.statusText,
         headers: new Headers(response.headers)
       });
-      response.headers.set("x-sveltekit-prerender", String(prerender));
+      cloned.headers.set("x-sveltekit-prerender", String(prerender));
+      if (state.prerendering.inside_reroute && prerender) {
+        cloned.headers.set(
+          "x-sveltekit-routeid",
+          encodeURI(
+            /** @type {string} */
+            event.route.id
+          )
+        );
+        state.prerendering.dependencies.set(event.url.pathname, { response: cloned, body: null });
+      } else {
+        return cloned;
+      }
     }
     return response;
   } catch (e) {
@@ -535,7 +562,7 @@ async function call_action(event, actions) {
       )}`
     );
   }
-  return action(event);
+  return with_event(event, () => action(event));
 }
 function validate_action_return(data) {
   if (data instanceof Redirect) {
@@ -583,6 +610,14 @@ function try_serialize(data, fn, route_id) {
     throw error;
   }
 }
+function validate_depends(route_id, dep) {
+  const match = /^(moz-icon|view-source|jar):/.exec(dep);
+  if (match) {
+    console.warn(
+      `${route_id}: Calling \`depends('${dep}')\` will throw an error in Firefox because \`${match[1]}\` is a special URI scheme`
+    );
+  }
+}
 const INVALIDATED_PARAM = "x-sveltekit-invalidated";
 const TRAILING_SLASH_PARAM = "x-sveltekit-trailing-slash";
 function b64_encode(buffer) {
@@ -619,6 +654,11 @@ async function load_server_data({ event, state, node, parent }) {
     url: false,
     search_params: /* @__PURE__ */ new Set()
   };
+  const load = node.server.load;
+  const slash = node.server.trailingSlash;
+  if (!load) {
+    return { type: "data", data: null, uses, slash };
+  }
   const url = make_trackable(
     event.url,
     () => {
@@ -635,62 +675,72 @@ async function load_server_data({ event, state, node, parent }) {
   if (state.prerendering) {
     disable_search(url);
   }
-  const result = await node.server.load?.call(null, {
-    ...event,
-    fetch: (info, init2) => {
-      new URL(info instanceof Request ? info.url : info, event.url);
-      return event.fetch(info, init2);
-    },
-    /** @param {string[]} deps */
-    depends: (...deps) => {
-      for (const dep of deps) {
-        const { href } = new URL(dep, event.url);
-        uses.dependencies.add(href);
-      }
-    },
-    params: new Proxy(event.params, {
-      get: (target, key2) => {
-        if (is_tracking) {
-          uses.params.add(key2);
+  let done = false;
+  const result = await with_event(
+    event,
+    () => load.call(null, {
+      ...event,
+      fetch: (info, init2) => {
+        const url2 = new URL(info instanceof Request ? info.url : info, event.url);
+        if (DEV && done && !uses.dependencies.has(url2.href)) ;
+        return event.fetch(info, init2);
+      },
+      /** @param {string[]} deps */
+      depends: (...deps) => {
+        for (const dep of deps) {
+          const { href } = new URL(dep, event.url);
+          if (DEV) ;
+          uses.dependencies.add(href);
         }
-        return target[
-          /** @type {string} */
-          key2
-        ];
-      }
-    }),
-    parent: async () => {
-      if (is_tracking) {
-        uses.parent = true;
-      }
-      return parent();
-    },
-    route: new Proxy(event.route, {
-      get: (target, key2) => {
-        if (is_tracking) {
-          uses.route = true;
+      },
+      params: new Proxy(event.params, {
+        get: (target, key2) => {
+          if (DEV && done && typeof key2 === "string" && !uses.params.has(key2)) ;
+          if (is_tracking) {
+            uses.params.add(key2);
+          }
+          return target[
+            /** @type {string} */
+            key2
+          ];
         }
-        return target[
-          /** @type {'id'} */
-          key2
-        ];
+      }),
+      parent: async () => {
+        if (DEV && done && !uses.parent) ;
+        if (is_tracking) {
+          uses.parent = true;
+        }
+        return parent();
+      },
+      route: new Proxy(event.route, {
+        get: (target, key2) => {
+          if (DEV && done && typeof key2 === "string" && !uses.route) ;
+          if (is_tracking) {
+            uses.route = true;
+          }
+          return target[
+            /** @type {'id'} */
+            key2
+          ];
+        }
+      }),
+      url,
+      untrack(fn) {
+        is_tracking = false;
+        try {
+          return fn();
+        } finally {
+          is_tracking = true;
+        }
       }
-    }),
-    url,
-    untrack(fn) {
-      is_tracking = false;
-      try {
-        return fn();
-      } finally {
-        is_tracking = true;
-      }
-    }
-  });
+    })
+  );
+  done = true;
   return {
     type: "data",
     data: result ?? null,
     uses,
-    slash: node.server.trailingSlash
+    slash
   };
 }
 async function load_data({
@@ -2842,12 +2892,16 @@ async function respond(request, options2, manifest, state) {
     });
   }
   let resolved_path;
+  const prerendering_reroute_state = state.prerendering?.inside_reroute;
   try {
+    if (state.prerendering) state.prerendering.inside_reroute = true;
     resolved_path = await options2.hooks.reroute({ url: new URL(url), fetch: event.fetch }) ?? url.pathname;
   } catch {
     return text("Internal Server Error", {
       status: 500
     });
+  } finally {
+    if (state.prerendering) state.prerendering.inside_reroute = prerendering_reroute_state;
   }
   try {
     resolved_path = decode_pathname(resolved_path);
@@ -2955,25 +3009,37 @@ async function respond(request, options2, manifest, state) {
       }
     }
     set_trailing_slash(trailing_slash);
-    if (state.prerendering && !state.prerendering.fallback) disable_search(url);
-    const response = await options2.hooks.handle({
+    if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
+      disable_search(url);
+    }
+    const response = await with_event(
       event,
-      resolve: (event2, opts) => resolve2(event2, page_nodes, opts).then((response2) => {
-        for (const key2 in headers2) {
-          const value = headers2[key2];
-          response2.headers.set(
-            key2,
-            /** @type {string} */
-            value
-          );
-        }
-        add_cookies_to_headers(response2.headers, Object.values(new_cookies));
-        if (state.prerendering && event2.route.id !== null) {
-          response2.headers.set("x-sveltekit-routeid", encodeURI(event2.route.id));
-        }
-        return response2;
+      () => options2.hooks.handle({
+        event,
+        resolve: (event2, opts) => (
+          // counter-intuitively, we need to clear the event, so that it's not
+          // e.g. accessible when loading modules needed to handle the request
+          with_event(
+            null,
+            () => resolve2(event2, page_nodes, opts).then((response2) => {
+              for (const key2 in headers2) {
+                const value = headers2[key2];
+                response2.headers.set(
+                  key2,
+                  /** @type {string} */
+                  value
+                );
+              }
+              add_cookies_to_headers(response2.headers, Object.values(new_cookies));
+              if (state.prerendering && event2.route.id !== null) {
+                response2.headers.set("x-sveltekit-routeid", encodeURI(event2.route.id));
+              }
+              return response2;
+            })
+          )
+        )
       })
-    });
+    );
     if (response.status === 200 && response.headers.has("etag")) {
       let if_none_match_value = request.headers.get("if-none-match");
       if (if_none_match_value?.startsWith('W/"')) {

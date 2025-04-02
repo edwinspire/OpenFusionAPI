@@ -1,5 +1,5 @@
-import { a as safe_equals, e as equals, g as get_descriptor, r as run_all, i as index_of, d as define_property, b as is_array, c as array_from } from "./equality.js";
-import { H as HYDRATION_ERROR, j as HYDRATION_START, k as HYDRATION_END, r as render, e as push$1, l as setContext, p as pop$1 } from "./index2.js";
+import { o as object_prototype, a as array_prototype, g as get_descriptor, b as get_prototype_of, i as is_array, c as safe_equals, e as equals, d as is_extensible, r as run_all, f as index_of, h as define_property, j as array_from } from "./equality.js";
+import { U as UNINITIALIZED, H as HYDRATION_ERROR, j as HYDRATION_START, k as HYDRATION_END, r as render, e as push$1, l as setContext, p as pop$1 } from "./index2.js";
 import "clsx";
 const DEV = false;
 let base = "";
@@ -45,6 +45,8 @@ const EFFECT_RAN = 1 << 15;
 const EFFECT_TRANSPARENT = 1 << 16;
 const HEAD_EFFECT = 1 << 19;
 const EFFECT_HAS_DERIVED = 1 << 20;
+const EFFECT_IS_UPDATING = 1 << 21;
+const STATE_SYMBOL = Symbol("$state");
 const LEGACY_PROPS = Symbol("legacy props");
 function effect_update_depth_exceeded() {
   {
@@ -56,9 +58,14 @@ function hydration_failed() {
     throw new Error(`https://svelte.dev/e/hydration_failed`);
   }
 }
-function state_unsafe_local_read() {
+function state_descriptors_fixed() {
   {
-    throw new Error(`https://svelte.dev/e/state_unsafe_local_read`);
+    throw new Error(`https://svelte.dev/e/state_descriptors_fixed`);
+  }
+}
+function state_prototype_fixed() {
+  {
+    throw new Error(`https://svelte.dev/e/state_prototype_fixed`);
   }
 }
 function state_unsafe_mutation() {
@@ -122,6 +129,204 @@ function pop(component) {
 function is_runes() {
   return true;
 }
+function proxy(value, prev) {
+  if (typeof value !== "object" || value === null || STATE_SYMBOL in value) {
+    return value;
+  }
+  const prototype = get_prototype_of(value);
+  if (prototype !== object_prototype && prototype !== array_prototype) {
+    return value;
+  }
+  var sources = /* @__PURE__ */ new Map();
+  var is_proxied_array = is_array(value);
+  var version = state(0);
+  var reaction = active_reaction;
+  var with_parent = (fn) => {
+    var previous_reaction = active_reaction;
+    set_active_reaction(reaction);
+    var result;
+    {
+      result = fn();
+    }
+    set_active_reaction(previous_reaction);
+    return result;
+  };
+  if (is_proxied_array) {
+    sources.set("length", state(
+      /** @type {any[]} */
+      value.length
+    ));
+  }
+  return new Proxy(
+    /** @type {any} */
+    value,
+    {
+      defineProperty(_, prop, descriptor) {
+        if (!("value" in descriptor) || descriptor.configurable === false || descriptor.enumerable === false || descriptor.writable === false) {
+          state_descriptors_fixed();
+        }
+        var s = sources.get(prop);
+        if (s === void 0) {
+          s = with_parent(() => state(descriptor.value));
+          sources.set(prop, s);
+        } else {
+          set(
+            s,
+            with_parent(() => proxy(descriptor.value))
+          );
+        }
+        return true;
+      },
+      deleteProperty(target, prop) {
+        var s = sources.get(prop);
+        if (s === void 0) {
+          if (prop in target) {
+            sources.set(
+              prop,
+              with_parent(() => state(UNINITIALIZED))
+            );
+          }
+        } else {
+          if (is_proxied_array && typeof prop === "string") {
+            var ls = (
+              /** @type {Source<number>} */
+              sources.get("length")
+            );
+            var n = Number(prop);
+            if (Number.isInteger(n) && n < ls.v) {
+              set(ls, n);
+            }
+          }
+          set(s, UNINITIALIZED);
+          update_version(version);
+        }
+        return true;
+      },
+      get(target, prop, receiver) {
+        if (prop === STATE_SYMBOL) {
+          return value;
+        }
+        var s = sources.get(prop);
+        var exists = prop in target;
+        if (s === void 0 && (!exists || get_descriptor(target, prop)?.writable)) {
+          s = with_parent(() => state(proxy(exists ? target[prop] : UNINITIALIZED)));
+          sources.set(prop, s);
+        }
+        if (s !== void 0) {
+          var v = get(s);
+          return v === UNINITIALIZED ? void 0 : v;
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+      getOwnPropertyDescriptor(target, prop) {
+        var descriptor = Reflect.getOwnPropertyDescriptor(target, prop);
+        if (descriptor && "value" in descriptor) {
+          var s = sources.get(prop);
+          if (s) descriptor.value = get(s);
+        } else if (descriptor === void 0) {
+          var source2 = sources.get(prop);
+          var value2 = source2?.v;
+          if (source2 !== void 0 && value2 !== UNINITIALIZED) {
+            return {
+              enumerable: true,
+              configurable: true,
+              value: value2,
+              writable: true
+            };
+          }
+        }
+        return descriptor;
+      },
+      has(target, prop) {
+        if (prop === STATE_SYMBOL) {
+          return true;
+        }
+        var s = sources.get(prop);
+        var has = s !== void 0 && s.v !== UNINITIALIZED || Reflect.has(target, prop);
+        if (s !== void 0 || active_effect !== null && (!has || get_descriptor(target, prop)?.writable)) {
+          if (s === void 0) {
+            s = with_parent(() => state(has ? proxy(target[prop]) : UNINITIALIZED));
+            sources.set(prop, s);
+          }
+          var value2 = get(s);
+          if (value2 === UNINITIALIZED) {
+            return false;
+          }
+        }
+        return has;
+      },
+      set(target, prop, value2, receiver) {
+        var s = sources.get(prop);
+        var has = prop in target;
+        if (is_proxied_array && prop === "length") {
+          for (var i = value2; i < /** @type {Source<number>} */
+          s.v; i += 1) {
+            var other_s = sources.get(i + "");
+            if (other_s !== void 0) {
+              set(other_s, UNINITIALIZED);
+            } else if (i in target) {
+              other_s = with_parent(() => state(UNINITIALIZED));
+              sources.set(i + "", other_s);
+            }
+          }
+        }
+        if (s === void 0) {
+          if (!has || get_descriptor(target, prop)?.writable) {
+            s = with_parent(() => state(void 0));
+            set(
+              s,
+              with_parent(() => proxy(value2))
+            );
+            sources.set(prop, s);
+          }
+        } else {
+          has = s.v !== UNINITIALIZED;
+          set(
+            s,
+            with_parent(() => proxy(value2))
+          );
+        }
+        var descriptor = Reflect.getOwnPropertyDescriptor(target, prop);
+        if (descriptor?.set) {
+          descriptor.set.call(receiver, value2);
+        }
+        if (!has) {
+          if (is_proxied_array && typeof prop === "string") {
+            var ls = (
+              /** @type {Source<number>} */
+              sources.get("length")
+            );
+            var n = Number(prop);
+            if (Number.isInteger(n) && n >= ls.v) {
+              set(ls, n + 1);
+            }
+          }
+          update_version(version);
+        }
+        return true;
+      },
+      ownKeys(target) {
+        get(version);
+        var own_keys = Reflect.ownKeys(target).filter((key2) => {
+          var source3 = sources.get(key2);
+          return source3 === void 0 || source3.v !== UNINITIALIZED;
+        });
+        for (var [key, source2] of sources) {
+          if (source2.v !== UNINITIALIZED && !(key in target)) {
+            own_keys.push(key);
+          }
+        }
+        return own_keys;
+      },
+      setPrototypeOf() {
+        state_prototype_fixed();
+      }
+    }
+  );
+}
+function update_version(signal, d = 1) {
+  set(signal, signal.v + d);
+}
 const old_values = /* @__PURE__ */ new Map();
 function source(v, stack) {
   var signal = {
@@ -135,6 +340,11 @@ function source(v, stack) {
   };
   return signal;
 }
+function state(v, stack) {
+  const s = source(v);
+  push_reaction_value(s);
+  return s;
+}
 // @__NO_SIDE_EFFECTS__
 function mutable_source(initial_value, immutable = false) {
   const s = source(initial_value);
@@ -143,13 +353,12 @@ function mutable_source(initial_value, immutable = false) {
   }
   return s;
 }
-function set(source2, value) {
-  if (active_reaction !== null && !untracking && is_runes() && (active_reaction.f & (DERIVED | BLOCK_EFFECT)) !== 0 && // If the source was created locally within the current derived, then
-  // we allow the mutation.
-  (derived_sources === null || !derived_sources.includes(source2))) {
+function set(source2, value, should_proxy = false) {
+  if (active_reaction !== null && !untracking && is_runes() && (active_reaction.f & (DERIVED | BLOCK_EFFECT)) !== 0 && !reaction_sources?.includes(source2)) {
     state_unsafe_mutation();
   }
-  return internal_set(source2, value);
+  let new_value = should_proxy ? proxy(value) : value;
+  return internal_set(source2, new_value);
 }
 function internal_set(source2, value) {
   if (!source2.equals(value)) {
@@ -225,14 +434,19 @@ function init_operations() {
   $window = window;
   var element_prototype = Element.prototype;
   var node_prototype = Node.prototype;
+  var text_prototype = Text.prototype;
   first_child_getter = get_descriptor(node_prototype, "firstChild").get;
   next_sibling_getter = get_descriptor(node_prototype, "nextSibling").get;
-  element_prototype.__click = void 0;
-  element_prototype.__className = void 0;
-  element_prototype.__attributes = null;
-  element_prototype.__style = void 0;
-  element_prototype.__e = void 0;
-  Text.prototype.__t = void 0;
+  if (is_extensible(element_prototype)) {
+    element_prototype.__click = void 0;
+    element_prototype.__className = void 0;
+    element_prototype.__attributes = null;
+    element_prototype.__style = void 0;
+    element_prototype.__e = void 0;
+  }
+  if (is_extensible(text_prototype)) {
+    text_prototype.__t = void 0;
+  }
 }
 function create_text(value = "") {
   return document.createTextNode(value);
@@ -534,7 +748,19 @@ let active_effect = null;
 function set_active_effect(effect2) {
   active_effect = effect2;
 }
-let derived_sources = null;
+let reaction_sources = null;
+function set_reaction_sources(sources) {
+  reaction_sources = sources;
+}
+function push_reaction_value(value) {
+  if (active_reaction !== null && active_reaction.f & EFFECT_IS_UPDATING) {
+    if (reaction_sources === null) {
+      set_reaction_sources([value]);
+    } else {
+      reaction_sources.push(value);
+    }
+  }
+}
 let new_deps = null;
 let skipped_deps = 0;
 let untracked_writes = null;
@@ -644,6 +870,7 @@ function schedule_possible_effect_self_invalidation(signal, effect2, root2 = tru
   if (reactions === null) return;
   for (var i = 0; i < reactions.length; i++) {
     var reaction = reactions[i];
+    if (reaction_sources?.includes(signal)) continue;
     if ((reaction.f & DERIVED) !== 0) {
       schedule_possible_effect_self_invalidation(
         /** @type {Derived} */
@@ -670,7 +897,7 @@ function update_reaction(reaction) {
   var previous_untracked_writes = untracked_writes;
   var previous_reaction = active_reaction;
   var previous_skip_reaction = skip_reaction;
-  var prev_derived_sources = derived_sources;
+  var previous_reaction_sources = reaction_sources;
   var previous_component_context = component_context;
   var previous_untracking = untracking;
   var flags = reaction.f;
@@ -680,10 +907,11 @@ function update_reaction(reaction) {
   untracked_writes = null;
   skip_reaction = (flags & UNOWNED) !== 0 && (untracking || !is_updating_effect || active_reaction === null);
   active_reaction = (flags & (BRANCH_EFFECT | ROOT_EFFECT)) === 0 ? reaction : null;
-  derived_sources = null;
+  reaction_sources = null;
   set_component_context(reaction.ctx);
   untracking = false;
   read_version++;
+  reaction.f |= EFFECT_IS_UPDATING;
   try {
     var result = (
       /** @type {Function} */
@@ -738,9 +966,10 @@ function update_reaction(reaction) {
     untracked_writes = previous_untracked_writes;
     active_reaction = previous_reaction;
     skip_reaction = previous_skip_reaction;
-    derived_sources = prev_derived_sources;
+    reaction_sources = previous_reaction_sources;
     set_component_context(previous_component_context);
     untracking = previous_untracking;
+    reaction.f ^= EFFECT_IS_UPDATING;
   }
 }
 function remove_reaction(signal, dependency) {
@@ -948,18 +1177,17 @@ function get(signal) {
   var flags = signal.f;
   var is_derived = (flags & DERIVED) !== 0;
   if (active_reaction !== null && !untracking) {
-    if (derived_sources !== null && derived_sources.includes(signal)) {
-      state_unsafe_local_read();
-    }
-    var deps = active_reaction.deps;
-    if (signal.rv < read_version) {
-      signal.rv = read_version;
-      if (new_deps === null && deps !== null && deps[skipped_deps] === signal) {
-        skipped_deps++;
-      } else if (new_deps === null) {
-        new_deps = [signal];
-      } else if (!skip_reaction || !new_deps.includes(signal)) {
-        new_deps.push(signal);
+    if (!reaction_sources?.includes(signal)) {
+      var deps = active_reaction.deps;
+      if (signal.rv < read_version) {
+        signal.rv = read_version;
+        if (new_deps === null && deps !== null && deps[skipped_deps] === signal) {
+          skipped_deps++;
+        } else if (new_deps === null) {
+          new_deps = [signal];
+        } else if (!skip_reaction || !new_deps.includes(signal)) {
+          new_deps.push(signal);
+        }
       }
     }
   } else if (is_derived && /** @type {Derived} */
@@ -1494,7 +1722,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "1v9tmeu"
+  version_hash: "ai5m3a"
 };
 async function get_hooks() {
   let handle;
