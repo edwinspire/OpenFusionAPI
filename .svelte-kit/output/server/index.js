@@ -268,7 +268,10 @@ async function handle_error_and_jsonify(event, options2, error) {
   }
   const status = get_status(error);
   const message = get_message(error);
-  return await options2.hooks.handleError({ error, event, status, message }) ?? { message };
+  return await with_event(
+    event,
+    () => options2.hooks.handleError({ error, event, status, message })
+  ) ?? { message };
 }
 function redirect_response(status, location) {
   const response = new Response(void 0, {
