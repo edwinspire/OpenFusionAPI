@@ -282,28 +282,28 @@ function redirect_response(status, location) {
 }
 function clarify_devalue_error(event, error) {
   if (error.path) {
-    return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (data${error.path})`;
+    return `Data returned from \`load\` while rendering ${event.route.id} is not serializable: ${error.message} (${error.path})`;
   }
   if (error.path === "") {
     return `Data returned from \`load\` while rendering ${event.route.id} is not a plain object`;
   }
   return error.message;
 }
-function stringify_uses(node) {
-  const uses = [];
+function serialize_uses(node) {
+  const uses = {};
   if (node.uses && node.uses.dependencies.size > 0) {
-    uses.push(`"dependencies":${JSON.stringify(Array.from(node.uses.dependencies))}`);
+    uses.dependencies = Array.from(node.uses.dependencies);
   }
   if (node.uses && node.uses.search_params.size > 0) {
-    uses.push(`"search_params":${JSON.stringify(Array.from(node.uses.search_params))}`);
+    uses.search_params = Array.from(node.uses.search_params);
   }
   if (node.uses && node.uses.params.size > 0) {
-    uses.push(`"params":${JSON.stringify(Array.from(node.uses.params))}`);
+    uses.params = Array.from(node.uses.params);
   }
-  if (node.uses?.parent) uses.push('"parent":1');
-  if (node.uses?.route) uses.push('"route":1');
-  if (node.uses?.url) uses.push('"url":1');
-  return `"uses":{${uses.join(",")}}`;
+  if (node.uses?.parent) uses.parent = 1;
+  if (node.uses?.route) uses.route = 1;
+  if (node.uses?.url) uses.url = 1;
+  return uses;
 }
 function has_prerendered_path(manifest, pathname) {
   return manifest._.prerendered_routes.has(pathname) || pathname.at(-1) === "/" && manifest._.prerendered_routes.has(pathname.slice(0, -1));
@@ -314,7 +314,7 @@ async function render_endpoint(event, mod, state) {
     event.request.method
   );
   let handler = mod[method] || mod.fallback;
-  if (method === "HEAD" && mod.GET && !mod.HEAD) {
+  if (method === "HEAD" && !mod.HEAD && mod.GET) {
     handler = mod.GET;
   }
   if (!handler) {
@@ -1899,13 +1899,16 @@ function get_data(event, options2, nodes, csp, global) {
   try {
     const strings = nodes.map((node) => {
       if (!node) return "null";
-      return `{"type":"data","data":${devalue.uneval(node.data, replacer)},${stringify_uses(node)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ""}}`;
+      const payload = { type: "data", data: node.data, uses: serialize_uses(node) };
+      if (node.slash) payload.slash = node.slash;
+      return devalue.uneval(payload, replacer);
     });
     return {
       data: `[${strings.join(",")}]`,
       chunks: count > 0 ? iterator : null
     };
   } catch (e) {
+    e.path = e.path.slice(1);
     throw new Error(clarify_devalue_error(
       event,
       /** @type {any} */
@@ -1957,18 +1960,14 @@ class PageNodes {
     }
   }
   /**
-   * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash' | 'entries'} Option
-   * @template {(import('types').UniversalNode | import('types').ServerNode)[Option]} Value
+   * @template {'prerender' | 'ssr' | 'csr' | 'trailingSlash'} Option
    * @param {Option} option
    * @returns {Value | undefined}
    */
   #get_option(option) {
     return this.data.reduce(
       (value, node) => {
-        return (
-          /** @type {Value} TypeScript's too dumb to understand this */
-          node?.universal?.[option] ?? node?.server?.[option] ?? value
-        );
+        return node?.universal?.[option] ?? node?.server?.[option] ?? value;
       },
       /** @type {Value | undefined} */
       void 0
@@ -1992,6 +1991,7 @@ class PageNodes {
       if (!node?.universal?.config && !node?.server?.config) continue;
       current = {
         ...current,
+        // TODO: should we override the server config value with the universal value similar to other page options?
         ...node?.universal?.config,
         ...node?.server?.config
       };
@@ -2283,8 +2283,8 @@ function get_data_json(event, options2, nodes) {
       if (node.type === "error" || node.type === "skip") {
         return JSON.stringify(node);
       }
-      return `{"type":"data","data":${devalue.stringify(node.data, reducers)},${stringify_uses(
-        node
+      return `{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
+        serialize_uses(node)
       )}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ""}}`;
     });
     return {
@@ -2293,6 +2293,7 @@ function get_data_json(event, options2, nodes) {
       chunks: count > 0 ? iterator : null
     };
   } catch (e) {
+    e.path = "data" + e.path;
     throw new Error(clarify_devalue_error(
       event,
       /** @type {any} */
@@ -2346,14 +2347,16 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
     const should_prerender_data = nodes.should_prerender_data();
     const data_pathname = add_data_suffix(event.url.pathname);
     const fetched = [];
-    if (nodes.ssr() === false && !(state.prerendering && should_prerender_data)) {
+    const ssr = nodes.ssr();
+    const csr = nodes.csr();
+    if (ssr === false && !(state.prerendering && should_prerender_data)) {
       if (DEV && action_result && !event.request.headers.has("x-sveltekit-action")) ;
       return await render_response({
         branch: [],
         fetched,
         page_config: {
           ssr: false,
-          csr: nodes.csr()
+          csr
         },
         status,
         error: null,
@@ -2395,7 +2398,6 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
         }
       });
     });
-    const csr = nodes.csr();
     const load_promises = nodes.data.map((node, i) => {
       if (load_error) throw load_error;
       return Promise.resolve().then(async () => {
@@ -2460,16 +2462,21 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
               const node2 = await manifest._.nodes[index]();
               let j = i;
               while (!branch[j]) j -= 1;
+              const layouts = compact(branch.slice(0, j + 1));
+              const nodes2 = new PageNodes(layouts.map((layout) => layout.node));
               return await render_response({
                 event,
                 options: options2,
                 manifest,
                 state,
                 resolve_opts,
-                page_config: { ssr: true, csr: true },
+                page_config: {
+                  ssr: nodes2.ssr(),
+                  csr: nodes2.csr()
+                },
                 status: status2,
                 error,
-                branch: compact(branch.slice(0, j + 1)).concat({
+                branch: layouts.concat({
                   node: node2,
                   data: null,
                   server_data: null
@@ -2500,7 +2507,6 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
         body: data
       });
     }
-    const ssr = nodes.ssr();
     return await render_response({
       event,
       options: options2,
@@ -2508,7 +2514,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
       state,
       resolve_opts,
       page_config: {
-        csr: nodes.csr(),
+        csr,
         ssr
       },
       status,

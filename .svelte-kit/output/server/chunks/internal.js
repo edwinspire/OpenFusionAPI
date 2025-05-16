@@ -177,6 +177,7 @@ function proxy(value) {
               prop,
               with_parent(() => /* @__PURE__ */ state(UNINITIALIZED))
             );
+            update_version(version);
           }
         } else {
           if (is_proxied_array && typeof prop === "string") {
@@ -410,7 +411,6 @@ function internal_set(source2, value) {
       old_values.set(source2, old_value);
     }
     source2.v = value;
-    source2.wv = increment_write_version();
     if ((source2.f & DERIVED) !== 0) {
       if ((source2.f & DIRTY) !== 0) {
         execute_derived(
@@ -420,6 +420,7 @@ function internal_set(source2, value) {
       }
       set_signal_status(source2, (source2.f & UNOWNED) === 0 ? CLEAN : MAYBE_DIRTY);
     }
+    source2.wv = increment_write_version();
     mark_reactions(source2, DIRTY);
     if (active_effect !== null && (active_effect.f & CLEAN) !== 0 && (active_effect.f & (BRANCH_EFFECT | ROOT_EFFECT)) === 0) {
       if (untracked_writes === null) {
@@ -640,16 +641,11 @@ function destroy_block_effect_children(signal) {
 function destroy_effect(effect2, remove_dom = true) {
   var removed = false;
   if ((remove_dom || (effect2.f & HEAD_EFFECT) !== 0) && effect2.nodes_start !== null) {
-    var node = effect2.nodes_start;
-    var end = effect2.nodes_end;
-    while (node !== null) {
-      var next = node === end ? null : (
-        /** @type {TemplateNode} */
-        /* @__PURE__ */ get_next_sibling(node)
-      );
-      node.remove();
-      node = next;
-    }
+    remove_effect_dom(
+      effect2.nodes_start,
+      /** @type {TemplateNode} */
+      effect2.nodes_end
+    );
     removed = true;
   }
   destroy_effect_children(effect2, remove_dom && !removed);
@@ -667,6 +663,16 @@ function destroy_effect(effect2, remove_dom = true) {
     unlink_effect(effect2);
   }
   effect2.next = effect2.prev = effect2.teardown = effect2.ctx = effect2.deps = effect2.fn = effect2.nodes_start = effect2.nodes_end = null;
+}
+function remove_effect_dom(node, end) {
+  while (node !== null) {
+    var next = node === end ? null : (
+      /** @type {TemplateNode} */
+      /* @__PURE__ */ get_next_sibling(node)
+    );
+    node.remove();
+    node = next;
+  }
 }
 function unlink_effect(effect2) {
   var parent = effect2.parent;
@@ -756,13 +762,10 @@ function set_active_effect(effect2) {
   active_effect = effect2;
 }
 let reaction_sources = null;
-function set_reaction_sources(sources) {
-  reaction_sources = sources;
-}
 function push_reaction_value(value) {
   if (active_reaction !== null && active_reaction.f & EFFECT_IS_UPDATING) {
     if (reaction_sources === null) {
-      set_reaction_sources([value]);
+      reaction_sources = [value];
     } else {
       reaction_sources.push(value);
     }
@@ -867,9 +870,9 @@ function handle_error(error, effect2, previous_effect, component_context2) {
   if (previous_effect !== null) {
     is_throwing_error = true;
   }
-  {
-    propagate_error(error, effect2);
-    return;
+  propagate_error(error, effect2);
+  if (should_rethrow_error(effect2)) {
+    throw error;
   }
 }
 function schedule_possible_effect_self_invalidation(signal, effect2, root2 = true) {
@@ -955,7 +958,7 @@ function update_reaction(reaction) {
         );
       }
     }
-    if (previous_reaction !== reaction) {
+    if (previous_reaction !== null && previous_reaction !== reaction) {
       read_version++;
       if (untracked_writes !== null) {
         if (previous_untracked_writes === null) {
@@ -1140,16 +1143,12 @@ function process_effects(root2) {
       } else if (is_branch) {
         effect2.f ^= CLEAN;
       } else {
-        var previous_active_reaction = active_reaction;
         try {
-          active_reaction = effect2;
           if (check_dirtiness(effect2)) {
             update_effect(effect2);
           }
         } catch (error) {
           handle_error(error, effect2, null, effect2.ctx);
-        } finally {
-          active_reaction = previous_active_reaction;
         }
       }
       var child = effect2.first;
@@ -1169,16 +1168,17 @@ function process_effects(root2) {
 }
 function flushSync(fn) {
   var result;
-  flush_tasks();
-  while (queued_root_effects.length > 0) {
+  while (true) {
+    flush_tasks();
+    if (queued_root_effects.length === 0) {
+      return (
+        /** @type {T} */
+        result
+      );
+    }
     is_flushing = true;
     flush_queued_root_effects();
-    flush_tasks();
   }
-  return (
-    /** @type {T} */
-    result
-  );
 }
 function get(signal) {
   var flags = signal.f;
@@ -1729,7 +1729,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "g2ha64"
+  version_hash: "1qmvpq7"
 };
 async function get_hooks() {
   let handle;

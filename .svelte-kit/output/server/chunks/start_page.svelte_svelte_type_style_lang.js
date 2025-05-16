@@ -3,6 +3,7 @@ import "clsx";
 import * as acorn from "acorn";
 import "zimmerframe";
 import { tsPlugin } from "@sveltejs/acorn-typescript";
+import "is-reference";
 import { roles, elementRoles } from "aria-query";
 import { AXObjects, elementAXObjects } from "axobject-query";
 import { getLocator } from "locate-character";

@@ -111,19 +111,37 @@ function get_parent_context(component_context) {
 }
 const BLOCK_OPEN = `<!--${HYDRATION_START}-->`;
 const BLOCK_CLOSE = `<!--${HYDRATION_END}-->`;
-let on_destroy = [];
+class HeadPayload {
+  /** @type {Set<{ hash: string; code: string }>} */
+  css = /* @__PURE__ */ new Set();
+  out = "";
+  uid = () => "";
+  title = "";
+  constructor(css = /* @__PURE__ */ new Set(), out = "", title = "", uid = () => "") {
+    this.css = css;
+    this.out = out;
+    this.title = title;
+    this.uid = uid;
+  }
+}
+class Payload {
+  /** @type {Set<{ hash: string; code: string }>} */
+  css = /* @__PURE__ */ new Set();
+  out = "";
+  uid = () => "";
+  head = new HeadPayload();
+  constructor(id_prefix = "") {
+    this.uid = props_id_generator(id_prefix);
+    this.head.uid = this.uid;
+  }
+}
 function props_id_generator(prefix) {
   let uid = 1;
   return () => `${prefix}s${uid++}`;
 }
+let on_destroy = [];
 function render(component, options = {}) {
-  const uid = props_id_generator(options.idPrefix ? options.idPrefix + "-" : "");
-  const payload = {
-    out: "",
-    css: /* @__PURE__ */ new Set(),
-    head: { title: "", out: "", css: /* @__PURE__ */ new Set(), uid },
-    uid
-  };
+  const payload = new Payload(options.idPrefix ? options.idPrefix + "-" : "");
   const prev_on_destroy = on_destroy;
   on_destroy = [];
   payload.out += BLOCK_OPEN;
