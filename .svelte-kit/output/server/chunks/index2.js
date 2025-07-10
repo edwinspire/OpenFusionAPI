@@ -1,4 +1,33 @@
 import "clsx";
+const DEV = false;
+const DERIVED = 1 << 1;
+const EFFECT = 1 << 2;
+const RENDER_EFFECT = 1 << 3;
+const BLOCK_EFFECT = 1 << 4;
+const BRANCH_EFFECT = 1 << 5;
+const ROOT_EFFECT = 1 << 6;
+const BOUNDARY_EFFECT = 1 << 7;
+const UNOWNED = 1 << 8;
+const DISCONNECTED = 1 << 9;
+const CLEAN = 1 << 10;
+const DIRTY = 1 << 11;
+const MAYBE_DIRTY = 1 << 12;
+const INERT = 1 << 13;
+const DESTROYED = 1 << 14;
+const EFFECT_RAN = 1 << 15;
+const EFFECT_TRANSPARENT = 1 << 16;
+const INSPECT_EFFECT = 1 << 17;
+const HEAD_EFFECT = 1 << 18;
+const EFFECT_PRESERVED = 1 << 19;
+const EFFECT_IS_UPDATING = 1 << 20;
+const USER_EFFECT = 1 << 21;
+const STATE_SYMBOL = Symbol("$state");
+const LEGACY_PROPS = Symbol("legacy props");
+const STALE_REACTION = new class StaleReactionError extends Error {
+  name = "StaleReactionError";
+  message = "The reaction that called `getAbortSignal()` was re-run or destroyed";
+}();
+const COMMENT_NODE = 8;
 const HYDRATION_START = "[";
 const HYDRATION_END = "]";
 const HYDRATION_ERROR = {};
@@ -129,6 +158,7 @@ class Payload {
   css = /* @__PURE__ */ new Set();
   out = "";
   uid = () => "";
+  select_value = void 0;
   head = new HeadPayload();
   constructor(id_prefix = "") {
     this.uid = props_id_generator(id_prefix);
@@ -139,32 +169,50 @@ function props_id_generator(prefix) {
   let uid = 1;
   return () => `${prefix}s${uid++}`;
 }
+function reset_elements() {
+  return () => {
+  };
+}
+let controller = null;
+function abort() {
+  controller?.abort(STALE_REACTION);
+  controller = null;
+}
 let on_destroy = [];
 function render(component, options = {}) {
-  const payload = new Payload(options.idPrefix ? options.idPrefix + "-" : "");
-  const prev_on_destroy = on_destroy;
-  on_destroy = [];
-  payload.out += BLOCK_OPEN;
-  if (options.context) {
-    push();
-    current_component.c = options.context;
+  try {
+    const payload = new Payload(options.idPrefix ? options.idPrefix + "-" : "");
+    const prev_on_destroy = on_destroy;
+    on_destroy = [];
+    payload.out += BLOCK_OPEN;
+    let reset_reset_element;
+    if (DEV) ;
+    if (options.context) {
+      push();
+      current_component.c = options.context;
+    }
+    component(payload, options.props ?? {}, {}, {});
+    if (options.context) {
+      pop();
+    }
+    if (reset_reset_element) {
+      reset_reset_element();
+    }
+    payload.out += BLOCK_CLOSE;
+    for (const cleanup of on_destroy) cleanup();
+    on_destroy = prev_on_destroy;
+    let head2 = payload.head.out + payload.head.title;
+    for (const { hash, code } of payload.css) {
+      head2 += `<style id="${hash}">${code}</style>`;
+    }
+    return {
+      head: head2,
+      html: payload.out,
+      body: payload.out
+    };
+  } finally {
+    abort();
   }
-  component(payload, options.props ?? {}, {}, {});
-  if (options.context) {
-    pop();
-  }
-  payload.out += BLOCK_CLOSE;
-  for (const cleanup of on_destroy) cleanup();
-  on_destroy = prev_on_destroy;
-  let head2 = payload.head.out + payload.head.title;
-  for (const { hash, code } of payload.css) {
-    head2 += `<style id="${hash}">${code}</style>`;
-  }
-  return {
-    head: head2,
-    html: payload.out,
-    body: payload.out
-  };
 }
 function head(payload, fn) {
   const head_payload = payload.head;
@@ -199,7 +247,22 @@ function ensure_array_like(array_like_or_iterator) {
   return [];
 }
 export {
+  DEV as A,
+  BLOCK_EFFECT as B,
+  CLEAN as C,
+  DERIVED as D,
+  EFFECT_RAN as E,
+  COMMENT_NODE as F,
+  HYDRATION_START as G,
   HYDRATION_ERROR as H,
+  INSPECT_EFFECT as I,
+  HYDRATION_END as J,
+  render as K,
+  LEGACY_PROPS as L,
+  MAYBE_DIRTY as M,
+  setContext as N,
+  ROOT_EFFECT as R,
+  STATE_SYMBOL as S,
   UNINITIALIZED as U,
   attr as a,
   attr_style as b,
@@ -210,10 +273,21 @@ export {
   escape_html as g,
   head as h,
   getContext as i,
-  HYDRATION_START as j,
-  HYDRATION_END as k,
-  setContext as l,
+  UNOWNED as j,
+  DIRTY as k,
+  BRANCH_EFFECT as l,
+  EFFECT_PRESERVED as m,
+  BOUNDARY_EFFECT as n,
+  HEAD_EFFECT as o,
   pop as p,
-  render as r,
-  stringify as s
+  DESTROYED as q,
+  INERT as r,
+  stringify as s,
+  EFFECT_TRANSPARENT as t,
+  STALE_REACTION as u,
+  RENDER_EFFECT as v,
+  EFFECT as w,
+  USER_EFFECT as x,
+  DISCONNECTED as y,
+  EFFECT_IS_UPDATING as z
 };

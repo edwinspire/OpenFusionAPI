@@ -31,15 +31,15 @@
     "file": "chunks/internal.js",
     "name": "internal",
     "imports": [
-      "_equality.js",
-      "_index2.js"
+      "_index2.js",
+      "_equality.js"
     ]
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
     "file": "chunks/start_page.svelte_svelte_type_style_lang.js",
     "name": "start_page.svelte_svelte_type_style_lang",
     "css": [
-      "_app/immutable/assets/start_page.DqOBHYFq.css"
+      "_app/immutable/assets/start_page.COqY4dvU.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.D_cYUPeE.woff2",
@@ -116,6 +116,7 @@
     "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js",
     "isEntry": true,
     "imports": [
+      "_index2.js",
       "_internal.js",
       "_exports.js",
       "_index.js"

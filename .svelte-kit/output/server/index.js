@@ -1,4 +1,7 @@
-import { D as DEV, a as assets, b as base, c as app_dir, p as public_env, s as safe_public_env, o as override, r as reset, d as read_implementation, e as options, g as get_hooks, f as set_private_env, h as prerendering, i as set_public_env, j as set_safe_public_env, k as set_read_implementation } from "./chunks/internal.js";
+import { A as DEV } from "./chunks/index2.js";
+import { json, text } from "@sveltejs/kit";
+import { HttpError, SvelteKitError, Redirect, ActionFailure } from "@sveltejs/kit/internal";
+import { a as assets, b as base, c as app_dir, p as public_env, s as safe_public_env, o as override, r as reset, d as read_implementation, e as options, g as get_hooks, f as set_private_env, h as prerendering, i as set_public_env, j as set_safe_public_env, k as set_read_implementation } from "./chunks/internal.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
 import { r as readable, w as writable } from "./chunks/index.js";
@@ -66,112 +69,6 @@ function with_event(event, fn) {
     request_event = null;
   }
 }
-class HttpError {
-  /**
-   * @param {number} status
-   * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
-   */
-  constructor(status, body2) {
-    this.status = status;
-    if (typeof body2 === "string") {
-      this.body = { message: body2 };
-    } else if (body2) {
-      this.body = body2;
-    } else {
-      this.body = { message: `Error: ${status}` };
-    }
-  }
-  toString() {
-    return JSON.stringify(this.body);
-  }
-}
-class Redirect {
-  /**
-   * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
-   * @param {string} location
-   */
-  constructor(status, location) {
-    this.status = status;
-    this.location = location;
-  }
-}
-class SvelteKitError extends Error {
-  /**
-   * @param {number} status
-   * @param {string} text
-   * @param {string} message
-   */
-  constructor(status, text2, message) {
-    super(message);
-    this.status = status;
-    this.text = text2;
-  }
-}
-class ActionFailure {
-  /**
-   * @param {number} status
-   * @param {T} data
-   */
-  constructor(status, data) {
-    this.status = status;
-    this.data = data;
-  }
-}
-const DATA_SUFFIX = "/__data.json";
-const HTML_DATA_SUFFIX = ".html__data.json";
-function has_data_suffix(pathname) {
-  return pathname.endsWith(DATA_SUFFIX) || pathname.endsWith(HTML_DATA_SUFFIX);
-}
-function add_data_suffix(pathname) {
-  if (pathname.endsWith(".html")) return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
-  return pathname.replace(/\/$/, "") + DATA_SUFFIX;
-}
-function strip_data_suffix(pathname) {
-  if (pathname.endsWith(HTML_DATA_SUFFIX)) {
-    return pathname.slice(0, -HTML_DATA_SUFFIX.length) + ".html";
-  }
-  return pathname.slice(0, -DATA_SUFFIX.length);
-}
-const ROUTE_SUFFIX = "/__route.js";
-function has_resolution_suffix(pathname) {
-  return pathname.endsWith(ROUTE_SUFFIX);
-}
-function add_resolution_suffix(pathname) {
-  return pathname.replace(/\/$/, "") + ROUTE_SUFFIX;
-}
-function strip_resolution_suffix(pathname) {
-  return pathname.slice(0, -ROUTE_SUFFIX.length);
-}
-function json(data, init2) {
-  const body2 = JSON.stringify(data);
-  const headers2 = new Headers(init2?.headers);
-  if (!headers2.has("content-length")) {
-    headers2.set("content-length", encoder$3.encode(body2).byteLength.toString());
-  }
-  if (!headers2.has("content-type")) {
-    headers2.set("content-type", "application/json");
-  }
-  return new Response(body2, {
-    ...init2,
-    headers: headers2
-  });
-}
-const encoder$3 = new TextEncoder();
-function text(body2, init2) {
-  const headers2 = new Headers(init2?.headers);
-  if (!headers2.has("content-length")) {
-    const encoded = encoder$3.encode(body2);
-    headers2.set("content-length", encoded.byteLength.toString());
-    return new Response(encoded, {
-      ...init2,
-      headers: headers2
-    });
-  }
-  return new Response(body2, {
-    ...init2,
-    headers: headers2
-  });
-}
 function coalesce_to_error(err) {
   return err instanceof Error || err && /** @type {any} */
   err.name && /** @type {any} */
@@ -182,7 +79,7 @@ function coalesce_to_error(err) {
 }
 function normalize_error(error) {
   return (
-    /** @type {import('../runtime/control.js').Redirect | HttpError | SvelteKitError | Error} */
+    /** @type {import('../exports/internal/index.js').Redirect | HttpError | SvelteKitError | Error} */
     error
   );
 }
@@ -389,6 +286,31 @@ function compact(arr) {
     /** @returns {val is NonNullable<T>} */
     (val) => val != null
   );
+}
+const DATA_SUFFIX = "/__data.json";
+const HTML_DATA_SUFFIX = ".html__data.json";
+function has_data_suffix(pathname) {
+  return pathname.endsWith(DATA_SUFFIX) || pathname.endsWith(HTML_DATA_SUFFIX);
+}
+function add_data_suffix(pathname) {
+  if (pathname.endsWith(".html")) return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
+  return pathname.replace(/\/$/, "") + DATA_SUFFIX;
+}
+function strip_data_suffix(pathname) {
+  if (pathname.endsWith(HTML_DATA_SUFFIX)) {
+    return pathname.slice(0, -HTML_DATA_SUFFIX.length) + ".html";
+  }
+  return pathname.slice(0, -DATA_SUFFIX.length);
+}
+const ROUTE_SUFFIX = "/__route.js";
+function has_resolution_suffix(pathname) {
+  return pathname.endsWith(ROUTE_SUFFIX);
+}
+function add_resolution_suffix(pathname) {
+  return pathname.replace(/\/$/, "") + ROUTE_SUFFIX;
+}
+function strip_resolution_suffix(pathname) {
+  return pathname.slice(0, -ROUTE_SUFFIX.length);
 }
 function is_action_json_request(event) {
   const accept = negotiate(event.request.headers.get("accept") ?? "*/*", [
@@ -2759,10 +2681,7 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
             event.request.headers.get("accept-language")
           );
         }
-        const response = await respond(request, options2, manifest, {
-          ...state,
-          depth: state.depth + 1
-        });
+        const response = await internal_fetch(request, options2, manifest, state);
         const set_cookie = response.headers.get("set-cookie");
         if (set_cookie) {
           for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
@@ -2795,6 +2714,36 @@ function normalize_fetch_input(info, init2, url) {
   }
   return new Request(typeof info === "string" ? new URL(info, url) : info, init2);
 }
+async function internal_fetch(request, options2, manifest, state) {
+  if (request.signal) {
+    if (request.signal.aborted) {
+      throw new DOMException("The operation was aborted.", "AbortError");
+    }
+    let remove_abort_listener = () => {
+    };
+    const abort_promise = new Promise((_, reject) => {
+      const on_abort = () => {
+        reject(new DOMException("The operation was aborted.", "AbortError"));
+      };
+      request.signal.addEventListener("abort", on_abort, { once: true });
+      remove_abort_listener = () => request.signal.removeEventListener("abort", on_abort);
+    });
+    const result = await Promise.race([
+      respond(request, options2, manifest, {
+        ...state,
+        depth: state.depth + 1
+      }),
+      abort_promise
+    ]);
+    remove_abort_listener();
+    return result;
+  } else {
+    return await respond(request, options2, manifest, {
+      ...state,
+      depth: state.depth + 1
+    });
+  }
+}
 let body;
 let etag;
 let headers;
@@ -2815,6 +2764,7 @@ const default_filter = () => false;
 const default_preload = ({ type }) => type === "js" || type === "css";
 const page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "POST"]);
 const allowed_page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
+let warned_on_devtools_json_request = false;
 async function respond(request, options2, manifest, state) {
   const url = new URL(request.url);
   if (options2.csrf_check_origin) {
@@ -3202,6 +3152,7 @@ async function respond(request, options2, manifest, state) {
         });
       }
       if (state.depth === 0) {
+        if (DEV && event2.url.pathname === "/.well-known/appspecific/com.chrome.devtools.json") ;
         return await respond_with_error({
           event: event2,
           options: options2,
@@ -3249,6 +3200,8 @@ function filter_public_env(env, { public_prefix, private_prefix }) {
     )
   );
 }
+function set_app(value) {
+}
 const prerender_env_handler = {
   get({ type }, prop) {
     throw new Error(
@@ -3295,12 +3248,16 @@ class Server {
         const module = await get_hooks();
         this.#options.hooks = {
           handle: module.handle || (({ event, resolve: resolve2 }) => resolve2(event)),
-          handleError: module.handleError || (({ error }) => console.error(error)),
+          handleError: module.handleError || (({ status, error }) => console.error(status === 404 && /** @type {Error} */
+          error?.message || error)),
           handleFetch: module.handleFetch || (({ request, fetch: fetch2 }) => fetch2(request)),
           reroute: module.reroute || (() => {
           }),
           transport: module.transport || {}
         };
+        set_app({
+          decoders: module.transport ? Object.fromEntries(Object.entries(module.transport).map(([k, v]) => [k, v.decode])) : {}
+        });
         if (module.init) {
           await module.init();
         }
