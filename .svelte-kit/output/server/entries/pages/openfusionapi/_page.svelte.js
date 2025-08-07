@@ -1,4 +1,4 @@
-import { c as attr_class, d as bind_props, p as pop, e as push, f as ensure_array_like, s as stringify, g as escape_html, a as attr, h as head } from "../../../chunks/index2.js";
+import { d as attr_class, f as bind_props, p as pop, c as push, h as ensure_array_like, s as stringify, e as escape_html, a as attr, i as head } from "../../../chunks/index2.js";
 import "clsx";
 import uFetch from "@edwinspire/universal-fetch";
 import "../../../chunks/start_page.svelte_svelte_type_style_lang.js";
@@ -13,6 +13,8 @@ import { w as writable } from "../../../chunks/index.js";
 import "zimmerframe";
 import "acorn";
 import "is-reference";
+import "aria-query";
+import "axobject-query";
 import "esrap";
 import "esrap/languages/ts";
 import "@ampproject/remapping";
@@ -22,16 +24,16 @@ const Logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0
 function Modal($$payload, $$props) {
   push();
   let { show = false, children, showCloseButton = false } = $$props;
-  $$payload.out += `<div${attr_class("modal", void 0, { "is-active": show })}><div class="modal-background"></div> <div class="modal-content">`;
+  $$payload.out.push(`<div${attr_class("modal", void 0, { "is-active": show })}><div class="modal-background"></div> <div class="modal-content">`);
   children?.($$payload);
-  $$payload.out += `<!----></div> `;
+  $$payload.out.push(`<!----></div> `);
   if (showCloseButton) {
-    $$payload.out += "<!--[-->";
-    $$payload.out += `<button class="modal-close is-large" aria-label="close"></button>`;
+    $$payload.out.push("<!--[-->");
+    $$payload.out.push(`<button class="modal-close is-large" aria-label="close"></button>`);
   } else {
-    $$payload.out += "<!--[!-->";
+    $$payload.out.push("<!--[!-->");
   }
-  $$payload.out += `<!--]--></div>`;
+  $$payload.out.push(`<!--]--></div>`);
   bind_props($$props, { show, showCloseButton });
   pop();
 }
@@ -59,25 +61,25 @@ function Notifications($$payload, $$props) {
         */
     list_notify
   );
-  $$payload.out += `<div class="bottom-right svelte-10s4c1v"><!--[-->`;
+  $$payload.out.push(`<div class="bottom-right svelte-10s4c1v"><!--[-->`);
   for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
     let s = each_array[$$index];
     if (!s.hidden) {
-      $$payload.out += "<!--[-->";
-      $$payload.out += `<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-10s4c1v")}>`;
+      $$payload.out.push("<!--[-->");
+      $$payload.out.push(`<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-10s4c1v")}>`);
       if (s.title) {
-        $$payload.out += "<!--[-->";
-        $$payload.out += `<div class="message-header"><p>${escape_html(s.title)}</p> <button class="delete is-small" aria-label="delete"></button></div>`;
+        $$payload.out.push("<!--[-->");
+        $$payload.out.push(`<div class="message-header"><p>${escape_html(s.title)}</p> <button class="delete is-small" aria-label="delete"></button></div>`);
       } else {
-        $$payload.out += "<!--[!-->";
+        $$payload.out.push("<!--[!-->");
       }
-      $$payload.out += `<!--]--> <div class="message-body">${escape_html(s.message)}</div></article>`;
+      $$payload.out.push(`<!--]--> <div class="message-body">${escape_html(s.message)}</div></article>`);
     } else {
-      $$payload.out += "<!--[!-->";
+      $$payload.out.push("<!--[!-->");
     }
-    $$payload.out += `<!--]-->`;
+    $$payload.out.push(`<!--]-->`);
   }
-  $$payload.out += `<!--]--></div>`;
+  $$payload.out.push(`<!--]--></div>`);
   pop();
 }
 function Login($$payload, $$props) {
@@ -88,16 +90,16 @@ function Login($$payload, $$props) {
   Modal($$payload, {
     show: true,
     children: ($$payload2) => {
-      $$payload2.out += `<div class="box"><div class="media t1 svelte-fhc20z"><div class="media-left"><figure class="image is-48x48"><img${attr("src", Logo)} alt="OpenFusionAPI"/></figure></div> <div class="media-content"><p class="title is-family-sans-serif">Open Fusion API</p></div></div> <div class="field"><p class="control has-icons-left has-icons-right"><input class="input" type="text" placeholder="Username"${attr("value", username)}/> <span class="icon is-small is-left"><i class="fa-solid fa-user"></i></span></p></div> <div class="field"><p class="control has-icons-left"><input class="input" type="password" placeholder="Password"${attr("value", password)}/> <span class="icon is-small is-left"><i class="fas fa-lock"></i></span></p></div> <div class="field"><p class="control">`;
+      $$payload2.out.push(`<div class="box"><div class="media t1 svelte-fhc20z"><div class="media-left"><figure class="image is-48x48"><img${attr("src", Logo)} alt="OpenFusionAPI"/></figure></div> <div class="media-content"><p class="title is-family-sans-serif">Open Fusion API</p></div></div> <div class="field"><p class="control has-icons-left has-icons-right"><input class="input" type="text" placeholder="Username"${attr("value", username)}/> <span class="icon is-small is-left"><i class="fa-solid fa-user"></i></span></p></div> <div class="field"><p class="control has-icons-left"><input class="input" type="password" placeholder="Password"${attr("value", password)}/> <span class="icon is-small is-left"><i class="fas fa-lock"></i></span></p></div> <div class="field"><p class="control">`);
       {
-        $$payload2.out += "<!--[!-->";
-        $$payload2.out += `<button class="button is-success">Login</button>`;
+        $$payload2.out.push("<!--[!-->");
+        $$payload2.out.push(`<button class="button is-success">Login</button>`);
       }
-      $$payload2.out += `<!--]--></p></div> `;
+      $$payload2.out.push(`<!--]--></p></div> `);
       {
-        $$payload2.out += "<!--[!-->";
+        $$payload2.out.push("<!--[!-->");
       }
-      $$payload2.out += `<!--]--></div>`;
+      $$payload2.out.push(`<!--]--></div>`);
     },
     $$slots: { default: true }
   });
@@ -106,18 +108,18 @@ function Login($$payload, $$props) {
 function OpenFusionAPI($$payload, $$props) {
   push();
   Notifications($$payload);
-  $$payload.out += `<!----> `;
+  $$payload.out.push(`<!----> `);
   {
-    $$payload.out += "<!--[!-->";
+    $$payload.out.push("<!--[!-->");
     Login($$payload);
   }
-  $$payload.out += `<!--]-->`;
+  $$payload.out.push(`<!--]-->`);
   pop();
 }
 function _page($$payload) {
   head($$payload, ($$payload2) => {
     $$payload2.title = `<title>OFAPI - Admin</title>`;
-    $$payload2.out += `<meta name="description" content="Open Fusion API - Admin"/>`;
+    $$payload2.out.push(`<meta name="description" content="Open Fusion API - Admin"/>`);
   });
   OpenFusionAPI($$payload);
 }

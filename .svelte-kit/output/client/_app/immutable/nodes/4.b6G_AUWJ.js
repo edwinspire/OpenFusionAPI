@@ -1,0 +1,1 @@
+import"../chunks/CWj6FrbW.js";import"../chunks/LevLFEVn.js";import{y as t,x as r}from"../chunks/Brg_41Fn.js";const i=Object.freeze(Object.defineProperty({__proto__:null},Symbol.toStringTag,{value:"Module"}));var a=t("<h1>Test</h1>");function l(o){var e=a();r(o,e)}export{l as component,i as universal};

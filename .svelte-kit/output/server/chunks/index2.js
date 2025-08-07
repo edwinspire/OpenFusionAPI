@@ -1,8 +1,7 @@
 import "clsx";
-const DEV = false;
+import { D as DEV } from "./false.js";
 const DERIVED = 1 << 1;
 const EFFECT = 1 << 2;
-const RENDER_EFFECT = 1 << 3;
 const BLOCK_EFFECT = 1 << 4;
 const BRANCH_EFFECT = 1 << 5;
 const ROOT_EFFECT = 1 << 6;
@@ -19,8 +18,10 @@ const EFFECT_TRANSPARENT = 1 << 16;
 const INSPECT_EFFECT = 1 << 17;
 const HEAD_EFFECT = 1 << 18;
 const EFFECT_PRESERVED = 1 << 19;
-const EFFECT_IS_UPDATING = 1 << 20;
-const USER_EFFECT = 1 << 21;
+const USER_EFFECT = 1 << 20;
+const REACTION_IS_UPDATING = 1 << 21;
+const ASYNC = 1 << 22;
+const ERROR_VALUE = 1 << 23;
 const STATE_SYMBOL = Symbol("$state");
 const LEGACY_PROPS = Symbol("legacy props");
 const STALE_REACTION = new class StaleReactionError extends Error {
@@ -28,15 +29,15 @@ const STALE_REACTION = new class StaleReactionError extends Error {
   message = "The reaction that called `getAbortSignal()` was re-run or destroyed";
 }();
 const COMMENT_NODE = 8;
-const HYDRATION_START = "[";
-const HYDRATION_END = "]";
-const HYDRATION_ERROR = {};
-const UNINITIALIZED = Symbol();
 function lifecycle_outside_component(name) {
   {
     throw new Error(`https://svelte.dev/e/lifecycle_outside_component`);
   }
 }
+const HYDRATION_START = "[";
+const HYDRATION_END = "]";
+const HYDRATION_ERROR = {};
+const UNINITIALIZED = Symbol();
 const ATTR_REGEX = /[&"<]/g;
 const CONTENT_REGEX = /[&<]/g;
 function escape_html(value, is_attr) {
@@ -143,10 +144,11 @@ const BLOCK_CLOSE = `<!--${HYDRATION_END}-->`;
 class HeadPayload {
   /** @type {Set<{ hash: string; code: string }>} */
   css = /* @__PURE__ */ new Set();
-  out = "";
+  /** @type {string[]} */
+  out = [];
   uid = () => "";
   title = "";
-  constructor(css = /* @__PURE__ */ new Set(), out = "", title = "", uid = () => "") {
+  constructor(css = /* @__PURE__ */ new Set(), out = [], title = "", uid = () => "") {
     this.css = css;
     this.out = out;
     this.title = title;
@@ -156,7 +158,8 @@ class HeadPayload {
 class Payload {
   /** @type {Set<{ hash: string; code: string }>} */
   css = /* @__PURE__ */ new Set();
-  out = "";
+  /** @type {string[]} */
+  out = [];
   uid = () => "";
   select_value = void 0;
   head = new HeadPayload();
@@ -184,7 +187,7 @@ function render(component, options = {}) {
     const payload = new Payload(options.idPrefix ? options.idPrefix + "-" : "");
     const prev_on_destroy = on_destroy;
     on_destroy = [];
-    payload.out += BLOCK_OPEN;
+    payload.out.push(BLOCK_OPEN);
     let reset_reset_element;
     if (DEV) ;
     if (options.context) {
@@ -198,17 +201,18 @@ function render(component, options = {}) {
     if (reset_reset_element) {
       reset_reset_element();
     }
-    payload.out += BLOCK_CLOSE;
+    payload.out.push(BLOCK_CLOSE);
     for (const cleanup of on_destroy) cleanup();
     on_destroy = prev_on_destroy;
-    let head2 = payload.head.out + payload.head.title;
+    let head2 = payload.head.out.join("") + payload.head.title;
     for (const { hash, code } of payload.css) {
       head2 += `<style id="${hash}">${code}</style>`;
     }
+    const body = payload.out.join("");
     return {
       head: head2,
-      html: payload.out,
-      body: payload.out
+      html: body,
+      body
     };
   } finally {
     abort();
@@ -216,9 +220,9 @@ function render(component, options = {}) {
 }
 function head(payload, fn) {
   const head_payload = payload.head;
-  head_payload.out += BLOCK_OPEN;
+  head_payload.out.push(BLOCK_OPEN);
   fn(head_payload);
-  head_payload.out += BLOCK_CLOSE;
+  head_payload.out.push(BLOCK_CLOSE);
 }
 function stringify(value) {
   return typeof value === "string" ? value : value == null ? "" : value + "";
@@ -247,15 +251,15 @@ function ensure_array_like(array_like_or_iterator) {
   return [];
 }
 export {
-  DEV as A,
-  BLOCK_EFFECT as B,
+  ASYNC as A,
+  BOUNDARY_EFFECT as B,
   CLEAN as C,
   DERIVED as D,
-  EFFECT_RAN as E,
+  ERROR_VALUE as E,
   COMMENT_NODE as F,
   HYDRATION_START as G,
   HYDRATION_ERROR as H,
-  INSPECT_EFFECT as I,
+  INERT as I,
   HYDRATION_END as J,
   render as K,
   LEGACY_PROPS as L,
@@ -263,31 +267,31 @@ export {
   setContext as N,
   ROOT_EFFECT as R,
   STATE_SYMBOL as S,
-  UNINITIALIZED as U,
+  UNOWNED as U,
   attr as a,
   attr_style as b,
-  attr_class as c,
-  bind_props as d,
-  push as e,
-  ensure_array_like as f,
-  escape_html as g,
-  head as h,
-  getContext as i,
-  UNOWNED as j,
-  DIRTY as k,
-  BRANCH_EFFECT as l,
-  EFFECT_PRESERVED as m,
-  BOUNDARY_EFFECT as n,
-  HEAD_EFFECT as o,
+  push as c,
+  attr_class as d,
+  escape_html as e,
+  bind_props as f,
+  getContext as g,
+  ensure_array_like as h,
+  head as i,
+  EFFECT_RAN as j,
+  EFFECT as k,
+  BLOCK_EFFECT as l,
+  DIRTY as m,
+  BRANCH_EFFECT as n,
+  DESTROYED as o,
   pop as p,
-  DESTROYED as q,
-  INERT as r,
+  USER_EFFECT as q,
+  INSPECT_EFFECT as r,
   stringify as s,
-  EFFECT_TRANSPARENT as t,
-  STALE_REACTION as u,
-  RENDER_EFFECT as v,
-  EFFECT as w,
-  USER_EFFECT as x,
+  UNINITIALIZED as t,
+  EFFECT_PRESERVED as u,
+  HEAD_EFFECT as v,
+  STALE_REACTION as w,
+  EFFECT_TRANSPARENT as x,
   DISCONNECTED as y,
-  EFFECT_IS_UPDATING as z
+  REACTION_IS_UPDATING as z
 };

@@ -1,11 +1,9 @@
-import { i as getContext, g as escape_html, p as pop, e as push } from "../../chunks/index2.js";
+import { g as getContext, e as escape_html, p as pop, c as push } from "../../chunks/index2.js";
 import "clsx";
 import { n as noop } from "../../chunks/equality.js";
 import "@sveltejs/kit/internal";
 import "../../chunks/exports.js";
 import { w as writable } from "../../chunks/index.js";
-const SNAPSHOT_KEY = "sveltekit:snapshot";
-const SCROLL_KEY = "sveltekit:scroll";
 function create_updated_store() {
   const { set, subscribe } = writable(false);
   {
@@ -29,14 +27,6 @@ if (is_legacy) {
     url: new URL("https://example.com")
   });
 }
-function get(key, parse = JSON.parse) {
-  try {
-    return parse(sessionStorage[key]);
-  } catch {
-  }
-}
-get(SCROLL_KEY) ?? {};
-get(SNAPSHOT_KEY) ?? {};
 const stores = {
   updated: /* @__PURE__ */ create_updated_store()
 };
@@ -57,7 +47,7 @@ const page$1 = {
 const page = page$1;
 function Error$1($$payload, $$props) {
   push();
-  $$payload.out += `<h1>${escape_html(page.status)}</h1> <p>${escape_html(page.error?.message)}</p>`;
+  $$payload.out.push(`<h1>${escape_html(page.status)}</h1> <p>${escape_html(page.error?.message)}</p>`);
   pop();
 }
 export {
