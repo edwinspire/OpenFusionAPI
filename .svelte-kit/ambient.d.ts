@@ -122,8 +122,8 @@ declare module '$env/static/private' {
 	export const PUBLIC: string;
 	export const PWD: string;
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
-	export const QIP14596: string;
-	export const QIP25812: string;
+	export const QIP13700: string;
+	export const QIP2044: string;
 	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
@@ -275,8 +275,8 @@ declare module '$env/dynamic/private' {
 		PUBLIC: string;
 		PWD: string;
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
-		QIP14596: string;
-		QIP25812: string;
+		QIP13700: string;
+		QIP2044: string;
 		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;

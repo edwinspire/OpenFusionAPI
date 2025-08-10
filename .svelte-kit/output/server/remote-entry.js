@@ -154,7 +154,7 @@ function form(fn) {
         state.refreshes ??= {};
         const result = await run_remote_function(event, true, form_data, (d) => d, fn);
         if (!event.isRemoteRequest) {
-          state.form_result = [key, result];
+          (state.remote_data ??= {})[__.id] = result;
         }
         return result;
       }
@@ -171,8 +171,8 @@ function form(fn) {
     Object.defineProperty(instance, "result", {
       get() {
         try {
-          const { form_result } = get_event_state(getRequestEvent());
-          return form_result && form_result[0] === key ? form_result[1] : void 0;
+          const { remote_data } = get_event_state(getRequestEvent());
+          return remote_data?.[__.id];
         } catch {
           return void 0;
         }

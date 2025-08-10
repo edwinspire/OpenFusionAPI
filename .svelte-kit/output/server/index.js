@@ -1605,13 +1605,29 @@ async function render_response({
 							try_to_resolve();
 						}`);
     }
+    const { remote_data } = get_event_state(event);
+    if (remote_data) {
+      const remote = {};
+      for (const key2 in remote_data) {
+        remote[key2] = await remote_data[key2];
+      }
+      const replacer = (thing) => {
+        for (const key2 in options2.hooks.transport) {
+          const encoded = options2.hooks.transport[key2].encode(thing);
+          if (encoded) {
+            return `app.decode('${key2}', ${devalue.uneval(encoded, replacer)})`;
+          }
+        }
+      };
+      properties.push(`data: ${devalue.uneval(remote, replacer)}`);
+    }
     blocks.push(`${global} = {
 						${properties.join(",\n						")}
 					};`);
     const args = ["element"];
     blocks.push("const element = document.currentScript.parentElement;");
     if (page_config.ssr) {
-      const serialized = { form: "null", error: "null", remote: "null" };
+      const serialized = { form: "null", error: "null" };
       if (form_value) {
         serialized.form = uneval_action_response(
           form_value,
@@ -1623,28 +1639,11 @@ async function render_response({
       if (error2) {
         serialized.error = devalue.uneval(error2);
       }
-      const { remote_data } = get_event_state(event);
-      if (remote_data) {
-        const remote = {};
-        for (const key2 in remote_data) {
-          remote[key2] = await remote_data[key2];
-        }
-        const replacer = (thing) => {
-          for (const key2 in options2.hooks.transport) {
-            const encoded = options2.hooks.transport[key2].encode(thing);
-            if (encoded) {
-              return `app.decode('${key2}', ${devalue.uneval(encoded, replacer)})`;
-            }
-          }
-        };
-        serialized.remote = devalue.uneval(remote, replacer);
-      }
       const hydrate = [
         `node_ids: [${branch.map(({ node }) => node.index).join(", ")}]`,
         `data: ${data}`,
         `form: ${serialized.form}`,
-        `error: ${serialized.error}`,
-        `remote: ${serialized.remote}`
+        `error: ${serialized.error}`
       ];
       if (status !== 200) {
         hydrate.push(`status: ${status}`);
