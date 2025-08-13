@@ -5,6 +5,7 @@ import { e as assets, b as base, a as app_dir, o as override, r as reset, p as p
 import { w as with_event, v as validate_depends, a as get_event_state, b as stringify, p as parse_remote_arg, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, E as EVENT_STATE, d as create_event_state } from "./chunks/event-state.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
+import { b as base64_encode, t as text_decoder, c as text_encoder, g as get_relative_path } from "./chunks/utils.js";
 import { r as readable, w as writable } from "./chunks/index.js";
 import { p as public_env, s as safe_public_env, r as read_implementation, o as options, g as get_hooks, a as set_private_env, b as set_public_env, c as set_safe_public_env, d as set_read_implementation } from "./chunks/internal.js";
 import { parse, serialize } from "cookie";
@@ -525,29 +526,6 @@ function try_serialize(data, fn, route_id) {
     throw error2;
   }
 }
-function b64_encode(buffer) {
-  if (globalThis.Buffer) {
-    return Buffer.from(buffer).toString("base64");
-  }
-  const little_endian = new Uint8Array(new Uint16Array([1]).buffer)[0] > 0;
-  return btoa(
-    new TextDecoder(little_endian ? "utf-16le" : "utf-16be").decode(
-      new Uint16Array(new Uint8Array(buffer))
-    )
-  );
-}
-function get_relative_path(from, to) {
-  const from_parts = from.split(/[/\\]/);
-  const to_parts = to.split(/[/\\]/);
-  from_parts.pop();
-  while (from_parts[0] === to_parts[0]) {
-    from_parts.shift();
-    to_parts.shift();
-  }
-  let i = from_parts.length;
-  while (i--) from_parts[i] = "..";
-  return from_parts.concat(to_parts).join("/");
-}
 async function load_server_data({ event, state, node, parent }) {
   if (!node?.server) return null;
   let is_tracking = true;
@@ -735,11 +713,12 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
         if (key2 === "arrayBuffer") {
           return async () => {
             const buffer = await response2.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
             if (dependency) {
-              dependency.body = new Uint8Array(buffer);
+              dependency.body = bytes;
             }
             if (buffer instanceof ArrayBuffer) {
-              await push_fetched(b64_encode(buffer), true);
+              await push_fetched(base64_encode(bytes), true);
             }
             return buffer;
           };
@@ -793,13 +772,12 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 async function stream_to_string(stream) {
   let result = "";
   const reader = stream.getReader();
-  const decoder = new TextDecoder();
   while (true) {
     const { done, value } = await reader.read();
     if (done) {
       break;
     }
-    result += decoder.decode(value);
+    result += text_decoder.decode(value);
   }
   return result;
 }
@@ -873,7 +851,6 @@ function serialize_data(fetched, filter, prerendering2 = false) {
   return `<script ${attrs.join(" ")}>${safe_payload}<\/script>`;
 }
 const s = JSON.stringify;
-const encoder$2 = new TextEncoder();
 function sha256(data) {
   if (!key[0]) precompute();
   const out = init.slice(0);
@@ -920,7 +897,7 @@ function sha256(data) {
   }
   const bytes = new Uint8Array(out.buffer);
   reverse_endianness(bytes);
-  return base64(bytes);
+  return btoa(String.fromCharCode(...bytes));
 }
 const init = new Uint32Array(8);
 const key = new Uint32Array(64);
@@ -959,7 +936,7 @@ function reverse_endianness(bytes) {
   }
 }
 function encode(str) {
-  const encoded = encoder$2.encode(str);
+  const encoded = text_encoder.encode(str);
   const length = encoded.length * 8;
   const size = 512 * Math.ceil((length + 65) / 512);
   const bytes = new Uint8Array(size / 8);
@@ -971,34 +948,10 @@ function encode(str) {
   words[words.length - 1] = length;
   return words;
 }
-const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
-function base64(bytes) {
-  const l = bytes.length;
-  let result = "";
-  let i;
-  for (i = 2; i < l; i += 3) {
-    result += chars[bytes[i - 2] >> 2];
-    result += chars[(bytes[i - 2] & 3) << 4 | bytes[i - 1] >> 4];
-    result += chars[(bytes[i - 1] & 15) << 2 | bytes[i] >> 6];
-    result += chars[bytes[i] & 63];
-  }
-  if (i === l + 1) {
-    result += chars[bytes[i - 2] >> 2];
-    result += chars[(bytes[i - 2] & 3) << 4];
-    result += "==";
-  }
-  if (i === l) {
-    result += chars[bytes[i - 2] >> 2];
-    result += chars[(bytes[i - 2] & 3) << 4 | bytes[i - 1] >> 4];
-    result += chars[(bytes[i - 1] & 15) << 2];
-    result += "=";
-  }
-  return result;
-}
 const array = new Uint8Array(16);
 function generate_nonce() {
   crypto.getRandomValues(array);
-  return base64(array);
+  return btoa(String.fromCharCode(...array));
 }
 const quoted = /* @__PURE__ */ new Set([
   "self",
@@ -1379,7 +1332,6 @@ const updated = {
   ...readable(false),
   check: () => false
 };
-const encoder$1 = new TextEncoder();
 async function render_response({
   branch,
   fetched,
@@ -1755,9 +1707,9 @@ ${indent}}`);
   }) : new Response(
     new ReadableStream({
       async start(controller) {
-        controller.enqueue(encoder$1.encode(transformed + "\n"));
+        controller.enqueue(text_encoder.encode(transformed + "\n"));
         for await (const chunk of chunks) {
-          controller.enqueue(encoder$1.encode(chunk));
+          controller.enqueue(text_encoder.encode(chunk));
         }
         controller.close();
       },
@@ -2021,7 +1973,6 @@ function once(fn) {
     return result = fn();
   };
 }
-const encoder = new TextEncoder();
 async function render_data(event, route, options2, manifest, state, invalidated_data_nodes, trailing_slash) {
   if (!route.page) {
     return new Response(void 0, {
@@ -2108,9 +2059,9 @@ async function render_data(event, route, options2, manifest, state, invalidated_
     return new Response(
       new ReadableStream({
         async start(controller) {
-          controller.enqueue(encoder.encode(data));
+          controller.enqueue(text_encoder.encode(data));
           for await (const chunk of chunks) {
-            controller.enqueue(encoder.encode(chunk));
+            controller.enqueue(text_encoder.encode(chunk));
           }
           controller.close();
         },
@@ -2260,15 +2211,9 @@ async function handle_remote_call(event, options2, manifest, id) {
         {
           type: "result",
           result: stringify(data2, transport),
-          refreshes: stringify(
-            {
-              ...get_event_state(event).refreshes,
-              ...await apply_client_refreshes(
-                /** @type {string[]} */
-                form_client_refreshes
-              )
-            },
-            transport
+          refreshes: await serialize_refreshes(
+            /** @type {string[]} */
+            form_client_refreshes
           )
         }
       );
@@ -2277,13 +2222,12 @@ async function handle_remote_call(event, options2, manifest, id) {
       const { payload: payload2, refreshes } = await event.request.json();
       const arg = parse_remote_arg(payload2, transport);
       const data2 = await with_event(event, () => fn(arg));
-      const refreshed = await apply_client_refreshes(refreshes);
       return json(
         /** @type {RemoteFunctionResponse} */
         {
           type: "result",
           result: stringify(data2, transport),
-          refreshes: stringify({ ...get_event_state(event).refreshes, ...refreshed }, transport)
+          refreshes: await serialize_refreshes(refreshes)
         }
       );
     }
@@ -2302,15 +2246,10 @@ async function handle_remote_call(event, options2, manifest, id) {
     );
   } catch (error2) {
     if (error2 instanceof Redirect) {
-      const refreshes = {
-        ...get_event_state(event).refreshes ?? {},
-        // could be set by form actions
-        ...await apply_client_refreshes(form_client_refreshes ?? [])
-      };
       return json({
         type: "redirect",
         location: error2.location,
-        refreshes: Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : void 0
+        refreshes: await serialize_refreshes(form_client_refreshes ?? [])
       });
     }
     return json(
@@ -2327,20 +2266,24 @@ async function handle_remote_call(event, options2, manifest, id) {
       }
     );
   }
-  async function apply_client_refreshes(refreshes) {
-    return Object.fromEntries(
-      await Promise.all(
-        refreshes.map(async (key2) => {
-          const [hash3, name2, payload] = key2.split("/");
-          const loader = manifest._.remotes[hash3];
-          if (!loader) error(400, "Bad Request");
-          const module2 = await loader();
-          const fn2 = module2[name2];
-          if (!fn2) error(400, "Bad Request");
-          return [key2, await with_event(event, () => fn2(parse_remote_arg(payload, transport)))];
-        })
+  async function serialize_refreshes(client_refreshes) {
+    const refreshes = {
+      ...get_event_state(event).refreshes,
+      ...Object.fromEntries(
+        await Promise.all(
+          client_refreshes.map(async (key2) => {
+            const [hash3, name2, payload] = key2.split("/");
+            const loader = manifest._.remotes[hash3];
+            if (!loader) error(400, "Bad Request");
+            const module2 = await loader();
+            const fn2 = module2[name2];
+            if (!fn2) error(400, "Bad Request");
+            return [key2, await with_event(event, () => fn2(parse_remote_arg(payload, transport)))];
+          })
+        )
       )
-    );
+    };
+    return Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : void 0;
   }
 }
 async function handle_remote_form_post(event, manifest, id) {
@@ -2738,8 +2681,8 @@ function get_cookies(request, url) {
       const cookie = new_cookies[key2];
       if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
       if (!path_matches(destination.pathname, cookie.options.path)) continue;
-      const encoder2 = cookie.options.encode || encodeURIComponent;
-      combined_cookies[cookie.name] = encoder2(cookie.value);
+      const encoder = cookie.options.encode || encodeURIComponent;
+      combined_cookies[cookie.name] = encoder(cookie.value);
     }
     if (header2) {
       const parsed = parse(header2, { decode: (value) => value });

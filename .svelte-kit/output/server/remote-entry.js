@@ -114,6 +114,9 @@ function command(validate_or_fn, maybe_fn) {
     );
   };
   Object.defineProperty(wrapper, "__", { value: __ });
+  Object.defineProperty(wrapper, "pending", {
+    get: () => 0
+  });
   return wrapper;
 }
 // @__NO_SIDE_EFFECTS__
@@ -177,6 +180,12 @@ function form(fn) {
           return void 0;
         }
       }
+    });
+    Object.defineProperty(instance, "pending", {
+      get: () => 0
+    });
+    Object.defineProperty(button_props, "pending", {
+      get: () => 0
     });
     if (key == void 0) {
       Object.defineProperty(instance, "for", {

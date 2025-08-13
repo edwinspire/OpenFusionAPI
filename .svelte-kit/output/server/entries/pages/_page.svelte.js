@@ -15,7 +15,7 @@ import "aria-query";
 import "axobject-query";
 import "esrap";
 import "esrap/languages/ts";
-import "@ampproject/remapping";
+import "@jridgewell/remapping";
 import "locate-character";
 import "@jridgewell/sourcemap-codec";
 import { a as attr, b as attr_style, s as stringify } from "../../chunks/index2.js";
