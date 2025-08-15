@@ -1,7 +1,7 @@
 # OPEN FUSION API
 # edwinspire@gmail.com
 # Usar una imagen base oficial de Node.js basada en Alpine (más ligera)
-FROM node:20-bookworm-slim
+FROM node:24-trixie-slim
 
 # Variables de Entorno
 ENV HOST=:: \

@@ -1,11 +1,11 @@
 import { D as DEV } from "./chunks/false.js";
 import { json, text, error } from "@sveltejs/kit";
 import { HttpError, SvelteKitError, Redirect, ActionFailure } from "@sveltejs/kit/internal";
-import { e as assets, b as base, a as app_dir, o as override, r as reset, p as prerendering } from "./chunks/environment.js";
-import { w as with_event, v as validate_depends, a as get_event_state, b as stringify, p as parse_remote_arg, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, E as EVENT_STATE, d as create_event_state } from "./chunks/event-state.js";
+import { a as assets, b as base, c as app_dir, o as override, r as reset, p as prerendering } from "./chunks/environment.js";
+import { w as with_event, v as validate_depends, g as get_event_state, s as stringify, p as parse_remote_arg, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, E as EVENT_STATE, c as create_event_state } from "./chunks/event-state.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
-import { b as base64_encode, t as text_decoder, c as text_encoder, g as get_relative_path } from "./chunks/utils.js";
+import { b as base64_encode, t as text_decoder, a as text_encoder, g as get_relative_path } from "./chunks/utils.js";
 import { r as readable, w as writable } from "./chunks/index.js";
 import { p as public_env, s as safe_public_env, r as read_implementation, o as options, g as get_hooks, a as set_private_env, b as set_public_env, c as set_safe_public_env, d as set_read_implementation } from "./chunks/internal.js";
 import { parse, serialize } from "cookie";
@@ -1637,7 +1637,11 @@ ${indent}}`);
       blocks.push(boot);
     }
     if (options2.service_worker) {
-      const opts = "";
+      let opts = "";
+      if (options2.service_worker_options != null) {
+        const service_worker_options = { ...options2.service_worker_options };
+        opts = `, ${s(service_worker_options)}`;
+      }
       blocks.push(`if ('serviceWorker' in navigator) {
 						addEventListener('load', function () {
 							navigator.serviceWorker.register('${prefixed("service-worker.js")}'${opts});
@@ -3455,3 +3459,4 @@ class Server {
 export {
   Server
 };
+//# sourceMappingURL=index.js.map

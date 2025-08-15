@@ -4,3 +4,4 @@ export {
   prerender,
   trailingSlash
 };
+//# sourceMappingURL=_layout.js.map

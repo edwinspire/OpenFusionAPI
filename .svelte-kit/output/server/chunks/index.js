@@ -1,4 +1,4 @@
-import { n as noop, s as safe_not_equal } from "./equality.js";
+import { n as noop, k as safe_not_equal } from "./equality.js";
 import "clsx";
 const subscriber_queue = [];
 function readable(value, start) {
@@ -57,3 +57,4 @@ export {
   readable as r,
   writable as w
 };
+//# sourceMappingURL=index.js.map

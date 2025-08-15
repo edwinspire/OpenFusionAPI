@@ -1,6 +1,6 @@
-import { H as HYDRATION_ERROR, B as BOUNDARY_EFFECT, E as ERROR_VALUE, j as EFFECT_RAN, U as UNOWNED, M as MAYBE_DIRTY, C as CLEAN, D as DERIVED, I as INERT, k as EFFECT, A as ASYNC, l as BLOCK_EFFECT, m as DIRTY, n as BRANCH_EFFECT, R as ROOT_EFFECT, o as DESTROYED, q as USER_EFFECT, r as INSPECT_EFFECT, S as STATE_SYMBOL, t as UNINITIALIZED, u as EFFECT_PRESERVED, v as HEAD_EFFECT, w as EFFECT_TRANSPARENT, x as STALE_REACTION, y as DISCONNECTED, z as REACTION_IS_UPDATING, F as COMMENT_NODE, G as HYDRATION_START, J as HYDRATION_END, L as LEGACY_PROPS, K as render, c as push$1, N as setContext, p as pop$1 } from "./index2.js";
+import { H as HYDRATION_ERROR, B as BOUNDARY_EFFECT, E as ERROR_VALUE, a as EFFECT_RAN, U as UNOWNED, M as MAYBE_DIRTY, C as CLEAN, D as DERIVED, I as INERT, b as EFFECT, A as ASYNC, c as BLOCK_EFFECT, d as DIRTY, e as BRANCH_EFFECT, R as ROOT_EFFECT, f as DESTROYED, g as USER_EFFECT, h as INSPECT_EFFECT, S as STATE_SYMBOL, i as UNINITIALIZED, j as EFFECT_PRESERVED, k as HEAD_EFFECT, l as EFFECT_TRANSPARENT, m as STALE_REACTION, n as DISCONNECTED, o as REACTION_IS_UPDATING, p as COMMENT_NODE, q as HYDRATION_START, r as HYDRATION_END, L as LEGACY_PROPS, s as render, t as push$1, u as setContext, v as pop$1 } from "./index2.js";
 import { D as DEV } from "./false.js";
-import { d as define_property, r as run_all, a as deferred, b as safe_equals, e as equals, o as object_prototype, c as array_prototype, g as get_descriptor, f as get_prototype_of, i as is_array, h as is_extensible, j as index_of, k as array_from } from "./equality.js";
+import { d as define_property, r as run_all, a as deferred, s as safe_equals, e as equals, o as object_prototype, b as array_prototype, g as get_descriptor, c as get_prototype_of, i as is_array, f as is_extensible, h as index_of, j as array_from } from "./equality.js";
 import "clsx";
 import "./environment.js";
 let public_env = {};
@@ -1988,6 +1988,7 @@ const options = {
   preload_strategy: "modulepreload",
   root,
   service_worker: false,
+  service_worker_options: void 0,
   templates: {
     app: ({ head, body, assets, nonce, env }) => '<!doctype html>\r\n<html lang="en">\r\n	<head>\r\n		<title>OpenFusionAPI</title>\r\n		<meta charset="utf-8" />\r\n		<link rel="icon" href="' + assets + '/favicon.png" />\r\n		<meta name="viewport" content="width=device-width, initial-scale=1" />\r\n		' + head + '\r\n	</head>\r\n	<body data-sveltekit-preload-data="hover">\r\n		<div style="display: contents">' + body + "</div>\r\n	</body>\r\n</html>\r\n",
     error: ({ status, message }) => '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>' + message + `</title>
@@ -2061,7 +2062,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "sxjo35"
+  version_hash: "6s0far"
 };
 async function get_hooks() {
   let handle;
@@ -2093,3 +2094,4 @@ export {
   read_implementation as r,
   safe_public_env as s
 };
+//# sourceMappingURL=internal.js.map

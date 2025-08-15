@@ -4,7 +4,7 @@ import adapter_static from "@sveltejs/adapter-static";
 const config = {
   kit: {
     adapter: adapter_static({
-      pages: "./www"
+      pages: "./www",
     }),
   },
 };

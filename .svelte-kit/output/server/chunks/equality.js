@@ -34,18 +34,19 @@ function safe_equals(value) {
 }
 export {
   deferred as a,
-  safe_equals as b,
-  array_prototype as c,
+  array_prototype as b,
+  get_prototype_of as c,
   define_property as d,
   equals as e,
-  get_prototype_of as f,
+  is_extensible as f,
   get_descriptor as g,
-  is_extensible as h,
+  index_of as h,
   is_array as i,
-  index_of as j,
-  array_from as k,
+  array_from as j,
+  safe_not_equal as k,
   noop as n,
   object_prototype as o,
   run_all as r,
-  safe_not_equal as s
+  safe_equals as s
 };
+//# sourceMappingURL=equality.js.map

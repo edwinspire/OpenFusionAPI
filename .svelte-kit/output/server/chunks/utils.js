@@ -35,9 +35,10 @@ function base64_decode(encoded) {
   return bytes;
 }
 export {
-  base64_decode as a,
+  text_encoder as a,
   base64_encode as b,
-  text_encoder as c,
+  base64_decode as c,
   get_relative_path as g,
   text_decoder as t
 };
+//# sourceMappingURL=utils.js.map

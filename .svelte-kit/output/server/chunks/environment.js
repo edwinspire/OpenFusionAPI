@@ -20,13 +20,14 @@ function set_prerendering() {
   prerendering = true;
 }
 export {
-  app_dir as a,
+  assets as a,
   base as b,
-  set_building as c,
-  set_prerendering as d,
-  assets as e,
+  app_dir as c,
+  set_building as d,
+  set_prerendering as e,
   override as o,
   prerendering as p,
   reset as r,
   set_assets as s
 };
+//# sourceMappingURL=environment.js.map

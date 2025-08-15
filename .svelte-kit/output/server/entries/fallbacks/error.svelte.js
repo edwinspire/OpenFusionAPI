@@ -1,4 +1,4 @@
-import { g as getContext, e as escape_html, p as pop, c as push } from "../../chunks/index2.js";
+import { w as getContext, x as escape_html, v as pop, t as push } from "../../chunks/index2.js";
 import "clsx";
 import { n as noop } from "../../chunks/equality.js";
 import "@sveltejs/kit/internal";
@@ -54,3 +54,4 @@ function Error$1($$payload, $$props) {
 export {
   Error$1 as default
 };
+//# sourceMappingURL=error.svelte.js.map
