@@ -1,7 +1,6 @@
 import "@edwinspire/universal-fetch";
 import "clsx";
-const PUBLIC_API_SERVER_HOST = "http://localhost:3000";
-validateBaseUrl(PUBLIC_API_SERVER_HOST);
+validateBaseUrl("");
 function validateBaseUrl(baseUrl) {
   try {
     const url = new URL(baseUrl);
