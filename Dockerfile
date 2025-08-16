@@ -1,6 +1,6 @@
 # OPEN FUSION API
 # edwinspire@gmail.com
-# Usar una imagen base oficial de Node.js basada en Alpine (más ligera)
+# Usar una imagen
 FROM node:24-trixie-slim
 
 # Variables de Entorno
@@ -37,8 +37,8 @@ RUN npm install pm2 -g
 
 # Instalar el módulo de rotación de logs de PM2
 RUN pm2 install pm2-logrotate \
-    && pm2 set pm2-logrotate:max_days 3 \
-    && pm2 set pm2-logrotate:retain 3
+    && pm2 set pm2-logrotate:max_days 2 \
+    && pm2 set pm2-logrotate:retain 2
 
 # Ejecutar la compilación de la aplicación
 RUN npm run build
