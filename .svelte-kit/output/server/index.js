@@ -1,13 +1,14 @@
 import { D as DEV } from "./chunks/false.js";
 import { json, text, error } from "@sveltejs/kit";
 import { HttpError, SvelteKitError, Redirect, ActionFailure } from "@sveltejs/kit/internal";
+import { with_request_store, merge_tracing } from "@sveltejs/kit/internal/server";
 import { a as assets, b as base, c as app_dir, o as override, r as reset, p as prerendering } from "./chunks/environment.js";
-import { w as with_event, v as validate_depends, g as get_event_state, s as stringify, p as parse_remote_arg, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, E as EVENT_STATE, c as create_event_state } from "./chunks/event-state.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
 import { b as base64_encode, t as text_decoder, a as text_encoder, g as get_relative_path } from "./chunks/utils.js";
 import { r as readable, w as writable } from "./chunks/index.js";
 import { p as public_env, s as safe_public_env, r as read_implementation, o as options, g as get_hooks, a as set_private_env, b as set_public_env, c as set_safe_public_env, d as set_read_implementation } from "./chunks/internal.js";
+import { s as stringify, p as parse_remote_arg, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM } from "./chunks/shared.js";
 import { parse, serialize } from "cookie";
 import * as set_cookie_parser from "set-cookie-parser";
 const SVELTE_KIT_ASSETS = "/_svelte_kit_assets";
@@ -135,10 +136,10 @@ function static_error_page(options2, status, message) {
     status
   });
 }
-async function handle_fatal_error(event, options2, error2) {
+async function handle_fatal_error(event, state, options2, error2) {
   error2 = error2 instanceof HttpError ? error2 : coalesce_to_error(error2);
   const status = get_status(error2);
-  const body2 = await handle_error_and_jsonify(event, options2, error2);
+  const body2 = await handle_error_and_jsonify(event, state, options2, error2);
   const type = negotiate(event.request.headers.get("accept") || "text/html", [
     "application/json",
     "text/html"
@@ -150,14 +151,14 @@ async function handle_fatal_error(event, options2, error2) {
   }
   return static_error_page(options2, status, body2.message);
 }
-async function handle_error_and_jsonify(event, options2, error2) {
+async function handle_error_and_jsonify(event, state, options2, error2) {
   if (error2 instanceof HttpError) {
     return error2.body;
   }
   const status = get_status(error2);
   const message = get_message(error2);
-  return await with_event(
-    event,
+  return await with_request_store(
+    { event, state },
     () => options2.hooks.handleError({ error: error2, event, status, message })
   ) ?? { message };
 }
@@ -196,7 +197,14 @@ function serialize_uses(node) {
 function has_prerendered_path(manifest, pathname) {
   return manifest._.prerendered_routes.has(pathname) || pathname.at(-1) === "/" && manifest._.prerendered_routes.has(pathname.slice(0, -1));
 }
-async function render_endpoint(event, mod, state) {
+function get_node_type(node_id) {
+  const parts = node_id?.split("/");
+  const filename = parts?.at(-1);
+  if (!filename) return "unknown";
+  const dot_parts = filename.split(".");
+  return dot_parts.slice(0, -1).join(".");
+}
+async function render_endpoint(event, event_state, mod, state) {
   const method = (
     /** @type {import('types').HttpMethod} */
     event.request.method
@@ -220,8 +228,8 @@ async function render_endpoint(event, mod, state) {
     }
   }
   try {
-    const response = await with_event(
-      event,
+    const response = await with_request_store(
+      { event, state: event_state },
       () => handler(
         /** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */
         event
@@ -303,6 +311,51 @@ function add_resolution_suffix(pathname) {
 function strip_resolution_suffix(pathname) {
   return pathname.slice(0, -ROUTE_SUFFIX.length);
 }
+const noop_span = {
+  spanContext() {
+    return noop_span_context;
+  },
+  setAttribute() {
+    return this;
+  },
+  setAttributes() {
+    return this;
+  },
+  addEvent() {
+    return this;
+  },
+  setStatus() {
+    return this;
+  },
+  updateName() {
+    return this;
+  },
+  end() {
+    return this;
+  },
+  isRecording() {
+    return false;
+  },
+  recordException() {
+    return this;
+  },
+  addLink() {
+    return this;
+  },
+  addLinks() {
+    return this;
+  }
+};
+const noop_span_context = {
+  traceId: "",
+  spanId: "",
+  traceFlags: 0
+};
+async function record_span({ name, attributes, fn }) {
+  {
+    return fn(noop_span);
+  }
+}
 function is_action_json_request(event) {
   const accept = negotiate(event.request.headers.get("accept") ?? "*/*", [
     "application/json",
@@ -310,7 +363,7 @@ function is_action_json_request(event) {
   ]);
   return accept === "application/json" && event.request.method === "POST";
 }
-async function handle_action_json_request(event, options2, server) {
+async function handle_action_json_request(event, event_state, options2, server) {
   const actions = server?.actions;
   if (!actions) {
     const no_actions_error = new SvelteKitError(
@@ -321,7 +374,7 @@ async function handle_action_json_request(event, options2, server) {
     return action_json(
       {
         type: "error",
-        error: await handle_error_and_jsonify(event, options2, no_actions_error)
+        error: await handle_error_and_jsonify(event, event_state, options2, no_actions_error)
       },
       {
         status: no_actions_error.status,
@@ -335,7 +388,7 @@ async function handle_action_json_request(event, options2, server) {
   }
   check_named_default_separate(actions);
   try {
-    const data = await call_action(event, actions);
+    const data = await call_action(event, event_state, actions);
     if (false) ;
     if (data instanceof ActionFailure) {
       return action_json({
@@ -372,7 +425,12 @@ async function handle_action_json_request(event, options2, server) {
     return action_json(
       {
         type: "error",
-        error: await handle_error_and_jsonify(event, options2, check_incorrect_fail_use(err))
+        error: await handle_error_and_jsonify(
+          event,
+          event_state,
+          options2,
+          check_incorrect_fail_use(err)
+        )
       },
       {
         status: get_status(err)
@@ -396,7 +454,7 @@ function action_json(data, init2) {
 function is_action_request(event) {
   return event.request.method === "POST";
 }
-async function handle_action_request(event, server) {
+async function handle_action_request(event, event_state, server) {
   const actions = server?.actions;
   if (!actions) {
     event.setHeaders({
@@ -415,7 +473,7 @@ async function handle_action_request(event, server) {
   }
   check_named_default_separate(actions);
   try {
-    const data = await call_action(event, actions);
+    const data = await call_action(event, event_state, actions);
     if (false) ;
     if (data instanceof ActionFailure) {
       return {
@@ -453,7 +511,7 @@ function check_named_default_separate(actions) {
     );
   }
 }
-async function call_action(event, actions) {
+async function call_action(event, event_state, actions) {
   const url = new URL(event.request.url);
   let name = "default";
   for (const param of url.searchParams) {
@@ -478,7 +536,26 @@ async function call_action(event, actions) {
       )}`
     );
   }
-  return with_event(event, () => action(event));
+  return record_span({
+    name: "sveltekit.form_action",
+    attributes: {
+      "http.route": event.route.id || "unknown"
+    },
+    fn: async (current) => {
+      const traced_event = merge_tracing(event, current);
+      const result = await with_request_store(
+        { event: traced_event, state: event_state },
+        () => action(traced_event)
+      );
+      if (result instanceof ActionFailure) {
+        current.setAttributes({
+          "sveltekit.form_action.result.type": "failure",
+          "sveltekit.form_action.result.status": result.status
+        });
+      }
+      return result;
+    }
+  });
 }
 function validate_action_return(data) {
   if (data instanceof Redirect) {
@@ -526,7 +603,7 @@ function try_serialize(data, fn, route_id) {
     throw error2;
   }
 }
-async function load_server_data({ event, state, node, parent }) {
+async function load_server_data({ event, event_state, state, node, parent }) {
   if (!node?.server) return null;
   let is_tracking = true;
   const uses = {
@@ -558,67 +635,72 @@ async function load_server_data({ event, state, node, parent }) {
   if (state.prerendering) {
     disable_search(url);
   }
-  let done = false;
-  const result = await with_event(
-    event,
-    () => load.call(null, {
-      ...event,
-      fetch: (info, init2) => {
-        const url2 = new URL(info instanceof Request ? info.url : info, event.url);
-        if (DEV && done && !uses.dependencies.has(url2.href)) ;
-        return event.fetch(info, init2);
-      },
-      /** @param {string[]} deps */
-      depends: (...deps) => {
-        for (const dep of deps) {
-          const { href } = new URL(dep, event.url);
-          if (DEV) ;
-          uses.dependencies.add(href);
-        }
-      },
-      params: new Proxy(event.params, {
-        get: (target, key2) => {
-          if (DEV && done && typeof key2 === "string" && !uses.params.has(key2)) ;
-          if (is_tracking) {
-            uses.params.add(key2);
+  const result = await record_span({
+    name: "sveltekit.load",
+    attributes: {
+      "sveltekit.load.node_id": node.server_id || "unknown",
+      "sveltekit.load.node_type": get_node_type(node.server_id),
+      "http.route": event.route.id || "unknown"
+    },
+    fn: async (current) => {
+      const traced_event = merge_tracing(event, current);
+      const result2 = await with_request_store(
+        { event: traced_event, state: event_state },
+        () => load.call(null, {
+          ...traced_event,
+          fetch: (info, init2) => {
+            new URL(info instanceof Request ? info.url : info, event.url);
+            return event.fetch(info, init2);
+          },
+          /** @param {string[]} deps */
+          depends: (...deps) => {
+            for (const dep of deps) {
+              const { href } = new URL(dep, event.url);
+              uses.dependencies.add(href);
+            }
+          },
+          params: new Proxy(event.params, {
+            get: (target, key2) => {
+              if (is_tracking) {
+                uses.params.add(key2);
+              }
+              return target[
+                /** @type {string} */
+                key2
+              ];
+            }
+          }),
+          parent: async () => {
+            if (is_tracking) {
+              uses.parent = true;
+            }
+            return parent();
+          },
+          route: new Proxy(event.route, {
+            get: (target, key2) => {
+              if (is_tracking) {
+                uses.route = true;
+              }
+              return target[
+                /** @type {'id'} */
+                key2
+              ];
+            }
+          }),
+          url,
+          untrack(fn) {
+            is_tracking = false;
+            try {
+              return fn();
+            } finally {
+              is_tracking = true;
+            }
           }
-          return target[
-            /** @type {string} */
-            key2
-          ];
-        }
-      }),
-      parent: async () => {
-        if (DEV && done && !uses.parent) ;
-        if (is_tracking) {
-          uses.parent = true;
-        }
-        return parent();
-      },
-      route: new Proxy(event.route, {
-        get: (target, key2) => {
-          if (DEV && done && typeof key2 === "string" && !uses.route) ;
-          if (is_tracking) {
-            uses.route = true;
-          }
-          return target[
-            /** @type {'id'} */
-            key2
-          ];
-        }
-      }),
-      url,
-      untrack(fn) {
-        is_tracking = false;
-        try {
-          return fn();
-        } finally {
-          is_tracking = true;
-        }
-      }
-    })
-  );
-  done = true;
+        })
+      );
+      return result2;
+    }
+  });
   return {
     type: "data",
     data: result ?? null,
@@ -628,6 +710,7 @@ async function load_server_data({ event, state, node, parent }) {
 }
 async function load_data({
   event,
+  event_state,
   fetched,
   node,
   parent,
@@ -641,21 +724,33 @@ async function load_data({
   if (!load) {
     return server_data_node?.data ?? null;
   }
-  const result = await with_event(
-    event,
-    () => load.call(null, {
-      url: event.url,
-      params: event.params,
-      data: server_data_node?.data ?? null,
-      route: event.route,
-      fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
-      setHeaders: event.setHeaders,
-      depends: () => {
-      },
-      parent,
-      untrack: (fn) => fn()
-    })
-  );
+  const result = await record_span({
+    name: "sveltekit.load",
+    attributes: {
+      "sveltekit.load.node_id": node.universal_id || "unknown",
+      "sveltekit.load.node_type": get_node_type(node.universal_id),
+      "http.route": event.route.id || "unknown"
+    },
+    fn: async (current) => {
+      const traced_event = merge_tracing(event, current);
+      return await with_request_store(
+        { event: traced_event, state: event_state },
+        () => load.call(null, {
+          url: event.url,
+          params: event.params,
+          data: server_data_node?.data ?? null,
+          route: event.route,
+          fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+          setHeaders: event.setHeaders,
+          depends: () => {
+          },
+          parent,
+          untrack: (fn) => fn(),
+          tracing: traced_event.tracing
+        })
+      );
+    }
+  });
   return result ?? null;
 }
 function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
@@ -1342,6 +1437,7 @@ async function render_response({
   status,
   error: error2 = null,
   event,
+  event_state,
   resolve_opts,
   action_result
 }) {
@@ -1424,7 +1520,10 @@ async function render_response({
     };
     {
       try {
-        rendered = with_event(event, () => options2.root.render(props, render_opts));
+        rendered = with_request_store(
+          { event, state: event_state },
+          () => options2.root.render(props, render_opts)
+        );
       } finally {
         reset();
       }
@@ -1491,6 +1590,7 @@ async function render_response({
   const global = `__sveltekit_${options2.version_hash}`;
   const { data, chunks } = get_data(
     event,
+    event_state,
     options2,
     branch.map((b) => b.server_data),
     csp,
@@ -1557,7 +1657,7 @@ async function render_response({
 							try_to_resolve();
 						}`);
     }
-    const { remote_data } = get_event_state(event);
+    const { remote_data } = event_state;
     if (remote_data) {
       const remote = {};
       for (const key2 in remote_data) {
@@ -1724,7 +1824,7 @@ ${indent}}`);
     }
   );
 }
-function get_data(event, options2, nodes, csp, global) {
+function get_data(event, event_state, options2, nodes, csp, global) {
   let promise_id = 1;
   let count = 0;
   const { iterator, push, done } = create_async_iterator();
@@ -1738,7 +1838,7 @@ function get_data(event, options2, nodes, csp, global) {
       ).catch(
         /** @param {any} error */
         async (error2) => ({
-          error: await handle_error_and_jsonify(event, options2, error2)
+          error: await handle_error_and_jsonify(event, event_state, options2, error2)
         })
       ).then(
         /**
@@ -1752,6 +1852,7 @@ function get_data(event, options2, nodes, csp, global) {
           } catch {
             error2 = await handle_error_and_jsonify(
               event,
+              event_state,
               options2,
               new Error(`Failed to serialize promise while rendering ${event.route.id}`)
             );
@@ -1885,6 +1986,7 @@ class PageNodes {
 }
 async function respond_with_error({
   event,
+  event_state,
   options: options2,
   manifest,
   state,
@@ -1911,6 +2013,7 @@ async function respond_with_error({
       state.error = true;
       const server_data_promise = load_server_data({
         event,
+        event_state,
         state,
         node: default_layout,
         // eslint-disable-next-line @typescript-eslint/require-await
@@ -1919,6 +2022,7 @@ async function respond_with_error({
       const server_data = await server_data_promise;
       const data = await load_data({
         event,
+        event_state,
         fetched,
         node: default_layout,
         // eslint-disable-next-line @typescript-eslint/require-await
@@ -1951,10 +2055,11 @@ async function respond_with_error({
         csr
       },
       status,
-      error: await handle_error_and_jsonify(event, options2, error2),
+      error: await handle_error_and_jsonify(event, event_state, options2, error2),
       branch,
       fetched,
       event,
+      event_state,
       resolve_opts
     });
   } catch (e) {
@@ -1964,7 +2069,7 @@ async function respond_with_error({
     return static_error_page(
       options2,
       get_status(e),
-      (await handle_error_and_jsonify(event, options2, e)).message
+      (await handle_error_and_jsonify(event, event_state, options2, e)).message
     );
   }
 }
@@ -1977,7 +2082,7 @@ function once(fn) {
     return result = fn();
   };
 }
-async function render_data(event, route, options2, manifest, state, invalidated_data_nodes, trailing_slash) {
+async function render_data(event, event_state, route, options2, manifest, state, invalidated_data_nodes, trailing_slash) {
   if (!route.page) {
     return new Response(void 0, {
       status: 404
@@ -2004,6 +2109,7 @@ async function render_data(event, route, options2, manifest, state, invalidated_
           const node = n == void 0 ? n : await manifest._.nodes[n]();
           return load_server_data({
             event: new_event,
+            event_state,
             state,
             node,
             parent: async () => {
@@ -2049,14 +2155,14 @@ async function render_data(event, route, options2, manifest, state, invalidated_
             /** @type {import('types').ServerErrorNode} */
             {
               type: "error",
-              error: await handle_error_and_jsonify(event, options2, error2),
+              error: await handle_error_and_jsonify(event, event_state, options2, error2),
               status: error2 instanceof HttpError || error2 instanceof SvelteKitError ? error2.status : void 0
             }
           );
         })
       )
     );
-    const { data, chunks } = get_data_json(event, options2, nodes);
+    const { data, chunks } = get_data_json(event, event_state, options2, nodes);
     if (!chunks) {
       return json_response(data);
     }
@@ -2085,7 +2191,7 @@ async function render_data(event, route, options2, manifest, state, invalidated_
     if (error2 instanceof Redirect) {
       return redirect_json_response(error2);
     } else {
-      return json_response(await handle_error_and_jsonify(event, options2, error2), 500);
+      return json_response(await handle_error_and_jsonify(event, event_state, options2, error2), 500);
     }
   }
 }
@@ -2107,7 +2213,7 @@ function redirect_json_response(redirect) {
     }
   );
 }
-function get_data_json(event, options2, nodes) {
+function get_data_json(event, event_state, options2, nodes) {
   let promise_id = 1;
   let count = 0;
   const { iterator, push, done } = create_async_iterator();
@@ -2127,6 +2233,7 @@ function get_data_json(event, options2, nodes) {
             key2 = "error";
             return handle_error_and_jsonify(
               event,
+              event_state,
               options2,
               /** @type {any} */
               e
@@ -2141,6 +2248,7 @@ function get_data_json(event, options2, nodes) {
             } catch {
               const error2 = await handle_error_and_jsonify(
                 event,
+                event_state,
                 options2,
                 new Error(`Failed to serialize promise while rendering ${event.route.id}`)
               );
@@ -2181,7 +2289,20 @@ function get_data_json(event, options2, nodes) {
     ));
   }
 }
-async function handle_remote_call(event, options2, manifest, id) {
+async function handle_remote_call(event, state, options2, manifest, id) {
+  return record_span({
+    name: "sveltekit.remote.call",
+    attributes: {},
+    fn: (current) => {
+      const traced_event = merge_tracing(event, current);
+      return with_request_store(
+        { event: traced_event, state },
+        () => handle_remote_call_internal(traced_event, state, options2, manifest, id)
+      );
+    }
+  });
+}
+async function handle_remote_call_internal(event, state, options2, manifest, id) {
   const [hash2, name, prerender_args] = id.split("/");
   const remotes = manifest._.remotes;
   if (!remotes[hash2]) error(404);
@@ -2190,6 +2311,10 @@ async function handle_remote_call(event, options2, manifest, id) {
   if (!fn) error(404);
   const info = fn.__;
   const transport = options2.hooks.transport;
+  event.tracing.current.setAttributes({
+    "sveltekit.remote.call.type": info.type,
+    "sveltekit.remote.call.name": info.name
+  });
   let form_client_refreshes;
   try {
     if (info.type === "form") {
@@ -2209,7 +2334,7 @@ async function handle_remote_call(event, options2, manifest, id) {
       );
       form_data.delete("sveltekit:remote_refreshes");
       const fn2 = info.fn;
-      const data2 = await with_event(event, () => fn2(form_data));
+      const data2 = await with_request_store({ event, state }, () => fn2(form_data));
       return json(
         /** @type {RemoteFunctionResponse} */
         {
@@ -2225,7 +2350,7 @@ async function handle_remote_call(event, options2, manifest, id) {
     if (info.type === "command") {
       const { payload: payload2, refreshes } = await event.request.json();
       const arg = parse_remote_arg(payload2, transport);
-      const data2 = await with_event(event, () => fn(arg));
+      const data2 = await with_request_store({ event, state }, () => fn(arg));
       return json(
         /** @type {RemoteFunctionResponse} */
         {
@@ -2240,7 +2365,10 @@ async function handle_remote_call(event, options2, manifest, id) {
       // new URL(...) necessary because we're hiding the URL from the user in the event object
       new URL(event.request.url).searchParams.get("payload")
     );
-    const data = await with_event(event, () => fn(parse_remote_arg(payload, transport)));
+    const data = await with_request_store(
+      { event, state },
+      () => fn(parse_remote_arg(payload, transport))
+    );
     return json(
       /** @type {RemoteFunctionResponse} */
       {
@@ -2260,7 +2388,7 @@ async function handle_remote_call(event, options2, manifest, id) {
       /** @type {RemoteFunctionResponse} */
       {
         type: "error",
-        error: await handle_error_and_jsonify(event, options2, error2),
+        error: await handle_error_and_jsonify(event, state, options2, error2),
         status: error2 instanceof HttpError || error2 instanceof SvelteKitError ? error2.status : 500
       },
       {
@@ -2272,7 +2400,7 @@ async function handle_remote_call(event, options2, manifest, id) {
   }
   async function serialize_refreshes(client_refreshes) {
     const refreshes = {
-      ...get_event_state(event).refreshes,
+      ...state.refreshes,
       ...Object.fromEntries(
         await Promise.all(
           client_refreshes.map(async (key2) => {
@@ -2282,7 +2410,13 @@ async function handle_remote_call(event, options2, manifest, id) {
             const module2 = await loader();
             const fn2 = module2[name2];
             if (!fn2) error(400, "Bad Request");
-            return [key2, await with_event(event, () => fn2(parse_remote_arg(payload, transport)))];
+            return [
+              key2,
+              await with_request_store(
+                { event, state },
+                () => fn2(parse_remote_arg(payload, transport))
+              )
+            ];
           })
         )
       )
@@ -2290,7 +2424,20 @@ async function handle_remote_call(event, options2, manifest, id) {
     return Object.keys(refreshes).length > 0 ? stringify(refreshes, transport) : void 0;
   }
 }
-async function handle_remote_form_post(event, manifest, id) {
+async function handle_remote_form_post(event, state, manifest, id) {
+  return record_span({
+    name: "sveltekit.remote.form.post",
+    attributes: {},
+    fn: (current) => {
+      const traced_event = merge_tracing(event, current);
+      return with_request_store(
+        { event: traced_event, state },
+        () => handle_remote_form_post_internal(traced_event, state, manifest, id)
+      );
+    }
+  });
+}
+async function handle_remote_form_post_internal(event, state, manifest, id) {
   const [hash2, name, action_id] = id.split("/");
   const remotes = manifest._.remotes;
   const module = await remotes[hash2]?.();
@@ -2314,7 +2461,7 @@ async function handle_remote_form_post(event, manifest, id) {
     };
   }
   if (action_id) {
-    form = with_event(event, () => form.for(JSON.parse(action_id)));
+    form = with_request_store({ event, state }, () => form.for(JSON.parse(action_id)));
   }
   try {
     const form_data = await event.request.formData();
@@ -2323,7 +2470,7 @@ async function handle_remote_form_post(event, manifest, id) {
       /** @type {any} */
       form.__.fn
     );
-    await with_event(event, () => fn(form_data));
+    await with_request_store({ event, state }, () => fn(form_data));
     return {
       type: "success",
       status: 200
@@ -2350,7 +2497,7 @@ function get_remote_action(url) {
   return url.searchParams.get("/remote");
 }
 const MAX_DEPTH = 10;
-async function render_page(event, page, options2, manifest, state, nodes, resolve_opts) {
+async function render_page(event, event_state, page, options2, manifest, state, nodes, resolve_opts) {
   if (state.depth > MAX_DEPTH) {
     return text(`Not found: ${event.url.pathname}`, {
       status: 404
@@ -2359,7 +2506,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
   }
   if (is_action_json_request(event)) {
     const node = await manifest._.nodes[page.leaf]();
-    return handle_action_json_request(event, options2, node?.server);
+    return handle_action_json_request(event, event_state, options2, node?.server);
   }
   try {
     const leaf_node = (
@@ -2371,9 +2518,9 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
     if (is_action_request(event)) {
       const remote_id = get_remote_action(event.url);
       if (remote_id) {
-        action_result = await handle_remote_form_post(event, manifest, remote_id);
+        action_result = await handle_remote_form_post(event, event_state, manifest, remote_id);
       } else {
-        action_result = await handle_action_request(event, leaf_node.server);
+        action_result = await handle_action_request(event, event_state, leaf_node.server);
       }
       if (action_result?.type === "redirect") {
         return redirect_response(action_result.status, action_result.location);
@@ -2414,6 +2561,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
         status,
         error: null,
         event,
+        event_state,
         options: options2,
         manifest,
         state,
@@ -2433,6 +2581,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
           }
           return await load_server_data({
             event,
+            event_state,
             state,
             node,
             parent: async () => {
@@ -2457,6 +2606,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
         try {
           return await load_data({
             event,
+            event_state,
             fetched,
             node,
             parent: async () => {
@@ -2505,7 +2655,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
             return redirect_response(err.status, err.location);
           }
           const status2 = get_status(err);
-          const error2 = await handle_error_and_jsonify(event, options2, err);
+          const error2 = await handle_error_and_jsonify(event, event_state, options2, err);
           while (i--) {
             if (page.errors[i]) {
               const index = (
@@ -2519,6 +2669,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
               const nodes2 = new PageNodes(layouts.map((layout) => layout.node));
               return await render_response({
                 event,
+                event_state,
                 options: options2,
                 manifest,
                 state,
@@ -2547,6 +2698,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
     if (state.prerendering && should_prerender_data) {
       let { data, chunks } = get_data_json(
         event,
+        event_state,
         options2,
         branch.map((node) => node?.server_data)
       );
@@ -2562,6 +2714,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
     }
     return await render_response({
       event,
+      event_state,
       options: options2,
       manifest,
       state,
@@ -2579,6 +2732,7 @@ async function render_page(event, page, options2, manifest, state, nodes, resolv
   } catch (e) {
     return await respond_with_error({
       event,
+      event_state,
       options: options2,
       manifest,
       state,
@@ -2896,7 +3050,8 @@ const default_preload = ({ type }) => type === "js" || type === "css";
 const page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "POST"]);
 const allowed_page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
 let warned_on_devtools_json_request = false;
-async function respond(request, options2, manifest, state) {
+const respond = propagate_context(internal_respond);
+async function internal_respond(request, options2, manifest, state) {
   const url = new URL(request.url);
   const is_route_resolution_request = has_resolution_suffix(url.pathname);
   const is_data_request = has_data_suffix(url.pathname);
@@ -2940,8 +3095,15 @@ async function respond(request, options2, manifest, state) {
     request,
     url
   );
+  const event_state = {
+    prerendering: state.prerendering,
+    transport: options2.hooks.transport,
+    handleValidationError: options2.hooks.handleValidationError,
+    tracing: {
+      record_span
+    }
+  };
   const event = {
-    [EVENT_STATE]: create_event_state(state, options2),
     cookies,
     // @ts-expect-error `fetch` needs to be created after the `event` itself
     fetch: null,
@@ -3116,34 +3278,66 @@ async function respond(request, options2, manifest, state) {
     if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
       disable_search(url);
     }
-    const response = await with_event(
-      event,
-      () => options2.hooks.handle({
-        event,
-        resolve: (event2, opts) => (
-          // counter-intuitively, we need to clear the event, so that it's not
-          // e.g. accessible when loading modules needed to handle the request
-          with_event(
-            null,
-            () => resolve2(event2, page_nodes, opts).then((response2) => {
-              for (const key2 in headers2) {
-                const value = headers2[key2];
-                response2.headers.set(
-                  key2,
-                  /** @type {string} */
-                  value
-                );
-              }
-              add_cookies_to_headers(response2.headers, Object.values(new_cookies));
-              if (state.prerendering && event2.route.id !== null) {
-                response2.headers.set("x-sveltekit-routeid", encodeURI(event2.route.id));
-              }
-              return response2;
-            })
-          )
-        )
-      })
-    );
+    const response = await record_span({
+      name: "sveltekit.handle.root",
+      attributes: {
+        "http.route": event.route.id || "unknown",
+        "http.method": event.request.method,
+        "http.url": event.url.href,
+        "sveltekit.is_data_request": is_data_request,
+        "sveltekit.is_sub_request": event.isSubRequest
+      },
+      fn: async (root_span) => {
+        const traced_event = {
+          ...event,
+          tracing: {
+            enabled: false,
+            root: root_span,
+            current: root_span
+          }
+        };
+        return await with_request_store(
+          { event: traced_event, state: event_state },
+          () => options2.hooks.handle({
+            event: traced_event,
+            resolve: (event2, opts) => {
+              return record_span({
+                name: "sveltekit.resolve",
+                attributes: {
+                  "http.route": event2.route.id || "unknown"
+                },
+                fn: (resolve_span) => {
+                  return with_request_store(
+                    null,
+                    () => resolve2(merge_tracing(event2, resolve_span), page_nodes, opts).then(
+                      (response2) => {
+                        for (const key2 in headers2) {
+                          const value = headers2[key2];
+                          response2.headers.set(
+                            key2,
+                            /** @type {string} */
+                            value
+                          );
+                        }
+                        add_cookies_to_headers(response2.headers, Object.values(new_cookies));
+                        if (state.prerendering && event2.route.id !== null) {
+                          response2.headers.set("x-sveltekit-routeid", encodeURI(event2.route.id));
+                        }
+                        resolve_span.setAttributes({
+                          "http.response.status_code": response2.status,
+                          "http.response.body.size": response2.headers.get("content-length") || "unknown"
+                        });
+                        return response2;
+                      }
+                    )
+                  );
+                }
+              });
+            }
+          })
+        );
+      }
+    });
     if (response.status === 200 && response.headers.has("etag")) {
       let if_none_match_value = request.headers.get("if-none-match");
       if (if_none_match_value?.startsWith('W/"')) {
@@ -3189,7 +3383,7 @@ async function respond(request, options2, manifest, state) {
       add_cookies_to_headers(response.headers, Object.values(new_cookies));
       return response;
     }
-    return await handle_fatal_error(event, options2, e);
+    return await handle_fatal_error(event, event_state, options2, e);
   }
   async function resolve2(event2, page_nodes, opts) {
     try {
@@ -3203,6 +3397,7 @@ async function respond(request, options2, manifest, state) {
       if (options2.hash_routing || state.prerendering?.fallback) {
         return await render_response({
           event: event2,
+          event_state,
           options: options2,
           manifest,
           state,
@@ -3215,7 +3410,7 @@ async function respond(request, options2, manifest, state) {
         });
       }
       if (remote_id) {
-        return await handle_remote_call(event2, options2, manifest, remote_id);
+        return await handle_remote_call(event2, event_state, options2, manifest, remote_id);
       }
       if (route) {
         const method = (
@@ -3226,6 +3421,7 @@ async function respond(request, options2, manifest, state) {
         if (is_data_request) {
           response = await render_data(
             event2,
+            event_state,
             route,
             options2,
             manifest,
@@ -3234,13 +3430,14 @@ async function respond(request, options2, manifest, state) {
             trailing_slash
           );
         } else if (route.endpoint && (!route.page || is_endpoint_request(event2))) {
-          response = await render_endpoint(event2, await route.endpoint(), state);
+          response = await render_endpoint(event2, event_state, await route.endpoint(), state);
         } else if (route.page) {
           if (!page_nodes) {
             throw new Error("page_nodes not found. This should never happen");
           } else if (page_methods.has(method)) {
             response = await render_page(
               event2,
+              event_state,
               route.page,
               options2,
               manifest,
@@ -3303,6 +3500,7 @@ async function respond(request, options2, manifest, state) {
         if (DEV && event2.url.pathname === "/.well-known/appspecific/com.chrome.devtools.json") ;
         return await respond_with_error({
           event: event2,
+          event_state,
           options: options2,
           manifest,
           state,
@@ -3316,7 +3514,7 @@ async function respond(request, options2, manifest, state) {
       }
       return await fetch(request);
     } catch (e) {
-      return await handle_fatal_error(event2, options2, e);
+      return await handle_fatal_error(event2, event_state, options2, e);
     } finally {
       event2.cookies.set = () => {
         throw new Error("Cannot use `cookies.set(...)` after the response has been generated");
@@ -3333,6 +3531,13 @@ function load_page_nodes(page, manifest) {
     ...page.layouts.map((n) => n == void 0 ? n : manifest._.nodes[n]()),
     manifest._.nodes[page.leaf]()
   ]);
+}
+function propagate_context(fn) {
+  return async (req, ...rest) => {
+    {
+      return fn(req, ...rest);
+    }
+  };
 }
 function filter_private_env(env, { public_prefix, private_prefix }) {
   return Object.fromEntries(

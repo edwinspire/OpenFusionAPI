@@ -17,13 +17,6 @@
     "file": "chunks/equality.js",
     "name": "equality"
   },
-  "_event-state.js": {
-    "file": "chunks/event-state.js",
-    "name": "event-state",
-    "imports": [
-      "_utils.js"
-    ]
-  },
   "_exports.js": {
     "file": "chunks/exports.js",
     "name": "exports"
@@ -54,6 +47,13 @@
       "_false.js",
       "_equality.js",
       "_environment.js"
+    ]
+  },
+  "_shared.js": {
+    "file": "chunks/shared.js",
+    "name": "shared",
+    "imports": [
+      "_utils.js"
     ]
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
@@ -123,7 +123,7 @@
     "src": "node_modules/@sveltejs/kit/src/runtime/app/server/remote/index.js",
     "isEntry": true,
     "imports": [
-      "_event-state.js",
+      "_shared.js",
       "_false.js",
       "_environment.js"
     ]
@@ -155,11 +155,11 @@
     "imports": [
       "_false.js",
       "_environment.js",
-      "_event-state.js",
       "_exports.js",
       "_utils.js",
       "_index.js",
-      "_internal.js"
+      "_internal.js",
+      "_shared.js"
     ]
   },
   "src/routes/+layout.js": {
