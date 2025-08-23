@@ -40,13 +40,6 @@ function get_response(id, arg, state, get_result) {
   const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
   return (state.remote_data ??= {})[cache_key] ??= get_result();
 }
-function check_experimental(feature) {
-  {
-    throw new Error(
-      `Cannot use \`${feature}\` from \`$app/server\` without the experimental flag set to true. Please set kit.experimental.remoteFunctions to \`true\` in your config.`
-    );
-  }
-}
 function parse_remote_response(data, transport) {
   const revivers = {};
   for (const key in transport) {
@@ -89,7 +82,6 @@ async function run_remote_function(event, state, allow_cookies, arg, validate, f
 }
 // @__NO_SIDE_EFFECTS__
 function command(validate_or_fn, maybe_fn) {
-  check_experimental("command");
   const fn = maybe_fn ?? validate_or_fn;
   const validate = create_validator(validate_or_fn, maybe_fn);
   const __ = { type: "command", id: "", name: "" };
@@ -118,7 +110,6 @@ function command(validate_or_fn, maybe_fn) {
 }
 // @__NO_SIDE_EFFECTS__
 function form(fn) {
-  check_experimental("form");
   function create_instance(key) {
     const instance = {};
     instance.method = "POST";
@@ -205,7 +196,6 @@ function form(fn) {
 }
 // @__NO_SIDE_EFFECTS__
 function prerender(validate_or_fn, fn_or_options, maybe_options) {
-  check_experimental("prerender");
   const maybe_fn = typeof fn_or_options === "function" ? fn_or_options : void 0;
   const options = maybe_options ?? (maybe_fn ? void 0 : fn_or_options);
   const fn = maybe_fn ?? validate_or_fn;
@@ -278,7 +268,6 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
 }
 // @__NO_SIDE_EFFECTS__
 function query(validate_or_fn, maybe_fn) {
-  check_experimental("query");
   const fn = maybe_fn ?? validate_or_fn;
   const validate = create_validator(validate_or_fn, maybe_fn);
   const __ = { type: "query", id: "", name: "" };

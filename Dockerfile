@@ -37,8 +37,8 @@ RUN npm install pm2 -g
 
 # Instalar el módulo de rotación de logs de PM2
 RUN pm2 install pm2-logrotate \
-    && pm2 set pm2-logrotate:max_days 7 \
-    && pm2 set pm2-logrotate:retain 7
+    && pm2 set pm2-logrotate:max_days 1 \
+    && pm2 set pm2-logrotate:retain 1
 
 # Ejecutar la compilación de la aplicación
 RUN npm run build

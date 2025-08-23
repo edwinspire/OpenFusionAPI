@@ -1,17 +1,13 @@
-import { H as HYDRATION_ERROR, B as BOUNDARY_EFFECT, E as ERROR_VALUE, a as EFFECT_RAN, U as UNOWNED, M as MAYBE_DIRTY, C as CLEAN, D as DERIVED, I as INERT, b as EFFECT, A as ASYNC, c as BLOCK_EFFECT, d as DIRTY, e as BRANCH_EFFECT, R as ROOT_EFFECT, f as DESTROYED, g as USER_EFFECT, h as INSPECT_EFFECT, S as STATE_SYMBOL, i as UNINITIALIZED, j as EFFECT_PRESERVED, k as HEAD_EFFECT, l as EFFECT_TRANSPARENT, m as STALE_REACTION, n as DISCONNECTED, o as REACTION_IS_UPDATING, p as COMMENT_NODE, q as HYDRATION_START, r as HYDRATION_END, L as LEGACY_PROPS, s as render, t as push$1, u as setContext, v as pop$1 } from "./index2.js";
+import { H as HYDRATION_ERROR, B as BOUNDARY_EFFECT, E as ERROR_VALUE, a as EFFECT_RAN, U as UNOWNED, M as MAYBE_DIRTY, C as CLEAN, D as DERIVED, I as INERT, b as EFFECT, A as ASYNC, c as BLOCK_EFFECT, d as DIRTY, e as BRANCH_EFFECT, R as ROOT_EFFECT, f as DESTROYED, g as INSPECT_EFFECT, S as STATE_SYMBOL, h as UNINITIALIZED, i as EFFECT_PRESERVED, j as HEAD_EFFECT, k as EFFECT_TRANSPARENT, l as STALE_REACTION, m as USER_EFFECT, n as DISCONNECTED, o as REACTION_IS_UPDATING, p as COMMENT_NODE, q as HYDRATION_START, r as HYDRATION_END, L as LEGACY_PROPS, s as render, t as push$1, u as setContext, v as pop$1 } from "./index2.js";
 import { D as DEV } from "./false.js";
 import { d as define_property, r as run_all, a as deferred, s as safe_equals, e as equals, o as object_prototype, b as array_prototype, g as get_descriptor, c as get_prototype_of, i as is_array, f as is_extensible, h as index_of, j as array_from } from "./equality.js";
 import "clsx";
 import "./environment.js";
 let public_env = {};
-let safe_public_env = {};
 function set_private_env(environment) {
 }
 function set_public_env(environment) {
   public_env = environment;
-}
-function set_safe_public_env(environment) {
-  safe_public_env = environment;
 }
 function effect_update_depth_exceeded() {
   {
@@ -399,10 +395,10 @@ class Batch {
       if (!skip && effect.fn !== null) {
         if (is_branch) {
           effect.f ^= CLEAN;
+        } else if ((flags & EFFECT) !== 0) {
+          this.#effects.push(effect);
         } else if ((flags & CLEAN) === 0) {
-          if ((flags & EFFECT) !== 0) {
-            this.#effects.push(effect);
-          } else if ((flags & ASYNC) !== 0) {
+          if ((flags & ASYNC) !== 0) {
             var effects = effect.b?.pending ? this.#boundary_async_effects : this.#async_effects;
             effects.push(effect);
           } else if (is_dirty(effect)) {
@@ -592,6 +588,7 @@ function infinite_loop_guard() {
     invoke_error_boundary(error, last_scheduled_effect);
   }
 }
+let eager_block_effects = null;
 function flush_queued_effects(effects) {
   var length = effects.length;
   if (length === 0) return;
@@ -599,7 +596,7 @@ function flush_queued_effects(effects) {
   while (i < length) {
     var effect = effects[i++];
     if ((effect.f & (DESTROYED | INERT)) === 0 && is_dirty(effect)) {
-      var n = current_batch ? current_batch.current.size : 0;
+      eager_block_effects = [];
       update_effect(effect);
       if (effect.deps === null && effect.first === null && effect.nodes_start === null) {
         if (effect.teardown === null && effect.ac === null) {
@@ -608,14 +605,16 @@ function flush_queued_effects(effects) {
           effect.fn = null;
         }
       }
-      if (current_batch !== null && current_batch.current.size > n && (effect.f & USER_EFFECT) !== 0) {
-        break;
+      if (eager_block_effects.length > 0) {
+        old_values.clear();
+        for (const e of eager_block_effects) {
+          update_effect(e);
+        }
+        eager_block_effects = [];
       }
     }
   }
-  while (i < length) {
-    schedule_effect(effects[i++]);
-  }
+  eager_block_effects = null;
 }
 function schedule_effect(signal) {
   var effect = last_scheduled_effect = signal;
@@ -721,6 +720,14 @@ function mark_reactions(signal, status) {
         MAYBE_DIRTY
       );
     } else if (not_dirty) {
+      if ((flags & BLOCK_EFFECT) !== 0) {
+        if (eager_block_effects !== null) {
+          eager_block_effects.push(
+            /** @type {Effect} */
+            reaction
+          );
+        }
+      }
       schedule_effect(
         /** @type {Effect} */
         reaction
@@ -1979,6 +1986,7 @@ const options = {
   app_template_contains_nonce: false,
   csp: { "mode": "auto", "directives": { "upgrade-insecure-requests": false, "block-all-mixed-content": false }, "reportOnly": { "upgrade-insecure-requests": false, "block-all-mixed-content": false } },
   csrf_check_origin: true,
+  csrf_trusted_origins: [],
   embedded: false,
   env_public_prefix: "PUBLIC_",
   env_private_prefix: "",
@@ -2062,7 +2070,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "zftr83"
+  version_hash: "16ro5x6"
 };
 async function get_hooks() {
   let handle;
@@ -2083,15 +2091,13 @@ async function get_hooks() {
   };
 }
 export {
-  set_private_env as a,
-  set_public_env as b,
-  set_safe_public_env as c,
-  set_read_implementation as d,
-  set_manifest as e,
+  set_public_env as a,
+  set_read_implementation as b,
+  set_manifest as c,
   get_hooks as g,
   options as o,
   public_env as p,
   read_implementation as r,
-  safe_public_env as s
+  set_private_env as s
 };
 //# sourceMappingURL=internal.js.map

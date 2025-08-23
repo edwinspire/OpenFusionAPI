@@ -122,9 +122,8 @@ declare module '$env/static/private' {
 	export const PUBLIC: string;
 	export const PWD: string;
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
-	export const QIP14348: string;
-	export const QIP23880: string;
-	export const SESSIONNAME: string;
+	export const QIP19424: string;
+	export const QIP5504: string;
 	export const SHELL: string;
 	export const SHLVL: string;
 	export const SSH_ASKPASS: string;
@@ -148,6 +147,7 @@ declare module '$env/static/private' {
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const WINDIR: string;
 	export const _: string;
+	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -167,8 +167,6 @@ declare module '$env/static/public' {
  * This module provides access to runtime environment variables, as defined by the platform you're running on. For example if you're using [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node) (or running [`vite preview`](https://svelte.dev/docs/kit/cli)), this is equivalent to `process.env`. This module only includes variables that _do not_ begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) _and do_ start with [`config.kit.env.privatePrefix`](https://svelte.dev/docs/kit/configuration#env) (if configured).
  * 
  * This module cannot be imported into client-side code.
- * 
- * Dynamic environment variables cannot be used during prerendering.
  * 
  * ```ts
  * import { env } from '$env/dynamic/private';
@@ -275,9 +273,8 @@ declare module '$env/dynamic/private' {
 		PUBLIC: string;
 		PWD: string;
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
-		QIP14348: string;
-		QIP23880: string;
-		SESSIONNAME: string;
+		QIP19424: string;
+		QIP5504: string;
 		SHELL: string;
 		SHLVL: string;
 		SSH_ASKPASS: string;
@@ -301,6 +298,7 @@ declare module '$env/dynamic/private' {
 		VSCODE_GIT_IPC_HANDLE: string;
 		WINDIR: string;
 		_: string;
+		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
@@ -310,8 +308,6 @@ declare module '$env/dynamic/private' {
  * Similar to [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private), but only includes variables that begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to `PUBLIC_`), and can therefore safely be exposed to client-side code.
  * 
  * Note that public dynamic environment variables must all be sent from the server to the client, causing larger network requests — when possible, use `$env/static/public` instead.
- * 
- * Dynamic environment variables cannot be used during prerendering.
  * 
  * ```ts
  * import { env } from '$env/dynamic/public';
