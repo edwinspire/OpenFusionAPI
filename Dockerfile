@@ -37,8 +37,8 @@ RUN npm install pm2 -g
 
 # Instalar el módulo de rotación de logs de PM2
 RUN pm2 install pm2-logrotate \
-    && pm2 set pm2-logrotate:max_days 1 \
-    && pm2 set pm2-logrotate:retain 1
+    && pm2 set pm2-logrotate:max_days 10 \
+    && pm2 set pm2-logrotate:retain 10
 
 # Ejecutar la compilación de la aplicación
 RUN npm run build
@@ -48,3 +48,6 @@ EXPOSE 3000
 
 # Comando para iniciar la aplicación con PM2
 CMD ["pm2-runtime", "start", "process.yml"]
+
+
+# docker system prune -a // Elimina todas las imágenes no utilizadas, contenedores detenidos, volúmenes y redes no utilizados

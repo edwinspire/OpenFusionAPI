@@ -143,14 +143,26 @@ function apply_adjustments(error) {
 let micro_tasks = [];
 let idle_tasks = [];
 function run_micro_tasks() {
-  var tasks2 = micro_tasks;
+  var tasks = micro_tasks;
   micro_tasks = [];
-  run_all(tasks2);
+  run_all(tasks);
 }
 function run_idle_tasks() {
-  var tasks2 = idle_tasks;
+  var tasks = idle_tasks;
   idle_tasks = [];
-  run_all(tasks2);
+  run_all(tasks);
+}
+function has_pending_tasks() {
+  return micro_tasks.length > 0 || idle_tasks.length > 0;
+}
+function queue_micro_task(fn) {
+  if (micro_tasks.length === 0 && !is_flushing_sync) {
+    var tasks = micro_tasks;
+    queueMicrotask(() => {
+      if (tasks === micro_tasks) run_micro_tasks();
+    });
+  }
+  micro_tasks.push(fn);
 }
 function flush_tasks() {
   if (micro_tasks.length > 0) {
@@ -208,28 +220,14 @@ function update_derived(derived) {
   if (is_destroying_effect) {
     return;
   }
-  if (batch_deriveds !== null) {
-    batch_deriveds.set(derived, derived.v);
-  } else {
+  {
     var status = (skip_reaction || (derived.f & UNOWNED) !== 0) && derived.deps !== null ? MAYBE_DIRTY : CLEAN;
     set_signal_status(derived, status);
   }
 }
 const batches = /* @__PURE__ */ new Set();
 let current_batch = null;
-let batch_deriveds = null;
 let effect_pending_updates = /* @__PURE__ */ new Set();
-let tasks = [];
-function dequeue() {
-  const task = (
-    /** @type {() => void} */
-    tasks.shift()
-  );
-  if (tasks.length > 0) {
-    queueMicrotask(dequeue);
-  }
-  task();
-}
 let queued_root_effects = [];
 let last_scheduled_effect = null;
 let is_flushing = false;
@@ -320,24 +318,6 @@ class Batch {
    */
   process(root_effects) {
     queued_root_effects = [];
-    var current_values = null;
-    if (batches.size > 1) {
-      current_values = /* @__PURE__ */ new Map();
-      batch_deriveds = /* @__PURE__ */ new Map();
-      for (const [source2, current] of this.current) {
-        current_values.set(source2, { v: source2.v, wv: source2.wv });
-        source2.v = current;
-      }
-      for (const batch of batches) {
-        if (batch === this) continue;
-        for (const [source2, previous] of batch.#previous) {
-          if (!current_values.has(source2)) {
-            current_values.set(source2, { v: source2.v, wv: source2.wv });
-            source2.v = previous;
-          }
-        }
-      }
-    }
     for (const root2 of root_effects) {
       this.#traverse_effect_tree(root2);
     }
@@ -361,14 +341,6 @@ class Batch {
       this.#defer_effects(this.#render_effects);
       this.#defer_effects(this.#effects);
       this.#defer_effects(this.#block_effects);
-    }
-    if (current_values) {
-      for (const [source2, { v, wv }] of current_values) {
-        if (source2.wv <= wv) {
-          source2.v = v;
-        }
-      }
-      batch_deriveds = null;
     }
     for (const effect of this.#async_effects) {
       update_effect(effect);
@@ -399,7 +371,7 @@ class Batch {
           this.#effects.push(effect);
         } else if ((flags & CLEAN) === 0) {
           if ((flags & ASYNC) !== 0) {
-            var effects = effect.b?.pending ? this.#boundary_async_effects : this.#async_effects;
+            var effects = effect.b?.is_pending() ? this.#boundary_async_effects : this.#async_effects;
             effects.push(effect);
           } else if (is_dirty(effect)) {
             if ((effect.f & BLOCK_EFFECT) !== 0) this.#block_effects.push(effect);
@@ -529,10 +501,7 @@ class Batch {
   }
   /** @param {() => void} task */
   static enqueue(task) {
-    if (tasks.length === 0) {
-      queueMicrotask(dequeue);
-    }
-    tasks.unshift(task);
+    queue_micro_task(task);
   }
 }
 function flushSync(fn) {
@@ -543,7 +512,7 @@ function flushSync(fn) {
     if (fn) ;
     while (true) {
       flush_tasks();
-      if (queued_root_effects.length === 0) {
+      if (queued_root_effects.length === 0 && !has_pending_tasks()) {
         current_batch?.flush();
         if (queued_root_effects.length === 0) {
           last_scheduled_effect = null;
@@ -605,7 +574,7 @@ function flush_queued_effects(effects) {
           effect.fn = null;
         }
       }
-      if (eager_block_effects.length > 0) {
+      if (eager_block_effects?.length > 0) {
         old_values.clear();
         for (const e of eager_block_effects) {
           update_effect(e);
@@ -1012,24 +981,31 @@ function create_effect(type, fn, sync, push2 = true) {
     try {
       update_effect(effect);
       effect.f |= EFFECT_RAN;
-    } catch (e) {
+    } catch (e2) {
       destroy_effect(effect);
-      throw e;
+      throw e2;
     }
   } else if (fn !== null) {
     schedule_effect(effect);
   }
-  var inert = sync && effect.deps === null && effect.first === null && effect.nodes_start === null && effect.teardown === null && (effect.f & EFFECT_PRESERVED) === 0;
-  if (!inert && push2) {
-    if (parent !== null) {
-      push_effect(effect, parent);
+  if (push2) {
+    var e = effect;
+    if (sync && e.deps === null && e.teardown === null && e.nodes_start === null && e.first === e.last && // either `null`, or a singular child
+    (e.f & EFFECT_PRESERVED) === 0) {
+      e = e.first;
     }
-    if (active_reaction !== null && (active_reaction.f & DERIVED) !== 0 && (type & ROOT_EFFECT) === 0) {
-      var derived = (
-        /** @type {Derived} */
-        active_reaction
-      );
-      (derived.effects ??= []).push(effect);
+    if (e !== null) {
+      e.parent = parent;
+      if (parent !== null) {
+        push_effect(e, parent);
+      }
+      if (active_reaction !== null && (active_reaction.f & DERIVED) !== 0 && (type & ROOT_EFFECT) === 0) {
+        var derived = (
+          /** @type {Derived} */
+          active_reaction
+        );
+        (derived.effects ??= []).push(e);
+      }
     }
   }
   return effect;
@@ -1039,7 +1015,7 @@ function create_user_effect(fn) {
 }
 function component_root(fn) {
   Batch.ensure();
-  const effect = create_effect(ROOT_EFFECT, fn, true);
+  const effect = create_effect(ROOT_EFFECT | EFFECT_PRESERVED, fn, true);
   return (options2 = {}) => {
     return new Promise((fulfil) => {
       if (options2.outro) {
@@ -1055,7 +1031,7 @@ function component_root(fn) {
   };
 }
 function branch(fn, push2 = true) {
-  return create_effect(BRANCH_EFFECT, fn, true, push2);
+  return create_effect(BRANCH_EFFECT | EFFECT_PRESERVED, fn, true, push2);
 }
 function execute_effect_teardown(effect) {
   var teardown = effect.teardown;
@@ -1532,9 +1508,6 @@ function get(signal) {
   } else if (is_derived) {
     derived = /** @type {Derived} */
     signal;
-    if (batch_deriveds?.has(derived)) {
-      return batch_deriveds.get(derived);
-    }
     if (is_dirty(derived)) {
       update_derived(derived);
     }
@@ -2070,7 +2043,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "16ro5x6"
+  version_hash: "3xvzod"
 };
 async function get_hooks() {
   let handle;

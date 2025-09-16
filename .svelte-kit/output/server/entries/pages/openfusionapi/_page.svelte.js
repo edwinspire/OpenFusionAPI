@@ -51,12 +51,12 @@ function Notifications($$payload, $$props) {
         */
     list_notify
   );
-  $$payload.out.push(`<div class="bottom-right svelte-10s4c1v"><!--[-->`);
+  $$payload.out.push(`<div class="bottom-right svelte-5sfib3"><!--[-->`);
   for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
     let s = each_array[$$index];
     if (!s.hidden) {
       $$payload.out.push("<!--[-->");
-      $$payload.out.push(`<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-10s4c1v")}>`);
+      $$payload.out.push(`<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-5sfib3")}>`);
       if (s.title) {
         $$payload.out.push("<!--[-->");
         $$payload.out.push(`<div class="message-header"><p>${escape_html(s.title)}</p> <button class="delete is-small" aria-label="delete"></button></div>`);
@@ -80,7 +80,7 @@ function Login($$payload, $$props) {
   Modal($$payload, {
     show: true,
     children: ($$payload2) => {
-      $$payload2.out.push(`<div class="box"><div class="media t1 svelte-fhc20z"><div class="media-left"><figure class="image is-48x48"><img${attr("src", Logo)} alt="OpenFusionAPI"/></figure></div> <div class="media-content"><p class="title is-family-sans-serif">Open Fusion API</p></div></div> <div class="field"><p class="control has-icons-left has-icons-right"><input class="input" type="text" placeholder="Username"${attr("value", username)}/> <span class="icon is-small is-left"><i class="fa-solid fa-user"></i></span></p></div> <div class="field"><p class="control has-icons-left"><input class="input" type="password" placeholder="Password"${attr("value", password)}/> <span class="icon is-small is-left"><i class="fas fa-lock"></i></span></p></div> <div class="field"><p class="control">`);
+      $$payload2.out.push(`<div class="box"><div class="media t1 svelte-ogcakf"><div class="media-left"><figure class="image is-48x48"><img${attr("src", Logo)} alt="OpenFusionAPI"/></figure></div> <div class="media-content"><p class="title is-family-sans-serif">Open Fusion API</p></div></div> <div class="field"><p class="control has-icons-left has-icons-right"><input class="input" type="text" placeholder="Username"${attr("value", username)}/> <span class="icon is-small is-left"><i class="fa-solid fa-user"></i></span></p></div> <div class="field"><p class="control has-icons-left"><input class="input" type="password" placeholder="Password"${attr("value", password)}/> <span class="icon is-small is-left"><i class="fas fa-lock"></i></span></p></div> <div class="field"><p class="control">`);
       {
         $$payload2.out.push("<!--[!-->");
         $$payload2.out.push(`<button class="button is-success">Login</button>`);
