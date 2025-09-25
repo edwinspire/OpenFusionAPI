@@ -1,9 +1,9 @@
 import { get_request_store, with_request_store } from "@sveltejs/kit/internal/server";
 import { parse } from "devalue";
 import { error, json } from "@sveltejs/kit";
-import { c as create_remote_cache_key, a as stringify_remote_arg, s as stringify } from "./chunks/shared.js";
-import { D as DEV } from "./chunks/false.js";
-import { b as base, c as app_dir, p as prerendering } from "./chunks/environment.js";
+import { a as stringify_remote_arg, s as stringify, c as create_remote_cache_key } from "./chunks/shared.js";
+import { c as convert_formdata, d as flatten_issues } from "./chunks/utils.js";
+import { b as base, c as app_dir, D as DEV, p as prerendering } from "./chunks/environment.js";
 function create_validator(validate_or_fn, maybe_fn) {
   if (!maybe_fn) {
     return (arg) => {
@@ -36,10 +36,10 @@ function create_validator(validate_or_fn, maybe_fn) {
     'Invalid validator passed to remote function. Expected "unchecked" or a Standard Schema (https://standardschema.dev)'
   );
 }
-async function get_response(id, arg, state, get_result) {
+async function get_response(info, arg, state, get_result) {
   await 0;
-  const cache_key = create_remote_cache_key(id, stringify_remote_arg(arg, state.transport));
-  return (state.remote_data ??= {})[cache_key] ??= get_result();
+  const cache = get_cache(info, state);
+  return cache[stringify_remote_arg(arg, state.transport)] ??= get_result();
 }
 function parse_remote_response(data, transport) {
   const revivers = {};
@@ -81,6 +81,14 @@ async function run_remote_function(event, state, allow_cookies, arg, validate, f
   const validated = await with_request_store({ event: cleansed, state }, () => validate(arg));
   return with_request_store({ event: cleansed, state }, () => fn(validated));
 }
+function get_cache(info, state = get_request_store().state) {
+  let cache = state.remote_data?.get(info);
+  if (cache === void 0) {
+    cache = {};
+    (state.remote_data ??= /* @__PURE__ */ new Map()).set(info, cache);
+  }
+  return cache;
+}
 // @__NO_SIDE_EFFECTS__
 function command(validate_or_fn, maybe_fn) {
   const fn = maybe_fn ?? validate_or_fn;
@@ -116,15 +124,15 @@ function command(validate_or_fn, maybe_fn) {
   return wrapper;
 }
 // @__NO_SIDE_EFFECTS__
-function form(fn) {
+function form(validate_or_fn, maybe_fn) {
+  const fn = maybe_fn ?? validate_or_fn;
+  const schema = !maybe_fn || validate_or_fn === "unchecked" ? null : validate_or_fn;
   function create_instance(key) {
     const instance = {};
     instance.method = "POST";
-    instance.onsubmit = () => {
-    };
     Object.defineProperty(instance, "enhance", {
       value: () => {
-        return { action: instance.action, method: instance.method, onsubmit: instance.onsubmit };
+        return { action: instance.action, method: instance.method };
       }
     });
     const button_props = {
@@ -147,13 +155,36 @@ function form(fn) {
       id: "",
       /** @param {FormData} form_data */
       fn: async (form_data) => {
+        const validate_only = form_data.get("sveltekit:validate_only") === "true";
+        form_data.delete("sveltekit:validate_only");
+        let data = maybe_fn ? convert_formdata(form_data) : void 0;
+        const output = {};
         const { event, state } = get_request_store();
-        state.refreshes ??= {};
-        const result = await run_remote_function(event, state, true, form_data, (d) => d, fn);
-        if (!event.isRemoteRequest) {
-          (state.remote_data ??= {})[__.id] = result;
+        const validated = await schema?.["~standard"].validate(data);
+        if (validate_only) {
+          return validated?.issues ?? [];
         }
-        return result;
+        if (validated?.issues !== void 0) {
+          output.issues = flatten_issues(validated.issues);
+          output.input = {};
+          for (let key2 of form_data.keys()) {
+            if (/^[.\]]?_/.test(key2)) continue;
+            const is_array = key2.endsWith("[]");
+            const values = form_data.getAll(key2).filter((value) => typeof value === "string");
+            if (is_array) key2 = key2.slice(0, -2);
+            output.input[key2] = is_array ? values : values[0];
+          }
+        } else {
+          if (validated !== void 0) {
+            data = validated.value;
+          }
+          state.refreshes ??= {};
+          output.result = await run_remote_function(event, state, true, data, (d) => d, fn);
+        }
+        if (!event.isRemoteRequest) {
+          get_cache(__, state)[""] ??= output;
+        }
+        return output;
       }
     };
     Object.defineProperty(instance, "__", { value: __ });
@@ -165,11 +196,21 @@ function form(fn) {
       get: () => `?/remote=${__.id}`,
       enumerable: true
     });
+    for (const property of ["input", "issues"]) {
+      Object.defineProperty(instance, property, {
+        get() {
+          try {
+            return get_cache(__)?.[""]?.[property] ?? {};
+          } catch {
+            return void 0;
+          }
+        }
+      });
+    }
     Object.defineProperty(instance, "result", {
       get() {
         try {
-          const { remote_data } = get_request_store().state;
-          return remote_data?.[__.id];
+          return get_cache(__)?.[""]?.result;
         } catch {
           return void 0;
         }
@@ -181,9 +222,21 @@ function form(fn) {
     Object.defineProperty(button_props, "pending", {
       get: () => 0
     });
+    Object.defineProperty(instance, "field", {
+      value: (name) => name
+    });
+    Object.defineProperty(instance, "preflight", {
+      // preflight is a noop on the server
+      value: () => instance
+    });
+    Object.defineProperty(instance, "validate", {
+      value: () => {
+        throw new Error("Cannot call validate() on the server");
+      }
+    });
     if (key == void 0) {
       Object.defineProperty(instance, "for", {
-        /** @type {RemoteForm<any>['for']} */
+        /** @type {RemoteForm<any, any>['for']} */
         value: (key2) => {
           const { state } = get_request_store();
           const cache_key = __.id + "|" + JSON.stringify(key2);
@@ -224,17 +277,22 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
       const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ""}`;
       if (!state.prerendering && !DEV && !event.isRemoteRequest) {
         try {
-          return await get_response(id, arg, state, async () => {
-            const response = await fetch(new URL(url, event.url.origin).href);
-            if (!response.ok) {
-              throw new Error("Prerendered response not found");
-            }
-            const prerendered = await response.json();
-            if (prerendered.type === "error") {
-              error(prerendered.status, prerendered.error);
-            }
-            (state.remote_data ??= {})[create_remote_cache_key(id, payload)] = prerendered.result;
-            return parse_remote_response(prerendered.result, state.transport);
+          return await get_response(__, arg, state, async () => {
+            const key = stringify_remote_arg(arg, state.transport);
+            const cache = get_cache(__, state);
+            const promise3 = cache[key] ??= fetch(new URL(url, event.url.origin).href).then(
+              async (response) => {
+                if (!response.ok) {
+                  throw new Error("Prerendered response not found");
+                }
+                const prerendered = await response.json();
+                if (prerendered.type === "error") {
+                  error(prerendered.status, prerendered.error);
+                }
+                return prerendered.result;
+              }
+            );
+            return parse_remote_response(await promise3, state.transport);
           });
         } catch {
         }
@@ -246,7 +304,7 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
         );
       }
       const promise2 = get_response(
-        id,
+        __,
         arg,
         state,
         () => run_remote_function(event, state, false, arg, validate, fn)
@@ -287,7 +345,7 @@ function query(validate_or_fn, maybe_fn) {
     }
     const { event, state } = get_request_store();
     const promise = get_response(
-      __.id,
+      __,
       arg,
       state,
       () => run_remote_function(event, state, false, arg, validate, fn)
@@ -302,8 +360,11 @@ function query(validate_or_fn, maybe_fn) {
           `Cannot call set on query '${__.name}' because it is not executed in the context of a command/form remote function`
         );
       }
-      const cache_key = create_remote_cache_key(__.id, stringify_remote_arg(arg, state2.transport));
-      refreshes[cache_key] = (state2.remote_data ??= {})[cache_key] = Promise.resolve(value);
+      const cache = get_cache(__, state2);
+      const key = stringify_remote_arg(arg, state2.transport);
+      if (__.id) {
+        refreshes[__.id + "/" + key] = cache[key] = Promise.resolve(value);
+      }
     };
     promise.refresh = () => {
       const { state: state2 } = get_request_store();
@@ -357,7 +418,7 @@ function batch(validate_or_fn, maybe_fn) {
       );
     }
     const { event, state } = get_request_store();
-    const promise = get_response(__.id, arg, state, () => {
+    const promise = get_response(__, arg, state, () => {
       return new Promise((resolve, reject) => {
         batching.args.push(arg);
         batching.resolvers.push({ resolve, reject });

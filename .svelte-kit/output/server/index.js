@@ -1,16 +1,26 @@
-import { D as DEV } from "./chunks/false.js";
+import { D as DEV, a as assets, b as base, c as app_dir, r as relative, o as override, d as reset } from "./chunks/environment.js";
 import { json, text, error } from "@sveltejs/kit";
 import { HttpError, SvelteKitError, Redirect, ActionFailure } from "@sveltejs/kit/internal";
 import { with_request_store, merge_tracing } from "@sveltejs/kit/internal/server";
-import { a as assets, b as base, c as app_dir, o as override, r as reset } from "./chunks/environment.js";
 import * as devalue from "devalue";
-import { m as make_trackable, d as disable_search, a as decode_params, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
-import { b as base64_encode, t as text_decoder, a as text_encoder, g as get_relative_path } from "./chunks/utils.js";
+import { m as make_trackable, d as disable_search, a as decode_params, S as SCHEME, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
+import { b as base64_encode, t as text_decoder, a as text_encoder, g as get_relative_path, f as file_transport } from "./chunks/utils.js";
 import { r as readable, w as writable } from "./chunks/index.js";
 import { p as public_env, r as read_implementation, o as options, s as set_private_env, a as set_public_env, g as get_hooks, b as set_read_implementation } from "./chunks/internal.js";
 import { p as parse_remote_arg, s as stringify, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM } from "./chunks/shared.js";
 import { parse, serialize } from "cookie";
 import * as set_cookie_parser from "set-cookie-parser";
+function with_resolvers() {
+  let resolve2;
+  let reject;
+  const promise = new Promise((res, rej) => {
+    resolve2 = res;
+    reject = rej;
+  });
+  return { promise, resolve: resolve2, reject };
+}
+const NULL_BODY_STATUS = [101, 103, 204, 205, 304];
+const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;
 const SVELTE_KIT_ASSETS = "/_svelte_kit_assets";
 const ENDPOINT_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"];
 const PAGE_METHODS = ["GET", "POST", "HEAD"];
@@ -554,14 +564,14 @@ async function call_action(event, event_state, actions) {
     attributes: {
       "http.route": event.route.id || "unknown"
     },
-    fn: async (current) => {
-      const traced_event = merge_tracing(event, current);
+    fn: async (current2) => {
+      const traced_event = merge_tracing(event, current2);
       const result = await with_request_store(
         { event: traced_event, state: event_state },
         () => action(traced_event)
       );
       if (result instanceof ActionFailure) {
-        current.setAttributes({
+        current2.setAttributes({
           "sveltekit.form_action.result.type": "failure",
           "sveltekit.form_action.result.status": result.status
         });
@@ -841,7 +851,6 @@ function server_data_serializer_json(event, event_state, options2) {
     }
   };
 }
-const NULL_BODY_STATUS = [101, 103, 204, 205, 304];
 async function load_server_data({ event, event_state, state, node, parent }) {
   if (!node?.server) return null;
   let is_tracking = true;
@@ -881,8 +890,8 @@ async function load_server_data({ event, event_state, state, node, parent }) {
       "sveltekit.load.node_type": get_node_type(node.server_id),
       "http.route": event.route.id || "unknown"
     },
-    fn: async (current) => {
-      const traced_event = merge_tracing(event, current);
+    fn: async (current2) => {
+      const traced_event = merge_tracing(event, current2);
       const result2 = await with_request_store(
         { event: traced_event, state: event_state },
         () => load.call(null, {
@@ -970,8 +979,8 @@ async function load_data({
       "sveltekit.load.node_type": get_node_type(node.universal_id),
       "http.route": event.route.id || "unknown"
     },
-    fn: async (current) => {
-      const traced_event = merge_tracing(event, current);
+    fn: async (current2) => {
+      const traced_event = merge_tracing(event, current2);
       return await with_request_store(
         { event: traced_event, state: event_state },
         () => load.call(null, {
@@ -1742,7 +1751,6 @@ async function render_response({
       form: form_value,
       state: {}
     };
-    override({ base: base$1, assets: assets$1 });
     const render_opts = {
       context: /* @__PURE__ */ new Map([
         [
@@ -1753,15 +1761,24 @@ async function render_response({
         ]
       ])
     };
-    {
-      try {
-        rendered = with_request_store(
-          { event, state: event_state },
-          () => options2.root.render(props, render_opts)
-        );
-      } finally {
-        reset();
-      }
+    const fetch2 = globalThis.fetch;
+    try {
+      if (DEV) ;
+      rendered = await with_request_store({ event, state: event_state }, async () => {
+        if (relative) override({ base: base$1, assets: assets$1 });
+        const maybe_promise = options2.root.render(props, render_opts);
+        const rendered2 = options2.async && "then" in maybe_promise ? (
+          /** @type {ReturnType<typeof options.root.render> & Promise<any>} */
+          maybe_promise.then((r) => r)
+        ) : maybe_promise;
+        if (options2.async) {
+          reset();
+        }
+        const { head: head2, html: html2, css } = options2.async ? await rendered2 : rendered2;
+        return { head: head2, html: html2, css };
+      });
+    } finally {
+      reset();
     }
     for (const { node } of branch) {
       for (const url of node.imports) modulepreloads.add(url);
@@ -1940,12 +1957,15 @@ ${indent}	${hydrate.join(`,
 ${indent}	`)}
 ${indent}}`);
     }
-    const { remote_data } = event_state;
+    const { remote_data: remote_cache } = event_state;
     let serialized_remote_data = "";
-    if (remote_data) {
+    if (remote_cache) {
       const remote = {};
-      for (const key2 in remote_data) {
-        remote[key2] = await remote_data[key2];
+      for (const [info, cache] of remote_cache) {
+        if (!info.id) continue;
+        for (const key2 in cache) {
+          remote[key2 ? info.id + "/" + key2 : info.id] = await cache[key2];
+        }
       }
       const replacer = (thing) => {
         for (const key2 in options2.hooks.transport) {
@@ -2136,17 +2156,17 @@ class PageNodes {
     return this.#get_option("trailingSlash") ?? "never";
   }
   get_config() {
-    let current = {};
+    let current2 = {};
     for (const node of this.data) {
       if (!node?.universal?.config && !node?.server?.config) continue;
-      current = {
-        ...current,
+      current2 = {
+        ...current2,
         // TODO: should we override the server config value with the universal value similar to other page options?
         ...node?.universal?.config,
         ...node?.server?.config
       };
     }
-    return Object.keys(current).length ? current : void 0;
+    return Object.keys(current2).length ? current2 : void 0;
   }
   should_prerender_data() {
     return this.data.some(
@@ -2251,8 +2271,8 @@ async function handle_remote_call(event, state, options2, manifest, id) {
   return record_span({
     name: "sveltekit.remote.call",
     attributes: {},
-    fn: (current) => {
-      const traced_event = merge_tracing(event, current);
+    fn: (current2) => {
+      const traced_event = merge_tracing(event, current2);
       return with_request_store(
         { event: traced_event, state },
         () => handle_remote_call_internal(traced_event, state, options2, manifest, id)
@@ -2337,8 +2357,8 @@ async function handle_remote_call_internal(event, state, options2, manifest, id)
         /** @type {RemoteFunctionResponse} */
         {
           type: "result",
-          result: stringify(data2, transport),
-          refreshes: await serialize_refreshes(form_client_refreshes)
+          result: stringify(data2, { ...transport, File: file_transport }),
+          refreshes: data2.issues ? {} : await serialize_refreshes(form_client_refreshes)
         }
       );
     }
@@ -2430,8 +2450,8 @@ async function handle_remote_form_post(event, state, manifest, id) {
   return record_span({
     name: "sveltekit.remote.form.post",
     attributes: {},
-    fn: (current) => {
-      const traced_event = merge_tracing(event, current);
+    fn: (current2) => {
+      const traced_event = merge_tracing(event, current2);
       return with_request_store(
         { event: traced_event, state },
         () => handle_remote_form_post_internal(traced_event, state, manifest, id)
@@ -2444,7 +2464,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
   const remotes = manifest._.remotes;
   const module = await remotes[hash2]?.();
   let form = (
-    /** @type {RemoteForm<any>} */
+    /** @type {RemoteForm<any, any>} */
     module?.default[name]
   );
   if (!form) {
@@ -3714,6 +3734,7 @@ function filter_env(env, allowed, disallowed) {
 function set_app(value) {
 }
 let init_promise;
+let current = null;
 class Server {
   /** @type {import('types').SSROptions} */
   #options;
@@ -3723,6 +3744,19 @@ class Server {
   constructor(manifest) {
     this.#options = options;
     this.#manifest = manifest;
+    if (IN_WEBCONTAINER) {
+      const respond2 = this.respond.bind(this);
+      this.respond = async (...args) => {
+        const { promise, resolve: resolve2 } = (
+          /** @type {PromiseWithResolvers<void>} */
+          with_resolvers()
+        );
+        const previous = current;
+        current = promise;
+        await previous;
+        return respond2(...args).finally(resolve2);
+      };
+    }
   }
   /**
    * @param {import('@sveltejs/kit').ServerInitOptions} opts

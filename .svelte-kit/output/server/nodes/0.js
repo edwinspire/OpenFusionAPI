@@ -5,6 +5,6 @@ let component_cache;
 export const component = async () => component_cache ??= (await import('../entries/fallbacks/layout.svelte.js')).default;
 export { universal };
 export const universal_id = "src/routes/+layout.js";
-export const imports = ["_app/immutable/nodes/0.DzAdE9qv.js","_app/immutable/chunks/CWj6FrbW.js","_app/immutable/chunks/C5twS6wJ.js"];
+export const imports = ["_app/immutable/nodes/0.Gph-LQ2n.js","_app/immutable/chunks/CWj6FrbW.js","_app/immutable/chunks/DCzOQYYH.js"];
 export const stylesheets = [];
 export const fonts = [];
