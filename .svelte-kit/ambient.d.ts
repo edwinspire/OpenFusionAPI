@@ -122,8 +122,9 @@ declare module '$env/static/private' {
 	export const PUBLIC: string;
 	export const PWD: string;
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
-	export const QIP17740: string;
-	export const QIP27336: string;
+	export const QIP14892: string;
+	export const QIP27164: string;
+	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
 	export const SSH_ASKPASS: string;
@@ -273,8 +274,9 @@ declare module '$env/dynamic/private' {
 		PUBLIC: string;
 		PWD: string;
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
-		QIP17740: string;
-		QIP27336: string;
+		QIP14892: string;
+		QIP27164: string;
+		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
 		SSH_ASKPASS: string;

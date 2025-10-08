@@ -1,5 +1,5 @@
 import * as devalue from "devalue";
-import { b as base64_encode, t as text_decoder, e as base64_decode } from "./utils.js";
+import { b as base64_encode, t as text_decoder, c as base64_decode } from "./utils.js";
 const INVALIDATED_PARAM = "x-sveltekit-invalidated";
 const TRAILING_SLASH_PARAM = "x-sveltekit-trailing-slash";
 function stringify(data, transport) {

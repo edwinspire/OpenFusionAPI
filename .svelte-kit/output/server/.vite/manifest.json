@@ -124,7 +124,6 @@
     "isEntry": true,
     "imports": [
       "_shared.js",
-      "_utils.js",
       "_environment.js"
     ]
   },
@@ -188,9 +187,9 @@
     "isEntry": true,
     "imports": [
       "_index2.js",
+      "_context.js",
       "_start_page.svelte_svelte_type_style_lang.js",
-      "_index.js",
-      "_context.js"
+      "_index.js"
     ]
   }
 }

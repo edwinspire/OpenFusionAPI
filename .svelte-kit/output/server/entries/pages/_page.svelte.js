@@ -8,6 +8,7 @@ import "prettier/plugins/babel.mjs";
 import "prettier/plugins/estree.mjs";
 import "prettier/plugins/html.mjs";
 import "prettier-plugin-sql";
+import "marked";
 import { x as attr, y as attr_style, z as stringify } from "../../chunks/index2.js";
 const logo = "/_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png";
 const flame = "/_app/immutable/assets/flame.pI4vnDs3.png";

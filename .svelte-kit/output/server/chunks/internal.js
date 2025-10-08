@@ -1,6 +1,6 @@
-import { H as HYDRATION_ERROR, C as COMMENT_NODE, a as HYDRATION_END, b as HYDRATION_START, c as HYDRATION_START_ELSE, B as BOUNDARY_EFFECT, E as ERROR_VALUE, d as EFFECT_RAN, e as CLEAN, I as INERT, f as EFFECT, A as ASYNC, g as BLOCK_EFFECT, D as DIRTY, h as BRANCH_EFFECT, R as ROOT_EFFECT, M as MAYBE_DIRTY, i as DESTROYED, j as EFFECT_TRANSPARENT, k as EFFECT_PRESERVED, U as UNOWNED, l as DERIVED, m as INSPECT_EFFECT, S as STATE_SYMBOL, n as UNINITIALIZED, o as HEAD_EFFECT, p as STALE_REACTION, q as RENDER_EFFECT, r as USER_EFFECT, s as DISCONNECTED, t as REACTION_IS_UPDATING, u as is_passive_event, L as LEGACY_PROPS, v as render, w as experimental_async_ssr } from "./index2.js";
+import { H as HYDRATION_ERROR, C as COMMENT_NODE, a as HYDRATION_END, b as HYDRATION_START, c as HYDRATION_START_ELSE, B as BOUNDARY_EFFECT, E as ERROR_VALUE, d as EFFECT_RAN, e as CLEAN, I as INERT, f as EFFECT, A as ASYNC, g as BLOCK_EFFECT, D as DIRTY, h as BRANCH_EFFECT, R as ROOT_EFFECT, M as MAYBE_DIRTY, i as DESTROYED, j as DERIVED, k as EFFECT_TRANSPARENT, l as EFFECT_PRESERVED, U as UNOWNED, m as INSPECT_EFFECT, S as STATE_SYMBOL, n as UNINITIALIZED, o as HEAD_EFFECT, p as STALE_REACTION, q as RENDER_EFFECT, r as USER_EFFECT, s as DISCONNECTED, t as REACTION_IS_UPDATING, u as is_passive_event, L as LEGACY_PROPS, v as render, w as experimental_async_ssr } from "./index2.js";
 import { D as DEV } from "./environment.js";
-import { r as run_all, d as define_property, a as deferred, s as safe_equals, e as equals, o as object_prototype, b as array_prototype, g as get_descriptor, c as get_prototype_of, i as is_array, f as is_extensible, h as index_of, j as array_from } from "./equality.js";
+import { r as run_all, d as define_property, a as deferred, n as noop, s as safe_equals, e as equals, o as object_prototype, b as array_prototype, g as get_descriptor, c as get_prototype_of, i as is_array, f as is_extensible, h as index_of, j as array_from } from "./equality.js";
 import "clsx";
 import { s as setContext } from "./context.js";
 let public_env = {};
@@ -139,19 +139,10 @@ function is_runes() {
   return true;
 }
 let micro_tasks = [];
-let idle_tasks = [];
 function run_micro_tasks() {
   var tasks = micro_tasks;
   micro_tasks = [];
   run_all(tasks);
-}
-function run_idle_tasks() {
-  var tasks = idle_tasks;
-  idle_tasks = [];
-  run_all(tasks);
-}
-function has_pending_tasks() {
-  return micro_tasks.length > 0 || idle_tasks.length > 0;
 }
 function queue_micro_task(fn) {
   if (micro_tasks.length === 0 && !is_flushing_sync) {
@@ -163,11 +154,8 @@ function queue_micro_task(fn) {
   micro_tasks.push(fn);
 }
 function flush_tasks() {
-  if (micro_tasks.length > 0) {
+  while (micro_tasks.length > 0) {
     run_micro_tasks();
-  }
-  if (idle_tasks.length > 0) {
-    run_idle_tasks();
   }
 }
 const adjustments = /* @__PURE__ */ new WeakMap();
@@ -254,20 +242,8 @@ class Batch {
    */
   #deferred = null;
   /**
-   * True if an async effect inside this batch resolved and
-   * its parent branch was already deleted
-   */
-  #neutered = false;
-  /**
-   * Async effects (created inside `async_derived`) encountered during processing.
-   * These run after the rest of the batch has updated, since they should
-   * always have the latest values
-   * @type {Effect[]}
-   */
-  #async_effects = [];
-  /**
-   * The same as `#async_effects`, but for effects inside a newly-created
-   * `<svelte:boundary>` — these do not prevent the batch from committing
+   * Async effects inside a newly-created `<svelte:boundary>`
+   * — these do not prevent the batch from committing
    * @type {Effect[]}
    */
   #boundary_async_effects = [];
@@ -310,10 +286,11 @@ class Batch {
    */
   process(root_effects) {
     queued_root_effects = [];
+    var revert = Batch.apply(this);
     for (const root2 of root_effects) {
       this.#traverse_effect_tree(root2);
     }
-    if (this.#async_effects.length === 0 && this.#pending === 0) {
+    if (this.#pending === 0) {
       this.#commit();
       var render_effects = this.#render_effects;
       var effects = this.#effects;
@@ -323,24 +300,16 @@ class Batch {
       current_batch = null;
       flush_queued_effects(render_effects);
       flush_queued_effects(effects);
-      if (current_batch === null) {
-        current_batch = this;
-      } else {
-        batches.delete(this);
-      }
       this.#deferred?.resolve();
     } else {
       this.#defer_effects(this.#render_effects);
       this.#defer_effects(this.#effects);
       this.#defer_effects(this.#block_effects);
     }
-    for (const effect of this.#async_effects) {
-      update_effect(effect);
-    }
+    revert();
     for (const effect of this.#boundary_async_effects) {
       update_effect(effect);
     }
-    this.#async_effects = [];
     this.#boundary_async_effects = [];
   }
   /**
@@ -362,9 +331,8 @@ class Batch {
         } else if ((flags2 & EFFECT) !== 0) {
           this.#effects.push(effect);
         } else if ((flags2 & CLEAN) === 0) {
-          if ((flags2 & ASYNC) !== 0) {
-            var effects = effect.b?.is_pending() ? this.#boundary_async_effects : this.#async_effects;
-            effects.push(effect);
+          if ((flags2 & ASYNC) !== 0 && effect.b?.is_pending()) {
+            this.#boundary_async_effects.push(effect);
           } else if (is_dirty(effect)) {
             if ((effect.f & BLOCK_EFFECT) !== 0) this.#block_effects.push(effect);
             update_effect(effect);
@@ -420,20 +388,15 @@ class Batch {
       }
     }
   }
-  neuter() {
-    this.#neutered = true;
-  }
   flush() {
     if (queued_root_effects.length > 0) {
+      this.activate();
       flush_effects();
-    } else {
+      if (current_batch !== null && current_batch !== this) {
+        return;
+      }
+    } else if (this.#pending === 0) {
       this.#commit();
-    }
-    if (current_batch !== this) {
-      return;
-    }
-    if (this.#pending === 0) {
-      batches.delete(this);
     }
     this.deactivate();
   }
@@ -441,12 +404,41 @@ class Batch {
    * Append and remove branches to/from the DOM
    */
   #commit() {
-    if (!this.#neutered) {
-      for (const fn of this.#callbacks) {
-        fn();
-      }
+    for (const fn of this.#callbacks) {
+      fn();
     }
     this.#callbacks.clear();
+    if (batches.size > 1) {
+      this.#previous.clear();
+      let is_earlier = true;
+      for (const batch of batches) {
+        if (batch === this) {
+          is_earlier = false;
+          continue;
+        }
+        for (const [source2, value] of this.current) {
+          if (batch.current.has(source2)) {
+            if (is_earlier) {
+              batch.current.set(source2, value);
+            } else {
+              continue;
+            }
+          }
+          mark_effects(source2);
+        }
+        if (queued_root_effects.length > 0) {
+          current_batch = batch;
+          const revert = Batch.apply(batch);
+          for (const root2 of queued_root_effects) {
+            batch.#traverse_effect_tree(root2);
+          }
+          queued_root_effects = [];
+          revert();
+        }
+      }
+      current_batch = null;
+    }
+    batches.delete(this);
   }
   increment() {
     this.#pending += 1;
@@ -462,8 +454,6 @@ class Batch {
         set_signal_status(e, MAYBE_DIRTY);
         schedule_effect(e);
       }
-      this.#render_effects = [];
-      this.#effects = [];
       this.flush();
     } else {
       this.deactivate();
@@ -495,6 +485,14 @@ class Batch {
   static enqueue(task) {
     queue_micro_task(task);
   }
+  /**
+   * @param {Batch} current_batch
+   */
+  static apply(current_batch2) {
+    {
+      return noop;
+    }
+  }
 }
 function flushSync(fn) {
   var was_flushing_sync = is_flushing_sync;
@@ -504,7 +502,7 @@ function flushSync(fn) {
     if (fn) ;
     while (true) {
       flush_tasks();
-      if (queued_root_effects.length === 0 && !has_pending_tasks()) {
+      if (queued_root_effects.length === 0) {
         current_batch?.flush();
         if (queued_root_effects.length === 0) {
           last_scheduled_effect = null;
@@ -576,6 +574,25 @@ function flush_queued_effects(effects) {
     }
   }
   eager_block_effects = null;
+}
+function mark_effects(value) {
+  if (value.reactions !== null) {
+    for (const reaction of value.reactions) {
+      const flags2 = reaction.f;
+      if ((flags2 & DERIVED) !== 0) {
+        mark_effects(
+          /** @type {Derived} */
+          reaction
+        );
+      } else if ((flags2 & (ASYNC | BLOCK_EFFECT)) !== 0) {
+        set_signal_status(reaction, DIRTY);
+        schedule_effect(
+          /** @type {Effect} */
+          reaction
+        );
+      }
+    }
+  }
 }
 function schedule_effect(signal) {
   var effect = last_scheduled_effect = signal;
@@ -811,6 +828,9 @@ class Boundary {
         this.#anchor.before(this.#offscreen_fragment);
         this.#offscreen_fragment = null;
       }
+      queue_micro_task(() => {
+        Batch.ensure().flush();
+      });
     }
   }
   /**
@@ -2488,7 +2508,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "168m0pj"
+  version_hash: "17amtch"
 };
 async function get_hooks() {
   let handle;
