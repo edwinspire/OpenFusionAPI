@@ -33,14 +33,14 @@ function safe_equals(value) {
   return !safe_not_equal(value, this.v);
 }
 export {
-  deferred as a,
-  array_prototype as b,
-  get_prototype_of as c,
-  define_property as d,
+  array_prototype as a,
+  get_prototype_of as b,
+  is_extensible as c,
+  deferred as d,
   equals as e,
-  is_extensible as f,
+  index_of as f,
   get_descriptor as g,
-  index_of as h,
+  define_property as h,
   is_array as i,
   array_from as j,
   safe_not_equal as k,

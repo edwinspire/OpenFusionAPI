@@ -1,15 +1,11 @@
 import "clsx";
-import "@edwinspire/universal-fetch";
 import "../../chunks/start_page.svelte_svelte_type_style_lang.js";
+import "@edwinspire/universal-fetch";
 import "events";
-import "d3";
-import "prettier/standalone.js";
-import "prettier/plugins/babel.mjs";
-import "prettier/plugins/estree.mjs";
-import "prettier/plugins/html.mjs";
 import "prettier-plugin-sql";
 import "marked";
-import { x as attr, y as attr_style, z as stringify } from "../../chunks/index2.js";
+import "echarts";
+import { w as attr, x as attr_style, y as stringify } from "../../chunks/index2.js";
 const logo = "/_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png";
 const flame = "/_app/immutable/assets/flame.pI4vnDs3.png";
 function Start_page($$renderer) {

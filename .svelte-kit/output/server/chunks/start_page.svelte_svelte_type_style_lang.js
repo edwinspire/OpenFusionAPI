@@ -1,6 +1,3 @@
-import "@edwinspire/universal-fetch";
-import "clsx";
-validateBaseUrl("");
 function validateBaseUrl(baseUrl) {
   try {
     const url = new URL(baseUrl);
@@ -12,4 +9,5 @@ function validateBaseUrl(baseUrl) {
     return "";
   }
 }
+validateBaseUrl("");
 //# sourceMappingURL=start_page.svelte_svelte_type_style_lang.js.map

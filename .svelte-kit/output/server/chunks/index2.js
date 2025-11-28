@@ -3,12 +3,12 @@ import { clsx as clsx$1 } from "clsx";
 const DERIVED = 1 << 1;
 const EFFECT = 1 << 2;
 const RENDER_EFFECT = 1 << 3;
+const MANAGED_EFFECT = 1 << 24;
 const BLOCK_EFFECT = 1 << 4;
 const BRANCH_EFFECT = 1 << 5;
 const ROOT_EFFECT = 1 << 6;
 const BOUNDARY_EFFECT = 1 << 7;
-const UNOWNED = 1 << 8;
-const DISCONNECTED = 1 << 9;
+const CONNECTED = 1 << 9;
 const CLEAN = 1 << 10;
 const DIRTY = 1 << 11;
 const MAYBE_DIRTY = 1 << 12;
@@ -16,10 +16,11 @@ const INERT = 1 << 13;
 const DESTROYED = 1 << 14;
 const EFFECT_RAN = 1 << 15;
 const EFFECT_TRANSPARENT = 1 << 16;
-const INSPECT_EFFECT = 1 << 17;
+const EAGER_EFFECT = 1 << 17;
 const HEAD_EFFECT = 1 << 18;
 const EFFECT_PRESERVED = 1 << 19;
 const USER_EFFECT = 1 << 20;
+const WAS_MARKED = 1 << 15;
 const REACTION_IS_UPDATING = 1 << 21;
 const ASYNC = 1 << 22;
 const ERROR_VALUE = 1 << 23;
@@ -218,6 +219,7 @@ function to_style(value, styles) {
 }
 const BLOCK_OPEN = `<!--${HYDRATION_START}-->`;
 const BLOCK_CLOSE = `<!--${HYDRATION_END}-->`;
+const EMPTY_COMMENT = `<!---->`;
 let controller = null;
 function abort() {
   controller?.abort(STALE_REACTION);
@@ -230,11 +232,26 @@ https://svelte.dev/e/await_invalid`);
   error.name = "Svelte error";
   throw error;
 }
-function experimental_async_ssr() {
+function server_context_required() {
+  const error = new Error(`server_context_required
+Could not resolve \`render\` context.
+https://svelte.dev/e/server_context_required`);
+  error.name = "Svelte error";
+  throw error;
+}
+function unresolved_hydratable(key, stack) {
   {
-    console.warn(`https://svelte.dev/e/experimental_async_ssr`);
+    console.warn(`https://svelte.dev/e/unresolved_hydratable`);
   }
 }
+function get_render_context() {
+  const store = als?.getStore();
+  {
+    server_context_required();
+  }
+  return store;
+}
+let als = null;
 class Renderer {
   /**
    * The contents of the renderer.
@@ -297,12 +314,56 @@ class Renderer {
     head2.child(fn);
   }
   /**
+   * @param {Array<Promise<void>>} blockers
    * @param {(renderer: Renderer) => void} fn
    */
-  async(fn) {
+  async_block(blockers, fn) {
     this.#out.push(BLOCK_OPEN);
-    this.child(fn);
+    this.async(blockers, fn);
     this.#out.push(BLOCK_CLOSE);
+  }
+  /**
+   * @param {Array<Promise<void>>} blockers
+   * @param {(renderer: Renderer) => void} fn
+   */
+  async(blockers, fn) {
+    let callback = fn;
+    if (blockers.length > 0) {
+      const context = ssr_context;
+      callback = (renderer) => {
+        return Promise.all(blockers).then(() => {
+          const previous_context = ssr_context;
+          try {
+            set_ssr_context(context);
+            return fn(renderer);
+          } finally {
+            set_ssr_context(previous_context);
+          }
+        });
+      };
+    }
+    this.child(callback);
+  }
+  /**
+   * @param {Array<() => void>} thunks
+   */
+  run(thunks) {
+    const context = ssr_context;
+    let promise = Promise.resolve(thunks[0]());
+    const promises = [promise];
+    for (const fn of thunks.slice(1)) {
+      promise = promise.then(() => {
+        const previous_context = ssr_context;
+        set_ssr_context(context);
+        try {
+          return fn();
+        } finally {
+          set_ssr_context(previous_context);
+        }
+      });
+      promises.push(promise);
+    }
+    return promises;
   }
   /**
    * Create a child renderer. The child renderer inherits the state from the parent,
@@ -518,7 +579,6 @@ class Renderer {
            */
           (onfulfilled, onrejected) => {
             {
-              experimental_async_ssr();
               const result2 = sync ??= Renderer.#render(component, options);
               const user_result = onfulfilled({
                 head: result2.head,
@@ -534,7 +594,7 @@ class Renderer {
     return result;
   }
   /**
-   * Collect all of the `onDestroy` callbacks regsitered during rendering. In an async context, this is only safe to call
+   * Collect all of the `onDestroy` callbacks registered during rendering. In an async context, this is only safe to call
    * after awaiting `collect_async`.
    *
    * Child renderers are "porous" and don't affect execution order, but component body renderers
@@ -603,14 +663,18 @@ class Renderer {
    * @returns {Promise<AccumulatedContent>}
    */
   static async #render_async(component, options) {
-    var previous_context = ssr_context;
+    const previous_context = ssr_context;
     try {
       const renderer = Renderer.#open_render("async", component, options);
       const content = await renderer.#collect_content_async();
+      const hydratables = await renderer.#collect_hydratables();
+      if (hydratables !== null) {
+        content.head = hydratables + content.head;
+      }
       return Renderer.#close_render(content, renderer);
     } finally {
-      abort();
       set_ssr_context(previous_context);
+      abort();
     }
   }
   /**
@@ -643,6 +707,16 @@ class Renderer {
       }
     }
     return content;
+  }
+  async #collect_hydratables() {
+    const ctx = get_render_context().hydratable;
+    for (const [_, key] of ctx.unresolved_promises) {
+      unresolved_hydratable(key, ctx.lookup.get(key)?.stack ?? "<missing stack trace>");
+    }
+    for (const comparison of ctx.comparisons) {
+      await comparison;
+    }
+    return await Renderer.#hydratable_block(ctx);
   }
   /**
    * @template {Record<string, any>} Props
@@ -685,6 +759,40 @@ class Renderer {
       head: head2,
       body
     };
+  }
+  /**
+   * @param {HydratableContext} ctx
+   */
+  static async #hydratable_block(ctx) {
+    if (ctx.lookup.size === 0) {
+      return null;
+    }
+    let entries = [];
+    let has_promises = false;
+    for (const [k, v] of ctx.lookup) {
+      if (v.promises) {
+        has_promises = true;
+        for (const p of v.promises) await p;
+      }
+      entries.push(`[${JSON.stringify(k)},${v.serialized}]`);
+    }
+    let prelude = `const h = (window.__svelte ??= {}).h ??= new Map();`;
+    if (has_promises) {
+      prelude = `const r = (v) => Promise.resolve(v);
+				${prelude}`;
+    }
+    return `
+		<script>
+			{
+				${prelude}
+
+				for (const [k, v] of [
+					${entries.join(",\n					")}
+				]) {
+					h.set(k, v);
+				}
+			}
+		<\/script>`;
   }
 }
 class SSRState {
@@ -734,11 +842,11 @@ function render(component, options = {}) {
     options
   );
 }
-function head(renderer, fn) {
+function head(hash, renderer, fn) {
   renderer.head((renderer2) => {
-    renderer2.push(BLOCK_OPEN);
+    renderer2.push(`<!--${hash}-->`);
     renderer2.child(fn);
-    renderer2.push(BLOCK_CLOSE);
+    renderer2.push(EMPTY_COMMENT);
   });
 }
 function attributes(attrs, css_hash, classes, styles, flags = 0) {
@@ -806,17 +914,17 @@ export {
   COMMENT_NODE as C,
   DIRTY as D,
   ERROR_VALUE as E,
-  attr_class as F,
-  bind_props as G,
+  bind_props as F,
+  ensure_array_like as G,
   HYDRATION_ERROR as H,
   INERT as I,
-  ensure_array_like as J,
-  head as K,
+  head as J,
   LEGACY_PROPS as L,
   MAYBE_DIRTY as M,
   ROOT_EFFECT as R,
   STATE_SYMBOL as S,
-  UNOWNED as U,
+  UNINITIALIZED as U,
+  WAS_MARKED as W,
   HYDRATION_END as a,
   HYDRATION_START as b,
   HYDRATION_START_ELSE as c,
@@ -824,24 +932,24 @@ export {
   CLEAN as e,
   EFFECT as f,
   BLOCK_EFFECT as g,
-  BRANCH_EFFECT as h,
-  DESTROYED as i,
-  DERIVED as j,
-  EFFECT_TRANSPARENT as k,
-  EFFECT_PRESERVED as l,
-  INSPECT_EFFECT as m,
-  UNINITIALIZED as n,
-  HEAD_EFFECT as o,
+  DERIVED as h,
+  BRANCH_EFFECT as i,
+  DESTROYED as j,
+  HEAD_EFFECT as k,
+  EFFECT_TRANSPARENT as l,
+  EFFECT_PRESERVED as m,
+  CONNECTED as n,
+  EAGER_EFFECT as o,
   STALE_REACTION as p,
   RENDER_EFFECT as q,
   USER_EFFECT as r,
-  DISCONNECTED as s,
+  MANAGED_EFFECT as s,
   REACTION_IS_UPDATING as t,
   is_passive_event as u,
   render as v,
-  experimental_async_ssr as w,
-  attr as x,
-  attr_style as y,
-  stringify as z
+  attr as w,
+  attr_style as x,
+  stringify as y,
+  attr_class as z
 };
 //# sourceMappingURL=index2.js.map

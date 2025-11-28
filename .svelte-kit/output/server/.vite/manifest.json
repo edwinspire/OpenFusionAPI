@@ -60,7 +60,7 @@
     "file": "chunks/start_page.svelte_svelte_type_style_lang.js",
     "name": "start_page.svelte_svelte_type_style_lang",
     "css": [
-      "_app/immutable/assets/start_page.Bm9hYffr.css"
+      "_app/immutable/assets/start_page.DuwO2N6u.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.D_cYUPeE.woff2",
@@ -153,11 +153,11 @@
     "isEntry": true,
     "imports": [
       "_environment.js",
+      "_shared.js",
       "_exports.js",
       "_utils.js",
       "_index.js",
-      "_internal.js",
-      "_shared.js"
+      "_internal.js"
     ]
   },
   "src/routes/+layout.js": {
