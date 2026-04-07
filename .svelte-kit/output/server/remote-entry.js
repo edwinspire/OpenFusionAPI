@@ -1,9 +1,10 @@
 import { get_request_store, with_request_store } from "@sveltejs/kit/internal/server";
 import { parse } from "devalue";
 import { error, json } from "@sveltejs/kit";
-import { a as stringify_remote_arg, f as flatten_issues, b as create_field_proxy, n as normalize_issue, e as set_nested_value, g as deep_set, s as stringify, c as create_remote_key } from "./chunks/shared.js";
-import { ValidationError } from "@sveltejs/kit/internal";
-import { b as base, c as app_dir, D as DEV, p as prerendering } from "./chunks/environment.js";
+import { v as stringify_remote_arg, f as create_remote_key, w as unfriendly_hydratable, k as stringify, M as MUTATIVE_METHODS, x as create_field_proxy, y as normalize_issue, z as set_nested_value, A as flatten_issues, B as deep_set, h as handle_error_and_jsonify, p as parse_remote_arg } from "./chunks/shared.js";
+import { ValidationError, HttpError, SvelteKitError } from "@sveltejs/kit/internal";
+import { D as DEV } from "./chunks/false.js";
+import { b as base, c as app_dir, p as prerendering } from "./chunks/environment.js";
 function create_validator(validate_or_fn, maybe_fn) {
   if (!maybe_fn) {
     return (arg) => {
@@ -35,10 +36,23 @@ function create_validator(validate_or_fn, maybe_fn) {
     'Invalid validator passed to remote function. Expected "unchecked" or a Standard Schema (https://standardschema.dev)'
   );
 }
-async function get_response(info, arg, state, get_result) {
+async function get_response(internals, arg, state, get_result) {
   await 0;
-  const cache = get_cache(info, state);
-  return cache[stringify_remote_arg(arg, state.transport)] ??= get_result();
+  const cache = get_cache(internals, state);
+  const key = stringify_remote_arg(arg, state.transport);
+  const entry = cache[key] ??= {
+    serialize: false,
+    data: get_result()
+  };
+  entry.serialize ||= !!state.is_in_universal_load;
+  if (state.is_in_render && internals.id) {
+    const remote_key = create_remote_key(internals.id, key);
+    Promise.resolve(entry.data).then((value) => {
+      void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
+    }).catch(() => {
+    });
+  }
+  return entry.data;
 }
 function parse_remote_response(data, transport) {
   const revivers = {};
@@ -47,7 +61,7 @@ function parse_remote_response(data, transport) {
   }
   return parse(data, revivers);
 }
-async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
+async function run_remote_function(event, state, allow_cookies, get_input, fn) {
   const store = {
     event: {
       ...event,
@@ -81,14 +95,14 @@ async function run_remote_function(event, state, allow_cookies, arg, validate, f
       is_in_remote_function: true
     }
   };
-  const validated = await with_request_store(store, () => validate(arg));
-  return with_request_store(store, () => fn(validated));
+  const input = await with_request_store(store, get_input);
+  return with_request_store(store, () => fn(input));
 }
-function get_cache(info, state = get_request_store().state) {
-  let cache = state.remote_data?.get(info);
+function get_cache(internals, state = get_request_store().state) {
+  let cache = state.remote.data?.get(internals);
   if (cache === void 0) {
     cache = {};
-    (state.remote_data ??= /* @__PURE__ */ new Map()).set(info, cache);
+    (state.remote.data ??= /* @__PURE__ */ new Map()).set(internals, cache);
   }
   return cache;
 }
@@ -99,19 +113,20 @@ function command(validate_or_fn, maybe_fn) {
   const __ = { type: "command", id: "", name: "" };
   const wrapper = (arg) => {
     const { event, state } = get_request_store();
-    if (state.is_endpoint_request) {
-      if (!["POST", "PUT", "PATCH", "DELETE"].includes(event.request.method)) {
-        throw new Error(
-          `Cannot call a command (\`${__.name}(${maybe_fn ? "..." : ""})\`) from a ${event.request.method} handler`
-        );
-      }
-    } else if (!event.isRemoteRequest) {
+    if (!MUTATIVE_METHODS.includes(event.request.method)) {
+      throw new Error(
+        `Cannot call a command (\`${__.name}(${maybe_fn ? "..." : ""})\`) from a ${event.request.method} handler`
+      );
+    }
+    if (state.is_in_render) {
       throw new Error(
         `Cannot call a command (\`${__.name}(${maybe_fn ? "..." : ""})\`) during server-side rendering`
       );
     }
-    state.refreshes ??= {};
-    const promise = Promise.resolve(run_remote_function(event, state, true, arg, validate, fn));
+    state.remote.refreshes ??= {};
+    const promise = Promise.resolve(
+      run_remote_function(event, state, true, () => validate(arg), fn)
+    );
     promise.updates = () => {
       throw new Error(`Cannot call '${__.name}(...).updates(...)' on the server`);
     };
@@ -141,20 +156,6 @@ function form(validate_or_fn, maybe_fn) {
         return { action: instance.action, method: instance.method };
       }
     });
-    const button_props = {
-      type: "submit",
-      onclick: () => {
-      }
-    };
-    Object.defineProperty(button_props, "enhance", {
-      value: () => {
-        return { type: "submit", formaction: instance.buttonProps.formaction, onclick: () => {
-        } };
-      }
-    });
-    Object.defineProperty(instance, "buttonProps", {
-      value: button_props
-    });
     const __ = {
       type: "form",
       name: "",
@@ -173,15 +174,14 @@ function form(validate_or_fn, maybe_fn) {
           if (validated !== void 0) {
             data = validated.value;
           }
-          state.refreshes ??= {};
+          state.remote.refreshes ??= {};
           const issue = create_issues();
           try {
             output.result = await run_remote_function(
               event,
               state,
               true,
-              data,
-              (d) => d,
+              () => data,
               (data2) => !maybe_fn ? fn() : fn(data2, issue)
             );
           } catch (e) {
@@ -193,7 +193,7 @@ function form(validate_or_fn, maybe_fn) {
           }
         }
         if (!event.isRemoteRequest) {
-          get_cache(__, state)[""] ??= output;
+          get_cache(__, state)[""] ??= { serialize: true, data: output };
         }
         return output;
       }
@@ -203,41 +203,39 @@ function form(validate_or_fn, maybe_fn) {
       get: () => `?/remote=${__.id}`,
       enumerable: true
     });
-    Object.defineProperty(button_props, "formaction", {
-      get: () => `?/remote=${__.id}`,
-      enumerable: true
-    });
     Object.defineProperty(instance, "fields", {
       get() {
-        const data = get_cache(__)?.[""];
-        const issues = flatten_issues(data?.issues ?? []);
         return create_field_proxy(
           {},
-          () => data?.input ?? {},
+          () => get_cache(__)?.[""]?.data?.input ?? {},
           (path, value) => {
-            if (data?.submission) {
+            const cache = get_cache(__);
+            const entry = cache[""];
+            if (entry?.data?.submission) {
               return;
             }
-            const input = path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
-            (get_cache(__)[""] ??= {}).input = input;
+            if (path.length === 0) {
+              (cache[""] ??= { serialize: true, data: {} }).data.input = value;
+              return;
+            }
+            const input = entry?.data?.input ?? {};
+            deep_set(input, path.map(String), value);
+            (cache[""] ??= { serialize: true, data: {} }).data.input = input;
           },
-          () => issues
+          () => flatten_issues(get_cache(__)?.[""]?.data?.issues ?? [])
         );
       }
     });
     Object.defineProperty(instance, "result", {
       get() {
         try {
-          return get_cache(__)?.[""]?.result;
+          return get_cache(__)?.[""]?.data?.result;
         } catch {
           return void 0;
         }
       }
     });
     Object.defineProperty(instance, "pending", {
-      get: () => 0
-    });
-    Object.defineProperty(button_props, "pending", {
       get: () => 0
     });
     Object.defineProperty(instance, "preflight", {
@@ -255,12 +253,12 @@ function form(validate_or_fn, maybe_fn) {
         value: (key2) => {
           const { state } = get_request_store();
           const cache_key = __.id + "|" + JSON.stringify(key2);
-          let instance2 = (state.form_instances ??= /* @__PURE__ */ new Map()).get(cache_key);
+          let instance2 = (state.remote.forms ??= /* @__PURE__ */ new Map()).get(cache_key);
           if (!instance2) {
             instance2 = create_instance(key2);
             instance2.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key2))}`;
             instance2.__.name = __.name;
-            state.form_instances.set(cache_key, instance2);
+            state.remote.forms.set(cache_key, instance2);
           }
           return instance2;
         }
@@ -360,8 +358,9 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
           return await get_response(__, arg, state, async () => {
             const key = stringify_remote_arg(arg, state.transport);
             const cache = get_cache(__, state);
-            const promise3 = cache[key] ??= fetch(new URL(url, event.url.origin).href).then(
-              async (response) => {
+            const promise3 = (cache[key] ??= {
+              serialize: true,
+              data: fetch(new URL(url, event.url.origin).href).then(async (response) => {
                 if (!response.ok) {
                   throw new Error("Prerendered response not found");
                 }
@@ -370,8 +369,8 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
                   error(prerendered.status, prerendered.error);
                 }
                 return prerendered.result;
-              }
-            );
+              })
+            }).data;
             return parse_remote_response(await promise3, state.transport);
           });
         } catch {
@@ -387,7 +386,7 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
         __,
         arg,
         state,
-        () => run_remote_function(event, state, false, arg, validate, fn)
+        () => run_remote_function(event, state, false, () => validate(arg), fn)
       );
       if (state.prerendering) {
         state.prerendering.remote_responses.set(url, promise2);
@@ -416,7 +415,7 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
 function query(validate_or_fn, maybe_fn) {
   const fn = maybe_fn ?? validate_or_fn;
   const validate = create_validator(validate_or_fn, maybe_fn);
-  const __ = { type: "query", id: "", name: "" };
+  const __ = { type: "query", id: "", name: "", validate };
   const wrapper = (arg) => {
     if (prerendering) {
       throw new Error(
@@ -424,27 +423,29 @@ function query(validate_or_fn, maybe_fn) {
       );
     }
     const { event, state } = get_request_store();
-    const get_remote_function_result = () => run_remote_function(event, state, false, arg, validate, fn);
-    const promise = get_response(__, arg, state, get_remote_function_result);
-    promise.catch(() => {
-    });
-    promise.set = (value) => update_refresh_value(get_refresh_context(__, "set", arg), value);
-    promise.refresh = () => {
-      const refresh_context = get_refresh_context(__, "refresh", arg);
-      const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-      const value = is_immediate_refresh ? promise : get_remote_function_result();
-      return update_refresh_value(refresh_context, value, is_immediate_refresh);
-    };
-    promise.withOverride = () => {
-      throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-    };
-    return (
-      /** @type {RemoteQuery<Output>} */
-      promise
+    const is_validated = is_validated_argument(__, state, arg);
+    return create_query_resource(
+      __,
+      arg,
+      state,
+      () => run_remote_function(event, state, false, () => is_validated ? arg : validate(arg), fn)
     );
   };
   Object.defineProperty(wrapper, "__", { value: __ });
   return wrapper;
+}
+function is_validated_argument(__, state, arg) {
+  return state.remote.validated?.get(__.id)?.has(arg) ?? false;
+}
+function mark_argument_validated(__, state, arg) {
+  const validated = state.remote.validated ??= /* @__PURE__ */ new Map();
+  let validated_args = validated.get(__.id);
+  if (!validated_args) {
+    validated_args = /* @__PURE__ */ new Set();
+    validated.set(__.id, validated_args);
+  }
+  validated_args.add(arg);
+  return arg;
 }
 // @__NO_SIDE_EFFECTS__
 function batch(validate_or_fn, maybe_fn) {
@@ -454,19 +455,34 @@ function batch(validate_or_fn, maybe_fn) {
     type: "query_batch",
     id: "",
     name: "",
-    run: (args) => {
+    run: async (args, options) => {
       const { event, state } = get_request_store();
       return run_remote_function(
         event,
         state,
         false,
-        args,
-        (array) => Promise.all(array.map(validate)),
-        fn
+        async () => Promise.all(args.map(validate)),
+        async (input) => {
+          const get_result = await fn(input);
+          return Promise.all(
+            input.map(async (arg, i) => {
+              try {
+                const data = get_result(arg, i);
+                return { type: "result", data: stringify(data, state.transport) };
+              } catch (error2) {
+                return {
+                  type: "error",
+                  error: await handle_error_and_jsonify(event, state, options, error2),
+                  status: error2 instanceof HttpError || error2 instanceof SvelteKitError ? error2.status : 500
+                };
+              }
+            })
+          );
+        }
       );
     }
   };
-  let batching = { args: [], resolvers: [] };
+  let batching = /* @__PURE__ */ new Map();
   const wrapper = (arg) => {
     if (prerendering) {
       throw new Error(
@@ -474,63 +490,112 @@ function batch(validate_or_fn, maybe_fn) {
       );
     }
     const { event, state } = get_request_store();
-    const get_remote_function_result = () => {
+    return create_query_resource(__, arg, state, () => {
       return new Promise((resolve, reject) => {
-        batching.args.push(arg);
-        batching.resolvers.push({ resolve, reject });
-        if (batching.args.length > 1) return;
+        const key = stringify_remote_arg(arg, state.transport);
+        const entry = batching.get(key);
+        if (entry) {
+          entry.resolvers.push({ resolve, reject });
+          return;
+        }
+        batching.set(key, {
+          arg,
+          resolvers: [{ resolve, reject }]
+        });
+        if (batching.size > 1) return;
         setTimeout(async () => {
           const batched = batching;
-          batching = { args: [], resolvers: [] };
+          batching = /* @__PURE__ */ new Map();
+          const entries = Array.from(batched.values());
+          const args = entries.map((entry2) => entry2.arg);
           try {
-            const get_result = await run_remote_function(
+            return await run_remote_function(
               event,
               state,
               false,
-              batched.args,
-              (array) => Promise.all(array.map(validate)),
-              fn
-            );
-            for (let i = 0; i < batched.resolvers.length; i++) {
-              try {
-                batched.resolvers[i].resolve(get_result(batched.args[i], i));
-              } catch (error2) {
-                batched.resolvers[i].reject(error2);
+              async () => Promise.all(args.map(validate)),
+              async (input) => {
+                const get_result = await fn(input);
+                for (let i = 0; i < entries.length; i++) {
+                  try {
+                    const result = get_result(input[i], i);
+                    for (const resolver of entries[i].resolvers) {
+                      resolver.resolve(result);
+                    }
+                  } catch (error2) {
+                    for (const resolver of entries[i].resolvers) {
+                      resolver.reject(error2);
+                    }
+                  }
+                }
               }
-            }
+            );
           } catch (error2) {
-            for (const resolver of batched.resolvers) {
-              resolver.reject(error2);
+            for (const entry2 of batched.values()) {
+              for (const resolver of entry2.resolvers) {
+                resolver.reject(error2);
+              }
             }
           }
         }, 0);
       });
-    };
-    const promise = get_response(__, arg, state, get_remote_function_result);
-    promise.catch(() => {
     });
-    promise.set = (value) => update_refresh_value(get_refresh_context(__, "set", arg), value);
-    promise.refresh = () => {
-      const refresh_context = get_refresh_context(__, "refresh", arg);
-      const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-      const value = is_immediate_refresh ? promise : get_remote_function_result();
-      return update_refresh_value(refresh_context, value, is_immediate_refresh);
-    };
-    promise.withOverride = () => {
-      throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-    };
-    return (
-      /** @type {RemoteQuery<Output>} */
-      promise
-    );
   };
   Object.defineProperty(wrapper, "__", { value: __ });
   return wrapper;
 }
+function create_query_resource(__, arg, state, fn) {
+  let promise = null;
+  const get_promise = () => {
+    return promise ??= get_response(__, arg, state, fn);
+  };
+  return {
+    /** @type {Promise<any>['catch']} */
+    catch(onrejected) {
+      return get_promise().catch(onrejected);
+    },
+    current: void 0,
+    error: void 0,
+    /** @type {Promise<any>['finally']} */
+    finally(onfinally) {
+      return get_promise().finally(onfinally);
+    },
+    loading: true,
+    ready: false,
+    refresh() {
+      const refresh_context = get_refresh_context(__, "refresh", arg);
+      const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+      const value = is_immediate_refresh ? get_promise() : fn();
+      return update_refresh_value(refresh_context, value, is_immediate_refresh);
+    },
+    run() {
+      if (!state.is_in_universal_load) {
+        throw new Error(
+          "On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly"
+        );
+      }
+      return get_response(__, arg, state, fn);
+    },
+    /** @param {any} value */
+    set(value) {
+      return update_refresh_value(get_refresh_context(__, "set", arg), value);
+    },
+    /** @type {Promise<any>['then']} */
+    then(onfulfilled, onrejected) {
+      return get_promise().then(onfulfilled, onrejected);
+    },
+    withOverride() {
+      throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+    },
+    get [Symbol.toStringTag]() {
+      return "QueryResource";
+    }
+  };
+}
 Object.defineProperty(query, "batch", { value: batch, enumerable: true });
 function get_refresh_context(__, action, arg) {
   const { state } = get_request_store();
-  const { refreshes } = state;
+  const { refreshes } = state.remote;
   if (!refreshes) {
     const name = __.type === "query_batch" ? `query.batch '${__.name}'` : `query '${__.name}'`;
     throw new Error(
@@ -545,18 +610,122 @@ function get_refresh_context(__, action, arg) {
 function update_refresh_value({ __, refreshes, refreshes_key, cache, cache_key }, value, is_immediate_refresh = false) {
   const promise = Promise.resolve(value);
   if (!is_immediate_refresh) {
-    cache[cache_key] = promise;
+    cache[cache_key] = { serialize: true, data: promise };
   }
   if (__.id) {
     refreshes[refreshes_key] = promise;
   }
-  return promise.then(() => {
-  });
+  return promise.then(
+    () => {
+    },
+    () => {
+    }
+  );
+}
+function requested(query2, limit = Infinity) {
+  const { state } = get_request_store();
+  const internals = (
+    /** @type {RemoteQueryInternals | undefined} */
+    /** @type {any} */
+    query2.__
+  );
+  if (!internals || internals.type !== "query") {
+    throw new Error("requested(...) expects a query function created with query(...)");
+  }
+  const requested2 = state.remote.requested;
+  const payloads = requested2?.get(internals.id) ?? [];
+  const refreshes = state.remote.refreshes ??= {};
+  const [selected, skipped] = split_limit(payloads, limit);
+  const record_failure = (payload, error2) => {
+    const promise = Promise.reject(error2);
+    promise.catch(() => {
+    });
+    const key = create_remote_key(internals.id, payload);
+    refreshes[key] = promise;
+  };
+  for (const payload of skipped) {
+    record_failure(
+      payload,
+      new Error(
+        `Requested refresh was rejected because it exceeded requested(${internals.name}, ${limit}) limit`
+      )
+    );
+  }
+  return {
+    *[Symbol.iterator]() {
+      for (const payload of selected) {
+        try {
+          const parsed = parse_remote_arg(payload, state.transport);
+          const validated = internals.validate(parsed);
+          if (is_thenable(validated)) {
+            throw new Error(
+              // TODO improve
+              `requested(${internals.name}, ${limit}) cannot be used with synchronous iteration because the query validator is async. Use \`for await ... of\` instead`
+            );
+          }
+          yield mark_argument_validated(internals, state, validated);
+        } catch (error2) {
+          record_failure(payload, error2);
+          continue;
+        }
+      }
+    },
+    async *[Symbol.asyncIterator]() {
+      yield* race_all(selected, async (payload) => {
+        try {
+          const parsed = parse_remote_arg(payload, state.transport);
+          const validated = await internals.validate(parsed);
+          return mark_argument_validated(internals, state, validated);
+        } catch (error2) {
+          record_failure(payload, error2);
+          throw new Error(`Skipping ${internals.name}(${payload})`, { cause: error2 });
+        }
+      });
+    },
+    async refreshAll() {
+      for await (const arg of this) {
+        void query2(arg).refresh();
+      }
+    }
+  };
+}
+function split_limit(array, limit) {
+  if (limit === Infinity) {
+    return [array, []];
+  }
+  if (!Number.isInteger(limit) || limit < 0) {
+    throw new Error("Limit must be a non-negative integer or Infinity");
+  }
+  return [array.slice(0, limit), array.slice(limit)];
+}
+function is_thenable(value) {
+  return !!value && (typeof value === "object" || typeof value === "function") && "then" in value;
+}
+async function* race_all(array, fn) {
+  const pending = /* @__PURE__ */ new Set();
+  for (const value of array) {
+    const promise = Promise.resolve(fn(value)).then((result) => ({
+      promise,
+      value: result
+    }));
+    promise.catch(() => {
+    });
+    pending.add(promise);
+  }
+  while (pending.size > 0) {
+    try {
+      const { promise, value } = await Promise.race(pending);
+      pending.delete(promise);
+      yield value;
+    } catch {
+    }
+  }
 }
 export {
   command,
   form,
   prerender,
-  query
+  query,
+  requested
 };
 //# sourceMappingURL=remote-entry.js.map

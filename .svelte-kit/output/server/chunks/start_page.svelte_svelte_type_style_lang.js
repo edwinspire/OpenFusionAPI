@@ -1,3 +1,4 @@
+const PUBLIC_API_SERVER_HOST = "http://localhost:3000";
 function validateBaseUrl(baseUrl) {
   try {
     const url = new URL(baseUrl);
@@ -9,5 +10,5 @@ function validateBaseUrl(baseUrl) {
     return "";
   }
 }
-validateBaseUrl("");
+validateBaseUrl(PUBLIC_API_SERVER_HOST);
 //# sourceMappingURL=start_page.svelte_svelte_type_style_lang.js.map

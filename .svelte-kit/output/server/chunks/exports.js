@@ -30,9 +30,9 @@ function make_trackable(url, callback, search_params_callback, allow_hash = fals
     value: new Proxy(tracked.searchParams, {
       get(obj, key) {
         if (key === "get" || key === "getAll" || key === "has") {
-          return (param) => {
+          return (param, ...rest) => {
             search_params_callback(param);
-            return obj[key](param);
+            return obj[key](param, ...rest);
           };
         }
         callback();

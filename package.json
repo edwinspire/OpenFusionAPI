@@ -10,7 +10,8 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"start": "node ./server/index.js",
-		"build_start": "vite build && node ./server/index.js"
+		"build_start": "vite build && node ./server/index.js",
+		"reinstall": "rm -rf node_modules && rm package-lock.json && npm install"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
@@ -31,6 +32,12 @@
 		"vite": "^5.4.11"
 	},
 	"type": "module",
+	"overrides": {
+		"@azure/identity": "^4.2.1",
+		"@xmldom/xmldom": "^0.9.8",
+		"minimatch": "^10.2.1",
+		"tar": "^7.5.8"
+	},
 	"dependencies": {
 		"@edwinspire/libopenfusionapi": "https://github.com/edwinspire/libOpenFusionAPI.git",
 		"@edwinspire/libopenfusionapigui": "https://github.com/edwinspire/libOpenFusionAPIGUI.git",

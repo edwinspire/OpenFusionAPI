@@ -1,6 +1,5 @@
-import { z as attr_class, F as bind_props, G as ensure_array_like, y as stringify, w as attr, J as head } from "../../../chunks/index2.js";
+import { a3 as attr_class, a4 as bind_props, a5 as ensure_array_like, a2 as stringify, e as escape_html, a0 as attr, a6 as clsx, a7 as head } from "../../../chunks/renderer.js";
 import "clsx";
-import { e as escape_html } from "../../../chunks/context.js";
 import "../../../chunks/start_page.svelte_svelte_type_style_lang.js";
 import "@edwinspire/universal-fetch";
 import "events";
@@ -16,10 +15,10 @@ function Modal($$renderer, $$props) {
     children?.($$renderer2);
     $$renderer2.push(`<!----></div> `);
     if (showCloseButton) {
-      $$renderer2.push("<!--[-->");
+      $$renderer2.push("<!--[0-->");
       $$renderer2.push(`<button class="modal-close is-large" aria-label="close"></button>`);
     } else {
-      $$renderer2.push("<!--[!-->");
+      $$renderer2.push("<!--[-1-->");
     }
     $$renderer2.push(`<!--]--></div>`);
     bind_props($$props, { show, showCloseButton });
@@ -37,41 +36,43 @@ function Notifications($$renderer, $$props) {
     for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
       let s = each_array[$$index];
       if (!s.hidden) {
-        $$renderer2.push("<!--[-->");
+        $$renderer2.push("<!--[0-->");
         $$renderer2.push(`<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-5sfib3")}>`);
         if (s.title) {
-          $$renderer2.push("<!--[-->");
+          $$renderer2.push("<!--[0-->");
           $$renderer2.push(`<div class="message-header"><p>${escape_html(s.title)}</p> <button class="delete is-small" aria-label="delete"></button></div>`);
         } else {
-          $$renderer2.push("<!--[!-->");
+          $$renderer2.push("<!--[-1-->");
         }
         $$renderer2.push(`<!--]--> <div class="message-body">${escape_html(s.message)}</div></article>`);
       } else {
-        $$renderer2.push("<!--[!-->");
+        $$renderer2.push("<!--[-1-->");
       }
       $$renderer2.push(`<!--]-->`);
     }
     $$renderer2.push(`<!--]--></div>`);
   });
 }
-const version = "1.1.18";
+const version = "1.2.3";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let username = "";
     let password = "";
+    let processing = { waiting: false, error: null };
+    let mounted = false;
     Modal($$renderer2, {
       show: true,
       children: ($$renderer3) => {
-        $$renderer3.push(`<div class="box"><div class="media t1 svelte-ogcakf"><div class="media-left"><figure class="image is-48x48"><img${attr("src", Logo)} alt="OpenFusionAPI"/></figure></div> <div class="media-content"><p class="title is-family-sans-serif">Open Fusion API</p></div></div> <div class="field"><p class="control has-icons-left has-icons-right"><input class="input" type="text" placeholder="Username"${attr("value", username)}/> <span class="icon is-small is-left"><i class="fa-solid fa-user"></i></span></p></div> <div class="field"><p class="control has-icons-left"><input class="input" type="password" placeholder="Password"${attr("value", password)}/> <span class="icon is-small is-left"><i class="fas fa-lock"></i></span></p></div> <div class="field"><p class="control">`);
+        $$renderer3.push(`<div${attr_class("login-wrapper svelte-ogcakf", void 0, { "is-visible": mounted })}><div class="orb orb-1 svelte-ogcakf"></div> <div class="orb orb-2 svelte-ogcakf"></div> <div class="orb orb-3 svelte-ogcakf"></div> <div class="login-card box svelte-ogcakf"><div class="brand-header has-text-centered svelte-ogcakf"><div class="logo-ring svelte-ogcakf"><div class="logo-figure svelte-ogcakf"><img${attr("src", Logo)} alt="OpenFusionAPI" class="logo-img svelte-ogcakf"/></div></div> <h1 class="title is-4 mt-3 brand-title svelte-ogcakf">Open Fusion API</h1> <p class="subtitle is-6 brand-subtitle svelte-ogcakf"><span class="tag is-dark is-rounded svelte-ogcakf"><span class="icon is-small svelte-ogcakf"><i class="fa-solid fa-server svelte-ogcakf"></i></span> <span class="svelte-ogcakf">MCP Server</span></span></p></div> <div class="divider-line svelte-ogcakf"></div> <form class="login-form svelte-ogcakf"><div class="field svelte-ogcakf"><label class="label has-text-grey-light is-small svelte-ogcakf">Username</label> <p class="control has-icons-left svelte-ogcakf"><input${attr_class("input is-rounded svelte-ogcakf", void 0, { "is-danger": processing.error })} type="text" placeholder="Enter your username"${attr("value", username)} autocomplete="username"/> <span class="icon is-small is-left svelte-ogcakf"><i class="fa-solid fa-user svelte-ogcakf"></i></span></p></div> <div class="field svelte-ogcakf"><label class="label has-text-grey-light is-small svelte-ogcakf">Password</label> <p class="control has-icons-left has-icons-right svelte-ogcakf"><input${attr_class("input is-rounded svelte-ogcakf", void 0, { "is-danger": processing.error })}${attr("type", "password")} placeholder="Enter your password"${attr("value", password)} autocomplete="current-password"/> <span class="icon is-small is-left svelte-ogcakf"><i class="fa-solid fa-lock svelte-ogcakf"></i></span> <span class="icon is-small is-right is-clickable eye-icon svelte-ogcakf"${attr("title", "Show password")}><i${attr_class(clsx("fa-solid fa-eye"), "svelte-ogcakf")}></i></span></p></div> `);
         {
-          $$renderer3.push("<!--[!-->");
-          $$renderer3.push(`<button class="button is-success">Login</button>`);
+          $$renderer3.push("<!--[-1-->");
         }
-        $$renderer3.push(`<!--]--></p> <div class="content is-small is-flex is-justify-content-flex-end">GUI Version: ${escape_html(version)}</div></div> `);
+        $$renderer3.push(`<!--]--> <div class="field mt-4 svelte-ogcakf"><p class="control svelte-ogcakf"><button type="submit"${attr_class("button is-fullwidth is-rounded login-btn svelte-ogcakf", void 0, { "is-loading": processing.waiting })}${attr("disabled", !username, true)}>`);
         {
-          $$renderer3.push("<!--[!-->");
+          $$renderer3.push("<!--[0-->");
+          $$renderer3.push(`<span class="icon svelte-ogcakf"><i class="fa-solid fa-right-to-bracket svelte-ogcakf"></i></span> <span class="svelte-ogcakf">Sign In</span>`);
         }
-        $$renderer3.push(`<!--]--></div>`);
+        $$renderer3.push(`<!--]--></button></p></div></form> <p class="version-tag has-text-centered has-text-grey svelte-ogcakf"><span class="icon is-small svelte-ogcakf"><i class="fa-solid fa-code-branch svelte-ogcakf"></i></span> v${escape_html(version)}</p></div></div>`);
       },
       $$slots: { default: true }
     });
@@ -82,7 +83,7 @@ function OpenFusionAPI($$renderer, $$props) {
     Notifications($$renderer2);
     $$renderer2.push(`<!----> `);
     {
-      $$renderer2.push("<!--[!-->");
+      $$renderer2.push("<!--[-1-->");
       Login($$renderer2);
     }
     $$renderer2.push(`<!--]-->`);

@@ -5,7 +5,7 @@ import "events";
 import "prettier-plugin-sql";
 import "marked";
 import "echarts";
-import { w as attr, x as attr_style, y as stringify } from "../../chunks/index2.js";
+import { a0 as attr, a1 as attr_style, a2 as stringify } from "../../chunks/renderer.js";
 const logo = "/_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png";
 const flame = "/_app/immutable/assets/flame.pI4vnDs3.png";
 function Start_page($$renderer) {

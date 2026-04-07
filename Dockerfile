@@ -1,36 +1,63 @@
 # OPEN FUSION API
 # edwinspire@gmail.com
-# Usar una imagen
-FROM node:24-trixie-slim
+# Usar una imagen LTS basada en Debian estable
+FROM node:22-bookworm-slim
 
 # Variables de Entorno
 ENV HOST=:: \
     PUBLIC_API_SERVER_HOST="" \
     PORT=3000 \
-    BUILD_DB=true
+    BUILD_DB=true \
+    PUPPETEER_SKIP_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Establecer el directorio de trabajo
 WORKDIR /app
 
-# Instalar herramientas adicionales necesarias
-# Incluye git y nano; agrega bash si es necesario para scripts complejos
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+# Instalar herramientas adicionales necesarias y dependencias de Chromium
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ca-certificates \
+    chromium \
+    fonts-liberation \
     git \
+    iputils-ping \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcairo2 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+    logrotate \
     nano \
     wget \
-    curl \
-    iputils-ping \
-    logrotate \
-    bash && \
+    xdg-utils \
+    bash \
+    curl && \
+    apt-get autoremove -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clonar la aplicación desde el repositorio
-RUN git clone https://github.com/edwinspire/OpenFusionAPI.git .
+# Copiar manifiestos para aprovechar la cache de dependencias
+COPY package.json package-lock.json ./
 
-# Eliminar archivos previos (node_modules y package-lock.json)
-RUN rm -rf node_modules package-lock.json
+# Instalar dependencias del proyecto
+RUN npm ci
 
-RUN npm install 
+# Copiar el resto del código fuente
+COPY . .
 
 # Instalar PM2 globalmente
 RUN npm install pm2 -g
