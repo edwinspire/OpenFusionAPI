@@ -5,6 +5,7 @@ FROM node:22-bookworm-slim
 
 # Variables de Entorno
 ENV HOST=:: \
+    NODE_ENV=production \
     PUBLIC_API_SERVER_HOST="" \
     PORT=3000 \
     BUILD_DB=true \
@@ -15,7 +16,7 @@ ENV HOST=:: \
 WORKDIR /app
 
 # Instalar herramientas adicionales necesarias y dependencias de Chromium
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     chromium \
     fonts-liberation \
     git \
@@ -51,10 +52,10 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copiar manifiestos para aprovechar la cache de dependencias
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
-# Instalar dependencias del proyecto
-RUN npm ci
+# Instalar dependencias del proyecto necesarias para build
+RUN if [ -f package-lock.json ]; then npm ci --include=dev; else npm install --include=dev; fi
 
 # Copiar el resto del código fuente
 COPY . .
@@ -64,17 +65,18 @@ RUN npm install pm2 -g
 
 # Instalar el módulo de rotación de logs de PM2
 RUN pm2 install pm2-logrotate \
-    && pm2 set pm2-logrotate:max_days 5 \
-    && pm2 set pm2-logrotate:retain 5
+    && pm2 set pm2-logrotate:max_days 3 \
+    && pm2 set pm2-logrotate:retain 3
 
-# Ejecutar la compilación de la aplicación
-RUN npm run build
+# Ejecutar la compilación de la aplicación y eliminar dependencias de desarrollo
+RUN npm run build \
+    && npm prune --omit=dev
 
 # Exponer el puerto en el que correrá la aplicación
 EXPOSE 3000
 
-# Comando para iniciar la aplicación con PM2
-CMD ["pm2-runtime", "start", "process.yml"]
+# Comando para iniciar la aplicación con PM2 en modo producción
+CMD ["pm2-runtime", "start", "process.yml", "--env", "production"]
 
 
 # docker system prune -a // Elimina todas las imágenes no utilizadas, contenedores detenidos, volúmenes y redes no utilizados

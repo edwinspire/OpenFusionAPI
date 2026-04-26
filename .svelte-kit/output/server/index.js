@@ -1,9 +1,9 @@
+import { E as ENDPOINT_METHODS, P as PAGE_METHODS, n as negotiate, m as method_not_allowed, h as handle_error_and_jsonify, g as get_status, i as is_form_content_type, a as normalize_error, b as get_global_name, s as serialize_uses, c as clarify_devalue_error, d as get_node_type, e as noop, f as escape_html, S as SVELTE_KIT_ASSETS, j as create_remote_key, k as static_error_page, r as redirect_response, p as parse_remote_arg, l as stringify, o as deserialize_binary_form, q as split_remote_key, t as once, u as has_prerendered_path, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, v as handle_fatal_error, w as format_server_error } from "./chunks/shared.js";
 import { D as DEV } from "./chunks/false.js";
 import { json, text, isRedirect, error } from "@sveltejs/kit";
 import { Redirect, SvelteKitError, ActionFailure, HttpError } from "@sveltejs/kit/internal";
 import { with_request_store, merge_tracing, try_get_request_store } from "@sveltejs/kit/internal/server";
 import { a as assets, b as base, c as app_dir, r as relative, o as override, d as reset } from "./chunks/environment.js";
-import { E as ENDPOINT_METHODS, P as PAGE_METHODS, n as negotiate, m as method_not_allowed, h as handle_error_and_jsonify, g as get_status, i as is_form_content_type, a as normalize_error, b as get_global_name, s as serialize_uses, c as clarify_devalue_error, d as get_node_type, e as escape_html, S as SVELTE_KIT_ASSETS, f as create_remote_key, j as static_error_page, r as redirect_response, p as parse_remote_arg, k as stringify, l as deserialize_binary_form, o as split_remote_key, q as has_prerendered_path, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, t as handle_fatal_error, u as format_server_error } from "./chunks/shared.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, S as SCHEME, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
 import { b as base64_encode, t as text_decoder, a as text_encoder, g as get_relative_path } from "./chunks/utils.js";
@@ -771,8 +771,7 @@ async function load_data({
           route: event.route,
           fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
           setHeaders: event.setHeaders,
-          depends: () => {
-          },
+          depends: noop,
           parent,
           untrack: (fn) => fn(),
           tracing: traced_event.tracing
@@ -932,8 +931,7 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
   };
   return (input, init2) => {
     const response = universal_fetch(input, init2);
-    response.catch(() => {
-    });
+    response.catch(noop);
     return response;
   };
 }
@@ -1637,22 +1635,22 @@ async function render_response({
     } finally {
       reset();
     }
-    for (const { node } of branch) {
-      for (const url of node.imports) modulepreloads.add(url);
-      for (const url of node.stylesheets) stylesheets.add(url);
-      for (const url of node.fonts) fonts.add(url);
-      if (node.inline_styles && !client.inline) {
-        Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
-          if (typeof css === "string") {
-            inline_styles.set(filename, css);
-            return;
-          }
-          inline_styles.set(filename, css(`${assets$1}/${app_dir}/immutable/assets`, assets$1));
-        });
-      }
-    }
   } else {
     rendered = { head: "", html: "", css: { code: "", map: null }, hashes: { script: [] } };
+  }
+  for (const { node } of branch) {
+    for (const url of node.imports) modulepreloads.add(url);
+    for (const url of node.stylesheets) stylesheets.add(url);
+    for (const url of node.fonts) fonts.add(url);
+    if (node.inline_styles && !client.inline) {
+      Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+        if (typeof css === "string") {
+          inline_styles.set(filename, css);
+          return;
+        }
+        inline_styles.set(filename, css(`${assets$1}/${app_dir}/immutable/assets`, assets$1));
+      });
+    }
   }
   const head = new Head(rendered.head, !!state.prerendering);
   let body2 = rendered.html;
@@ -1897,8 +1895,14 @@ ${indent}}`);
         opts = `, ${s(service_worker_options)}`;
       }
       blocks.push(`if ('serviceWorker' in navigator) {
+						const script_url = '${prefixed("service-worker.js")}';
+						const policy = globalThis?.window?.trustedTypes?.createPolicy(
+							'sveltekit-trusted-url',
+							{ createScriptURL(url) { return url; } }
+						);
+						const sanitised = policy?.createScriptURL(script_url) ?? script_url;
 						addEventListener('load', function () {
-							navigator.serviceWorker.register('${prefixed("service-worker.js")}'${opts});
+							navigator.serviceWorker.register(sanitised${opts});
 						});
 					}`);
     }
@@ -2043,6 +2047,7 @@ class Head {
   }
 }
 class PageNodes {
+  /** All layout nodes and the page node, if any */
   data;
   /**
    * @param {Array<import('types').SSRNode | undefined>} nodes
@@ -2495,7 +2500,7 @@ async function render_page(event, event_state, page, options2, manifest, state, 
   }
   try {
     const leaf_node = (
-      /** @type {import('types').SSRNode} */
+      /** @type {SSRNode} */
       nodes.page()
     );
     let status = 200;
@@ -2537,7 +2542,15 @@ async function render_page(event, event_state, page, options2, manifest, state, 
     if (ssr === false && !(state.prerendering && should_prerender_data)) {
       if (DEV && action_result && !event.request.headers.has("x-sveltekit-action")) ;
       return await render_response({
-        branch: [],
+        // provide nodes without running load functions so that the styles and
+        // fonts are linked in the head before CSR takes over
+        branch: compact(nodes.data).map((node) => {
+          return {
+            node,
+            data: null,
+            server_data: null
+          };
+        }),
         fetched,
         page_config: {
           ssr: false,
@@ -2621,10 +2634,8 @@ async function render_page(event, event_state, page, options2, manifest, state, 
         }
       });
     });
-    for (const p of server_promises) p.catch(() => {
-    });
-    for (const p of load_promises) p.catch(() => {
-    });
+    for (const p of server_promises) p.catch(noop);
+    for (const p of load_promises) p.catch(noop);
     for (let i = 0; i < nodes.data.length; i += 1) {
       const node = nodes.data[i];
       if (node) {
@@ -2723,7 +2734,7 @@ async function render_page(event, event_state, page, options2, manifest, state, 
       },
       status,
       error: null,
-      branch: !ssr ? [] : compact(branch),
+      branch: compact(branch),
       action_result,
       fetched,
       data_serializer: !ssr ? server_data_serializer(event, event_state, options2) : data_serializer,
@@ -2764,15 +2775,6 @@ async function load_error_components(options2, ssr, branch, page, manifest) {
     );
   }
   return error_components;
-}
-function once(fn) {
-  let done = false;
-  let result;
-  return () => {
-    if (done) return result;
-    done = true;
-    return result = fn();
-  };
 }
 async function render_data(event, event_state, route, options2, manifest, state, invalidated_data_nodes, trailing_slash) {
   if (!route.page) {
@@ -3166,8 +3168,7 @@ function create_fetch({ event, options: options2, manifest, state, get_cookie_he
   };
   return (input, init2) => {
     const response = server_fetch(input, init2);
-    response.catch(() => {
-    });
+    response.catch(noop);
     return response;
   };
 }
@@ -3182,8 +3183,7 @@ async function internal_fetch(request, options2, manifest, state) {
     if (request.signal.aborted) {
       throw new DOMException("The operation was aborted.", "AbortError");
     }
-    let remove_abort_listener = () => {
-    };
+    let remove_abort_listener = noop;
     const abort_promise = new Promise((_, reject) => {
       const on_abort = () => {
         reject(new DOMException("The operation was aborted.", "AbortError"));
@@ -3227,7 +3227,6 @@ const default_filter = () => false;
 const default_preload = ({ type }) => type === "js" || type === "css";
 const page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "POST"]);
 const allowed_page_methods = /* @__PURE__ */ new Set(["GET", "HEAD", "OPTIONS"]);
-let warned_on_devtools_json_request = false;
 const respond = propagate_context(internal_respond);
 async function internal_respond(request, options2, manifest, state) {
   const url = new URL(request.url);
@@ -3286,12 +3285,7 @@ async function internal_respond(request, options2, manifest, state) {
       /** A map of remote function key to corresponding single-flight-mutation promise */
       refreshes: null,
       /** A map of remote function ID to payloads requested for refreshing by the client */
-      requested: null,
-      /**
-       * A map of remote function ID to objects that have passed validation;
-       * used to prevent revalidating parameters returned from `requested`
-       */
-      validated: null
+      requested: null
     },
     is_in_remote_function: false,
     is_in_render: false,
@@ -3579,9 +3573,13 @@ async function internal_respond(request, options2, manifest, state) {
     return response;
   } catch (e) {
     if (e instanceof Redirect) {
-      const response = is_data_request || remote_id ? redirect_json_response(e) : route?.page && is_action_json_request(event) ? action_json_redirect(e) : redirect_response(e.status, e.location);
-      add_cookies_to_headers(response.headers, new_cookies.values());
-      return response;
+      try {
+        const response = is_data_request || remote_id ? redirect_json_response(e) : route?.page && is_action_json_request(event) ? action_json_redirect(e) : redirect_response(e.status, e.location);
+        add_cookies_to_headers(response.headers, new_cookies.values());
+        return response;
+      } catch (err) {
+        return await handle_fatal_error(event, event_state, options2, err);
+      }
     }
     return await handle_fatal_error(event, event_state, options2, e);
   }
@@ -3604,7 +3602,17 @@ async function internal_respond(request, options2, manifest, state) {
           page_config: { ssr: false, csr: true },
           status: 200,
           error: null,
-          branch: [],
+          branch: [
+            // include the root layout because it applies to every page
+            {
+              node: (
+                /** @type {SSRNode} */
+                await manifest._.nodes[0]()
+              ),
+              data: null,
+              server_data: null
+            }
+          ],
           fetched: [],
           resolve_opts,
           data_serializer: server_data_serializer(event2, event_state, options2)
@@ -3698,7 +3706,6 @@ async function internal_respond(request, options2, manifest, state) {
         });
       }
       if (state.depth === 0) {
-        if (DEV && event2.url.pathname === "/.well-known/appspecific/com.chrome.devtools.json") ;
         return await respond_with_error({
           event: event2,
           event_state,
@@ -3831,8 +3838,7 @@ class Server {
             console.error("Remote function schema validation failed:", issues);
             return { message: "Bad Request" };
           }),
-          reroute: module.reroute || (() => {
-          }),
+          reroute: module.reroute || noop,
           transport: module.transport || {}
         };
         set_app({

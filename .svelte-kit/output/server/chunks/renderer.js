@@ -1,4 +1,4 @@
-import { l as lifecycle_outside_component, i as invalid_csp, a as await_invalid, g as get_render_context } from "./render-context.js";
+import { l as lifecycle_outside_component, i as invalid_csp, a as await_invalid, g as get_render_context, b as invalid_id_prefix } from "./render-context.js";
 import { clsx as clsx$1 } from "clsx";
 import * as devalue from "devalue";
 var ssr_context = null;
@@ -1040,6 +1040,9 @@ class Renderer {
    * @returns {Renderer}
    */
   static #open_render(mode, component, options) {
+    if (options.idPrefix?.includes("--")) {
+      invalid_id_prefix();
+    }
     var previous_context = ssr_context;
     try {
       const renderer = new Renderer(
@@ -1185,17 +1188,17 @@ export {
   COMMENT_NODE as C,
   DIRTY as D,
   ERROR_VALUE as E,
-  get_descriptor as F,
-  get_prototype_of as G,
+  array_prototype as F,
+  get_descriptor as G,
   HYDRATION_ERROR as H,
   INERT as I,
-  is_array as J,
-  is_extensible as K,
-  HEAD_EFFECT as L,
+  get_prototype_of as J,
+  is_array as K,
+  is_extensible as L,
   MAYBE_DIRTY as M,
-  DESTROYING as N,
-  USER_EFFECT as O,
-  REACTION_IS_UPDATING as P,
+  HEAD_EFFECT as N,
+  DESTROYING as O,
+  USER_EFFECT as P,
   index_of as Q,
   REACTION_RAN as R,
   STALE_REACTION as S,
@@ -1238,8 +1241,8 @@ export {
   HYDRATION_START_FAILED as u,
   EFFECT_TRANSPARENT as v,
   EFFECT_PRESERVED as w,
-  STATE_SYMBOL as x,
-  object_prototype as y,
-  array_prototype as z
+  REACTION_IS_UPDATING as x,
+  STATE_SYMBOL as y,
+  object_prototype as z
 };
 //# sourceMappingURL=renderer.js.map

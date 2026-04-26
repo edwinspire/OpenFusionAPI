@@ -2,9 +2,20 @@ import { json, text } from "@sveltejs/kit";
 import { SvelteKitError, HttpError } from "@sveltejs/kit/internal";
 import { with_request_store } from "@sveltejs/kit/internal/server";
 import * as devalue from "devalue";
-import { t as text_decoder, c as base64_decode, b as base64_encode } from "./utils.js";
+import { t as text_decoder, c as base64_decode, a as text_encoder, b as base64_encode } from "./utils.js";
 import { e as experimental_async_required, g as get_render_context, h as hydratable_serialization_failed } from "./render-context.js";
 import "clsx";
+function noop() {
+}
+function once(fn) {
+  let done = false;
+  let result;
+  return () => {
+    if (done) return result;
+    done = true;
+    return result = fn();
+  };
+}
 const SVELTE_KIT_ASSETS = "/_svelte_kit_assets";
 const ENDPOINT_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"];
 const MUTATIVE_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
@@ -317,8 +328,8 @@ function deep_set(object, keys, value) {
     const key = keys[i];
     check_prototype_pollution(key);
     const is_array = /^\d+$/.test(keys[i + 1]);
-    const exists = Object.hasOwn(current, key);
-    const inner = current[key];
+    const inner = Object.hasOwn(current, key) ? current[key] : void 0;
+    const exists = inner != null;
     if (exists && is_array !== Array.isArray(inner)) {
       throw new Error(`Invalid array key ${keys[i + 1]}`);
     }
@@ -444,7 +455,7 @@ function create_field_proxy(target, get_input, set_input, get_issues, path = [])
               value: {
                 enumerable: true,
                 get() {
-                  return input_value !== void 0 ? input_value : get_value();
+                  return get_value() ?? input_value;
                 }
               }
             });
@@ -503,7 +514,7 @@ function create_field_proxy(target, get_input, set_input, get_issues, path = [])
             value: {
               enumerable: true,
               get() {
-                const value = input_value !== void 0 ? input_value : get_value();
+                const value = get_value() ?? input_value;
                 return value != null ? String(value) : "";
               }
             }
@@ -921,7 +932,7 @@ function stringify_remote_arg(value, transport, sort = true) {
     value,
     create_remote_arg_reducers(transport, sort, /* @__PURE__ */ new Map())
   );
-  const bytes = new TextEncoder().encode(json_string);
+  const bytes = text_encoder.encode(json_string);
   return base64_encode(bytes).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
 }
 function parse_remote_arg(string, transport) {
@@ -952,8 +963,10 @@ function unfriendly_hydratable(key, fn) {
   return hydratable(key, fn);
 }
 export {
-  flatten_issues as A,
-  deep_set as B,
+  set_nested_value as A,
+  flatten_issues as B,
+  deep_set as C,
+  stringify_remote_arg as D,
   ENDPOINT_METHODS as E,
   INVALIDATED_PARAM as I,
   MUTATIVE_METHODS as M,
@@ -964,27 +977,27 @@ export {
   get_global_name as b,
   clarify_devalue_error as c,
   get_node_type as d,
-  escape_html as e,
-  create_remote_key as f,
+  noop as e,
+  escape_html as f,
   get_status as g,
   handle_error_and_jsonify as h,
   is_form_content_type as i,
-  static_error_page as j,
-  stringify as k,
-  deserialize_binary_form as l,
+  create_remote_key as j,
+  static_error_page as k,
+  stringify as l,
   method_not_allowed as m,
   negotiate as n,
-  split_remote_key as o,
+  deserialize_binary_form as o,
   parse_remote_arg as p,
-  has_prerendered_path as q,
+  split_remote_key as q,
   redirect_response as r,
   serialize_uses as s,
-  handle_fatal_error as t,
-  format_server_error as u,
-  stringify_remote_arg as v,
-  unfriendly_hydratable as w,
-  create_field_proxy as x,
-  normalize_issue as y,
-  set_nested_value as z
+  once as t,
+  has_prerendered_path as u,
+  handle_fatal_error as v,
+  format_server_error as w,
+  unfriendly_hydratable as x,
+  create_field_proxy as y,
+  normalize_issue as z
 };
 //# sourceMappingURL=shared.js.map

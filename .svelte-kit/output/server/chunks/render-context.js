@@ -34,6 +34,13 @@ https://svelte.dev/e/invalid_csp`);
   error.name = "Svelte error";
   throw error;
 }
+function invalid_id_prefix() {
+  const error = new Error(`invalid_id_prefix
+The \`idPrefix\` option cannot include \`--\`.
+https://svelte.dev/e/invalid_id_prefix`);
+  error.name = "Svelte error";
+  throw error;
+}
 function server_context_required() {
   const error = new Error(`server_context_required
 Could not resolve \`render\` context.
@@ -51,6 +58,7 @@ function get_render_context() {
 let als = null;
 export {
   await_invalid as a,
+  invalid_id_prefix as b,
   experimental_async_required as e,
   get_render_context as g,
   hydratable_serialization_failed as h,

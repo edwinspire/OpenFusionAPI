@@ -69,10 +69,6 @@ declare module '$env/static/private' {
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
-	export const GIT_EDITOR: string;
-	export const GIT_MERGE_AUTOEDIT: string;
-	export const GIT_PAGER: string;
-	export const HISTCONTROL: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
 	export const HOMEPATH: string;
@@ -137,8 +133,8 @@ declare module '$env/static/private' {
 	export const PUBLIC: string;
 	export const PWD: string;
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
-	export const QIP37488: string;
-	export const QIP39604: string;
+	export const QIP16264: string;
+	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
 	export const SSH_ASKPASS: string;
@@ -163,7 +159,6 @@ declare module '$env/static/private' {
 	export const VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 	export const WINDIR: string;
 	export const _: string;
-	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -281,10 +276,6 @@ declare module '$env/dynamic/private' {
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
-		GIT_EDITOR: string;
-		GIT_MERGE_AUTOEDIT: string;
-		GIT_PAGER: string;
-		HISTCONTROL: string;
 		HOME: string;
 		HOMEDRIVE: string;
 		HOMEPATH: string;
@@ -349,8 +340,8 @@ declare module '$env/dynamic/private' {
 		PUBLIC: string;
 		PWD: string;
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
-		QIP37488: string;
-		QIP39604: string;
+		QIP16264: string;
+		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
 		SSH_ASKPASS: string;
@@ -375,7 +366,6 @@ declare module '$env/dynamic/private' {
 		VSCODE_PYTHON_AUTOACTIVATE_GUARD: string;
 		WINDIR: string;
 		_: string;
-		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
