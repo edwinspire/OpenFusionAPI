@@ -41,44 +41,155 @@ It is common to have a large number of APIs for different projects. To keep the 
 Now you can search for it in the list of applications and select it.
 
 
-## Handlers
-### Javascript
-With the **javascript handler** driver you can use javascript to create your API functionality. For example, you can make a simple API that receives two parameters and returns the sum of them.
+# OpenFusion API – Tutorial & Reference
 
-Or you can do something more complicated like make several fetch calls, process those results, and return a response to the client.
+This section covers everything you need to go from zero to a running API endpoint.
 
-[Javascript Handler Tutorial](handlers/javascript.md)
+---
 
-### SQL
-With the **sql handler** you can connect to various SLQ database engines, for example: MS Sql Server, PostgreSQL, MariaDB, MySQL and Oracle.
+## Prerequisites
 
-You can give your base API the functionality to do Insert, Update, Delete, Select and call stored procedures
+- Node.js v20 or higher
+- A running OpenFusion API instance (see [quick start](../README.md#-quick-start))
+- A browser to access the web interface at `http://localhost:3000/openfusionapi`
 
-You can store the data for the connection to the database in an application variable or pass it as a parameter in the API request.
+**Default credentials:** user `superuser` / password `superuser`
 
-[SQL Handler Tutorial](handlers/sql.md)
+---
 
-### Fetch
-The **fetch handler** allows you to access and manipulate parts of the HTTP channel, such as requests and responses, using universal-fetch, a layer on top of the fetch standard that makes it easier to use.
+## Video tutorials
 
+- [Preview overview](https://youtu.be/GpjXgEJV1bI)
+- [Installation process](https://youtu.be/L-DC6mIL9oM)
 
-With it you can make calls to other internal OpenFusionAPI APIs or external services.
+---
 
-You can see it as something similar to a proxy.
+## 1. Create an application
 
-[Fetch Handler Tutorial](handlers/fetch.md)
+All endpoints live inside an **application**. Create one before adding endpoints.
 
-### SOAP
-The **SOAP handler** allows you to easily convert a SOAP service to a REST one.
+![Create app](img/create_app.png)
 
-[SOAP Handler Tutorial](handlers/soap.md)
+1. Click **New App** (top-right)
+2. Enter an application name — no spaces or special characters
+3. Toggle **Enabled** to `true`
+4. Click **Save**
 
-### Functions
-If the API you are building is more complex or requires additional modules then the solution is to use the **Function handler**.
+Select the application from the dropdown to start working with it. Each application has three tabs:
 
-In the Backend you are going to create a javascript file that will contain the logic for your API, this function will be the one that is called from your API to return the result to the user.
+- **Endpoints** — list and manage all endpoints for this app
+- **Description** — free-text documentation
+- **Application variables** — reusable values (credentials, hosts, etc.) per environment
 
-[Custom Function Handler Tutorial](handlers/functions.md)
+---
+
+## 2. Application variables
+
+Before creating endpoints, define reusable variables that your endpoints will reference. Variables are scoped per environment (`dev`, `qa`, `prd`), which means you can have different database hosts or credentials per stage without changing endpoint code.
+
+Typical use cases:
+- Database connection JSON (`{"username":"...","password":"...", ...}`)
+- External API base URLs
+- WSDL URLs for SOAP services
+- Email transporter config for `nodemailer`
+- AI model defaults for `askIAWithMCP`
+
+Reference a variable inside endpoint code by its name, e.g. `$_VAR_DB_CONN`.
+
+---
+
+## 3. Create an endpoint
+
+Inside the **Endpoints** tab, click the **New** icon. Configure:
+
+| Field | Description |
+|---|---|
+| **API Resource** | URL path + environment selector |
+| **Handler** | Logic engine for this endpoint |
+| **Method** | HTTP verb: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `WS`, `MQTT` |
+| **Access** | `Public`, `Bearer` (JWT required), or `Private` |
+| **Timeout Cache** | Response cache TTL in seconds (`0` = disabled) |
+| **Description** | Human/AI-readable description of the endpoint purpose |
+
+Once the handler is selected, additional configuration tabs appear.
+
+---
+
+## 4. JSON Schema tab
+
+Define the expected input shape using [JSON Schema](https://json-schema.org/). This is especially important when the endpoint is used as an MCP tool — it tells AI agents exactly what fields to send.
+
+---
+
+## 5. MCP tab
+
+Enable any endpoint as an **MCP tool** consumable by AI agents (GitHub Copilot, Claude, GPT, etc.):
+
+- Set the tool **name** (no spaces)
+- Set the tool **title** and **description**
+- The platform generates an MCP-compatible interface automatically
+
+---
+
+## Handler reference
+
+| Handler | Best for |
+|---|---|
+| [JS](handlers/javascript.md) | Custom server-side logic, data transformation, orchestration |
+| [SQL](handlers/sql.md) | CRUD operations on relational databases |
+| [FETCH](handlers/fetch.md) | Proxying or forwarding calls to external REST APIs |
+| [SOAP](handlers/soap.md) | Integrating legacy SOAP/WSDL web services |
+| [FUNCTION](handlers/functions.md) | Calling pre-registered internal backend functions |
+| SQL_BULK_I | High-volume bulk insert operations |
+| MONGODB | MongoDB collection queries and mutations |
+| HANA | SAP HANA database access |
+| MCP | Expose endpoints as MCP tools for AI agents |
+| TELEGRAM_BOT | Telegram bot interaction handlers |
+| TEXT | Return static or dynamic text/file responses |
+
+---
+
+## URL structure
+
+All endpoints follow this pattern:
+
+```
+/api/{app}/{environment}/{resource}/{version}
+```
+
+Example:
+```
+/api/demo/dev/main/test_fetch/0.01
+```
+
+- `demo` — application name
+- `dev` — environment (`dev`, `qa`, `prd`)
+- `main/test_fetch` — resource path
+- `0.01` — version
+
+---
+
+## Environments
+
+The platform manages three independent environments:
+
+| Environment | Purpose |
+|---|---|
+| `dev` | Active development |
+| `qa` | Staging and validation |
+| `prd` | Production traffic |
+
+Each environment can be independently exposed via the `EXPOSE_DEV_API`, `EXPOSE_QA_API`, and `EXPOSE_PRD_API` environment variables.
+
+---
+
+## Access control
+
+| Level | Behavior |
+|---|---|
+| **Public** | No authentication required |
+| **Bearer** | JWT required in `Authorization: Bearer <token>` header |
+| **Private** | Not exposed externally |
 
 
 

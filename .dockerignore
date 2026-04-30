@@ -4,3 +4,9 @@ node_modules
 .svelte-kit
 www
 npm-debug.log
+bash.exe.stackdump
+.vscode
+.idea
+.DS_Store
+*.log
+*.sqlite

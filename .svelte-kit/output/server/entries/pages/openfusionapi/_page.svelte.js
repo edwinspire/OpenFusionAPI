@@ -1,7 +1,7 @@
 import { a3 as attr_class, a4 as bind_props, a5 as ensure_array_like, a2 as stringify, e as escape_html, a0 as attr, a6 as clsx, a7 as head } from "../../../chunks/renderer.js";
 import "clsx";
-import "../../../chunks/start_page.svelte_svelte_type_style_lang.js";
 import "@edwinspire/universal-fetch";
+/* empty css                                                       */
 import "events";
 import "prettier-plugin-sql";
 import "marked";
@@ -53,7 +53,7 @@ function Notifications($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div>`);
   });
 }
-const version = "1.3.3";
+const version = "1.4.2";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let username = "";
@@ -63,7 +63,7 @@ function Login($$renderer, $$props) {
     Modal($$renderer2, {
       show: true,
       children: ($$renderer3) => {
-        $$renderer3.push(`<div${attr_class("login-wrapper svelte-ogcakf", void 0, { "is-visible": mounted })}><div class="orb orb-1 svelte-ogcakf"></div> <div class="orb orb-2 svelte-ogcakf"></div> <div class="orb orb-3 svelte-ogcakf"></div> <div class="login-card box svelte-ogcakf"><div class="brand-header has-text-centered svelte-ogcakf"><div class="logo-ring svelte-ogcakf"><div class="logo-figure svelte-ogcakf"><img${attr("src", Logo)} alt="OpenFusionAPI" class="logo-img svelte-ogcakf"/></div></div> <h1 class="title is-4 mt-3 brand-title svelte-ogcakf">Open Fusion API</h1> <p class="subtitle is-6 brand-subtitle svelte-ogcakf"><span class="tag is-dark is-rounded svelte-ogcakf"><span class="icon is-small svelte-ogcakf"><i class="fa-solid fa-server svelte-ogcakf"></i></span> <span class="svelte-ogcakf">MCP Server</span></span></p></div> <div class="divider-line svelte-ogcakf"></div> <form class="login-form svelte-ogcakf"><div class="field svelte-ogcakf"><label class="label has-text-grey-light is-small svelte-ogcakf">Username</label> <p class="control has-icons-left svelte-ogcakf"><input${attr_class("input is-rounded svelte-ogcakf", void 0, { "is-danger": processing.error })} type="text" placeholder="Enter your username"${attr("value", username)} autocomplete="username"/> <span class="icon is-small is-left svelte-ogcakf"><i class="fa-solid fa-user svelte-ogcakf"></i></span></p></div> <div class="field svelte-ogcakf"><label class="label has-text-grey-light is-small svelte-ogcakf">Password</label> <p class="control has-icons-left has-icons-right svelte-ogcakf"><input${attr_class("input is-rounded svelte-ogcakf", void 0, { "is-danger": processing.error })}${attr("type", "password")} placeholder="Enter your password"${attr("value", password)} autocomplete="current-password"/> <span class="icon is-small is-left svelte-ogcakf"><i class="fa-solid fa-lock svelte-ogcakf"></i></span> <span class="icon is-small is-right is-clickable eye-icon svelte-ogcakf"${attr("title", "Show password")}><i${attr_class(clsx("fa-solid fa-eye"), "svelte-ogcakf")}></i></span></p></div> `);
+        $$renderer3.push(`<div${attr_class("login-wrapper svelte-ogcakf", void 0, { "is-visible": mounted })}><div class="orb orb-1 svelte-ogcakf"></div> <div class="orb orb-2 svelte-ogcakf"></div> <div class="orb orb-3 svelte-ogcakf"></div> <div class="login-card box svelte-ogcakf"><div class="brand-header has-text-centered svelte-ogcakf"><div class="logo-ring svelte-ogcakf"><div class="logo-figure svelte-ogcakf"><img${attr("src", Logo)} alt="OpenFusionAPI" class="logo-img svelte-ogcakf"/></div></div> <h1 class="title is-4 mt-3 brand-title svelte-ogcakf">Open Fusion API</h1> <p class="subtitle is-6 brand-subtitle svelte-ogcakf"><span class="tag is-dark is-rounded svelte-ogcakf"><span class="icon is-small svelte-ogcakf"><i class="fa-solid fa-server svelte-ogcakf"></i></span> <span class="svelte-ogcakf">MCP Server</span></span></p></div> <div class="divider-line svelte-ogcakf"></div> <form class="login-form svelte-ogcakf"><div class="field svelte-ogcakf"><label class="label has-text-grey-light is-small svelte-ogcakf" for="login-username">Username</label> <p class="control has-icons-left svelte-ogcakf"><input id="login-username"${attr_class("input is-rounded svelte-ogcakf", void 0, { "is-danger": processing.error })} type="text" placeholder="Enter your username"${attr("value", username)} autocomplete="username"/> <span class="icon is-small is-left svelte-ogcakf"><i class="fa-solid fa-user svelte-ogcakf"></i></span></p></div> <div class="field svelte-ogcakf"><label class="label has-text-grey-light is-small svelte-ogcakf" for="login-password">Password</label> <p class="control has-icons-left has-icons-right svelte-ogcakf"><input id="login-password"${attr_class("input is-rounded svelte-ogcakf", void 0, { "is-danger": processing.error })}${attr("type", "password")} placeholder="Enter your password"${attr("value", password)} autocomplete="current-password"/> <span class="icon is-small is-left svelte-ogcakf"><i class="fa-solid fa-lock svelte-ogcakf"></i></span> <button type="button" class="icon is-small is-right is-clickable eye-icon svelte-ogcakf"${attr("title", "Show password")}${attr("aria-label", "Show password")}><i${attr_class(clsx("fa-solid fa-eye"), "svelte-ogcakf")}></i></button></p></div> `);
         {
           $$renderer3.push("<!--[-1-->");
         }

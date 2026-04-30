@@ -11,7 +11,7 @@
 		"format": "prettier --write .",
 		"start": "node ./server/index.js",
 		"build_start": "vite build && node ./server/index.js",
-		"reinstall": "rm -rf node_modules && rm package-lock.json && npm install"
+		"reinstall": "rm -rf node_modules && rm package-lock.json && npm install && npm run build"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",

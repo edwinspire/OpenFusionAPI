@@ -41,6 +41,7 @@ declare module '$env/static/private' {
 	export const PORT: string;
 	export const BUILD_DB: string;
 	export const DATABASE_URI_API: string;
+	export const JWT_KEY: string;
 	export const EXPOSE_DEV_API: string;
 	export const EXPOSE_QA_API: string;
 	export const EXPOSE_PROD_API: string;
@@ -60,7 +61,6 @@ declare module '$env/static/private' {
 	export const COMPUTERNAME: string;
 	export const COMSPEC: string;
 	export const CONFIG_SITE: string;
-	export const DEBUGPY_ADAPTER_ENDPOINTS: string;
 	export const DISPLAY: string;
 	export const DriverData: string;
 	export const EDITOR: string;
@@ -69,6 +69,10 @@ declare module '$env/static/private' {
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
+	export const GIT_EDITOR: string;
+	export const GIT_MERGE_AUTOEDIT: string;
+	export const GIT_PAGER: string;
+	export const HISTCONTROL: string;
 	export const HOME: string;
 	export const HOMEDRIVE: string;
 	export const HOMEPATH: string;
@@ -109,6 +113,7 @@ declare module '$env/static/private' {
 	export const npm_package_name: string;
 	export const npm_package_version: string;
 	export const NUMBER_OF_PROCESSORS: string;
+	export const OLDPWD: string;
 	export const OLLAMA_HOST: string;
 	export const OLLAMA_MODELS: string;
 	export const OneDrive: string;
@@ -133,8 +138,10 @@ declare module '$env/static/private' {
 	export const PUBLIC: string;
 	export const PWD: string;
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
-	export const QIP16264: string;
-	export const SESSIONNAME: string;
+	export const PYTHONSTARTUP: string;
+	export const PYTHON_BASIC_REPL: string;
+	export const QIP16424: string;
+	export const QIP18784: string;
 	export const SHELL: string;
 	export const SHLVL: string;
 	export const SSH_ASKPASS: string;
@@ -152,6 +159,7 @@ declare module '$env/static/private' {
 	export const USERNAME: string;
 	export const USERPROFILE: string;
 	export const VBOX_MSI_INSTALL_PATH: string;
+	export const VSCODE_DEBUGPY_ADAPTER_ENDPOINTS: string;
 	export const VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 	export const VSCODE_GIT_ASKPASS_MAIN: string;
 	export const VSCODE_GIT_ASKPASS_NODE: string;
@@ -195,7 +203,7 @@ declare module '$env/static/private' {
  * The above values will be the same _even if_ different values for `ENVIRONMENT` or `PUBLIC_BASE_URL` are set at runtime, as they are statically replaced in your code with their build time values.
  */
 declare module '$env/static/public' {
-	export const PUBLIC_API_SERVER_HOST: string;
+	
 }
 
 /**
@@ -248,6 +256,7 @@ declare module '$env/dynamic/private' {
 		PORT: string;
 		BUILD_DB: string;
 		DATABASE_URI_API: string;
+		JWT_KEY: string;
 		EXPOSE_DEV_API: string;
 		EXPOSE_QA_API: string;
 		EXPOSE_PROD_API: string;
@@ -267,7 +276,6 @@ declare module '$env/dynamic/private' {
 		COMPUTERNAME: string;
 		COMSPEC: string;
 		CONFIG_SITE: string;
-		DEBUGPY_ADAPTER_ENDPOINTS: string;
 		DISPLAY: string;
 		DriverData: string;
 		EDITOR: string;
@@ -276,6 +284,10 @@ declare module '$env/dynamic/private' {
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
+		GIT_EDITOR: string;
+		GIT_MERGE_AUTOEDIT: string;
+		GIT_PAGER: string;
+		HISTCONTROL: string;
 		HOME: string;
 		HOMEDRIVE: string;
 		HOMEPATH: string;
@@ -316,6 +328,7 @@ declare module '$env/dynamic/private' {
 		npm_package_name: string;
 		npm_package_version: string;
 		NUMBER_OF_PROCESSORS: string;
+		OLDPWD: string;
 		OLLAMA_HOST: string;
 		OLLAMA_MODELS: string;
 		OneDrive: string;
@@ -340,8 +353,10 @@ declare module '$env/dynamic/private' {
 		PUBLIC: string;
 		PWD: string;
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
-		QIP16264: string;
-		SESSIONNAME: string;
+		PYTHONSTARTUP: string;
+		PYTHON_BASIC_REPL: string;
+		QIP16424: string;
+		QIP18784: string;
 		SHELL: string;
 		SHLVL: string;
 		SSH_ASKPASS: string;
@@ -359,6 +374,7 @@ declare module '$env/dynamic/private' {
 		USERNAME: string;
 		USERPROFILE: string;
 		VBOX_MSI_INSTALL_PATH: string;
+		VSCODE_DEBUGPY_ADAPTER_ENDPOINTS: string;
 		VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 		VSCODE_GIT_ASKPASS_MAIN: string;
 		VSCODE_GIT_ASKPASS_NODE: string;
@@ -421,7 +437,6 @@ declare module '$env/dynamic/private' {
  */
 declare module '$env/dynamic/public' {
 	export const env: {
-		PUBLIC_API_SERVER_HOST: string;
 		[key: `PUBLIC_${string}`]: string | undefined;
 	}
 }

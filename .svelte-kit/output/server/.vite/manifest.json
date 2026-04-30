@@ -71,16 +71,8 @@
     ]
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
-    "file": "chunks/start_page.svelte_svelte_type_style_lang.js",
-    "name": "start_page.svelte_svelte_type_style_lang",
-    "css": [
-      "_app/immutable/assets/start_page.CAJyZIZe.css"
-    ],
-    "assets": [
-      "_app/immutable/assets/fa-brands-400.BP5tdqmh.woff2",
-      "_app/immutable/assets/fa-regular-400.nyy7hhHF.woff2",
-      "_app/immutable/assets/fa-solid-900.DRAAbZTg.woff2"
-    ]
+    "file": "_app/immutable/assets/start_page.CAJyZIZe.css",
+    "src": "_start_page.svelte_svelte_type_style_lang.js"
   },
   "_utils.js": {
     "file": "chunks/utils.js",
@@ -163,12 +155,17 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_start_page.svelte_svelte_type_style_lang.js",
       "_renderer.js"
+    ],
+    "css": [
+      "_app/immutable/assets/start_page.CAJyZIZe.css"
     ],
     "assets": [
       "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
-      "_app/immutable/assets/flame.pI4vnDs3.png"
+      "_app/immutable/assets/flame.pI4vnDs3.png",
+      "_app/immutable/assets/fa-brands-400.BP5tdqmh.woff2",
+      "_app/immutable/assets/fa-regular-400.nyy7hhHF.woff2",
+      "_app/immutable/assets/fa-solid-900.DRAAbZTg.woff2"
     ]
   },
   "src/routes/openfusionapi/+page.svelte": {
@@ -178,8 +175,15 @@
     "isEntry": true,
     "imports": [
       "_renderer.js",
-      "_start_page.svelte_svelte_type_style_lang.js",
       "_index.js"
+    ],
+    "css": [
+      "_app/immutable/assets/start_page.CAJyZIZe.css"
+    ],
+    "assets": [
+      "_app/immutable/assets/fa-brands-400.BP5tdqmh.woff2",
+      "_app/immutable/assets/fa-regular-400.nyy7hhHF.woff2",
+      "_app/immutable/assets/fa-solid-900.DRAAbZTg.woff2"
     ]
   }
 }

@@ -1,6 +1,6 @@
 import "clsx";
-import "../../chunks/start_page.svelte_svelte_type_style_lang.js";
 import "@edwinspire/universal-fetch";
+/* empty css                                                    */
 import "events";
 import "prettier-plugin-sql";
 import "marked";
