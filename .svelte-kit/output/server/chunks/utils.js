@@ -1,5 +1,4 @@
 const text_encoder = new TextEncoder();
-const text_decoder = new TextDecoder();
 function get_relative_path(from, to) {
   const from_parts = from.split(/[/\\]/);
   const to_parts = to.split(/[/\\]/);
@@ -35,10 +34,9 @@ function base64_decode(encoded) {
   return bytes;
 }
 export {
-  text_encoder as a,
+  base64_decode as a,
   base64_encode as b,
-  base64_decode as c,
   get_relative_path as g,
-  text_decoder as t
+  text_encoder as t
 };
 //# sourceMappingURL=utils.js.map

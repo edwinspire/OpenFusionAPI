@@ -6,7 +6,7 @@ import { with_request_store, merge_tracing, try_get_request_store } from "@svelt
 import { a as assets, b as base, c as app_dir, r as relative, o as override, d as reset } from "./chunks/environment.js";
 import * as devalue from "devalue";
 import { m as make_trackable, d as disable_search, a as decode_params, S as SCHEME, v as validate_layout_server_exports, b as validate_layout_exports, c as validate_page_server_exports, e as validate_page_exports, n as normalize_path, r as resolve, f as decode_pathname, g as validate_server_exports } from "./chunks/exports.js";
-import { b as base64_encode, t as text_decoder, a as text_encoder, g as get_relative_path } from "./chunks/utils.js";
+import { b as base64_encode, t as text_encoder, g as get_relative_path } from "./chunks/utils.js";
 import "clsx";
 import { w as writable, r as readable } from "./chunks/index.js";
 import { p as public_env, r as read_implementation, o as options, s as set_private_env, a as set_public_env, g as get_hooks, b as set_read_implementation } from "./chunks/internal.js";
@@ -938,12 +938,14 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
 async function stream_to_string(stream) {
   let result = "";
   const reader = stream.getReader();
+  const decoder = new TextDecoder();
   while (true) {
     const { done, value } = await reader.read();
     if (done) {
+      result += decoder.decode();
       break;
     }
-    result += text_decoder.decode(value);
+    result += decoder.decode(value, { stream: true });
   }
   return result;
 }
@@ -1821,7 +1823,7 @@ ${indent}}`);
           if (!entry.serialize) continue;
           const remote_key = create_remote_key(internals.id, key2);
           const store = internals.type === "prerender" ? prerender : query;
-          if (event_state.remote.refreshes?.[remote_key] !== void 0) {
+          if (event_state.remote.refreshes?.has(remote_key) || event_state.remote.reconnects?.has(remote_key)) {
             store[remote_key] = await entry.data;
           } else {
             const result = await Promise.race([
@@ -2309,7 +2311,8 @@ async function handle_remote_call_internal(event, state, options2, manifest, id)
         {
           type: "result",
           result: stringify(result, transport),
-          refreshes: result.issues ? void 0 : await serialize_refreshes()
+          refreshes: result.issues ? void 0 : await serialize_singleflight(state.remote.refreshes),
+          reconnects: result.issues ? void 0 : await serialize_singleflight(state.remote.reconnects)
         }
       );
     }
@@ -2323,7 +2326,87 @@ async function handle_remote_call_internal(event, state, options2, manifest, id)
         {
           type: "result",
           result: stringify(data2, transport),
-          refreshes: await serialize_refreshes()
+          refreshes: await serialize_singleflight(state.remote.refreshes),
+          reconnects: await serialize_singleflight(state.remote.reconnects)
+        }
+      );
+    }
+    if (internals.type === "query_live") {
+      let send = function(controller, payload3) {
+        controller.enqueue(encoder.encode(JSON.stringify(payload3) + "\n"));
+      };
+      if (event.request.method !== "GET") {
+        throw new SvelteKitError(
+          405,
+          "Method Not Allowed",
+          `\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
+        );
+      }
+      const payload2 = (
+        /** @type {string} */
+        new URL(event.request.url).searchParams.get("payload")
+      );
+      const generator = internals.run(event, state, parse_remote_arg(payload2, transport));
+      const encoder = new TextEncoder();
+      let closed = false;
+      let result = void 0;
+      async function cancel() {
+        if (closed) return;
+        closed = true;
+        await generator.return(void 0);
+      }
+      event.request.signal.addEventListener("abort", cancel, { once: true });
+      return new Response(
+        new ReadableStream({
+          async pull(controller) {
+            if (event.request.signal.aborted) {
+              await cancel();
+              controller.close();
+              return;
+            }
+            try {
+              while (true) {
+                const { value, done } = await generator.next();
+                if (done) {
+                  await cancel();
+                  controller.close();
+                  return;
+                }
+                if (result !== (result = stringify(value, transport))) {
+                  send(controller, {
+                    type: "result",
+                    result
+                  });
+                  return;
+                }
+              }
+            } catch (error2) {
+              if (!event.request.signal.aborted) {
+                if (error2 instanceof Redirect) {
+                  send(controller, {
+                    type: "redirect",
+                    location: error2.location
+                  });
+                } else {
+                  const status = error2 instanceof HttpError || error2 instanceof SvelteKitError ? error2.status : 500;
+                  send(controller, {
+                    type: "error",
+                    error: await handle_error_and_jsonify(event, state, options2, error2),
+                    status
+                  });
+                }
+              }
+              await cancel();
+              controller.close();
+            }
+          },
+          cancel
+        }),
+        {
+          headers: {
+            "cache-control": "private, no-store",
+            "content-type": "application/x-ndjson"
+          }
         }
       );
     }
@@ -2350,7 +2433,8 @@ async function handle_remote_call_internal(event, state, options2, manifest, id)
         {
           type: "redirect",
           location: error2.location,
-          refreshes: await serialize_refreshes()
+          refreshes: await serialize_singleflight(state.remote.refreshes),
+          reconnects: await serialize_singleflight(state.remote.reconnects)
         }
       );
     }
@@ -2372,14 +2456,12 @@ async function handle_remote_call_internal(event, state, options2, manifest, id)
       }
     );
   }
-  async function serialize_refreshes() {
-    const refreshes = state.remote.refreshes ?? {};
-    const entries = Object.entries(refreshes);
-    if (entries.length === 0) {
+  async function serialize_singleflight(map) {
+    if (!map || map.size === 0) {
       return void 0;
     }
     const results = await Promise.all(
-      entries.map(async ([key2, promise]) => {
+      Array.from(map, async ([key2, promise]) => {
         try {
           return [key2, { type: "result", data: await promise }];
         } catch (error2) {
@@ -3284,6 +3366,7 @@ async function internal_respond(request, options2, manifest, state) {
       forms: null,
       /** A map of remote function key to corresponding single-flight-mutation promise */
       refreshes: null,
+      reconnects: null,
       /** A map of remote function ID to payloads requested for refreshing by the client */
       requested: null
     },
