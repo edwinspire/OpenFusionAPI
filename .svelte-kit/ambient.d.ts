@@ -139,8 +139,8 @@ declare module '$env/static/private' {
 	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
 	export const PYTHONSTARTUP: string;
 	export const PYTHON_BASIC_REPL: string;
-	export const QIP16736: string;
-	export const QIP3984: string;
+	export const QIP15740: string;
+	export const QIP36956: string;
 	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
@@ -354,8 +354,8 @@ declare module '$env/dynamic/private' {
 		PYDEVD_DISABLE_FILE_VALIDATION: string;
 		PYTHONSTARTUP: string;
 		PYTHON_BASIC_REPL: string;
-		QIP16736: string;
-		QIP3984: string;
+		QIP15740: string;
+		QIP36956: string;
 		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
