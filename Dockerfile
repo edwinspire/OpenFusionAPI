@@ -52,8 +52,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 # Copiar manifiestos para aprovechar la cache de dependencias
 COPY package.json package-lock.json ./
 
-# Instalar dependencias del proyecto
-RUN npm ci
+# Instalar dependencias del proyecto (incluyendo siempre devDependencies)
+RUN npm ci --include=dev
 
 # Copiar el resto del código fuente
 COPY . .
