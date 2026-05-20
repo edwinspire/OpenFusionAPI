@@ -71,7 +71,7 @@
     ]
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
-    "file": "_app/immutable/assets/start_page.DFfWsGXS.css",
+    "file": "_app/immutable/assets/start_page.CV9gC7yj.css",
     "src": "_start_page.svelte_svelte_type_style_lang.js"
   },
   "_utils.js": {
@@ -158,7 +158,7 @@
       "_renderer.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.DFfWsGXS.css"
+      "_app/immutable/assets/start_page.CV9gC7yj.css"
     ],
     "assets": [
       "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
@@ -178,7 +178,7 @@
       "_index.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.DFfWsGXS.css"
+      "_app/immutable/assets/start_page.CV9gC7yj.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.BP5tdqmh.woff2",

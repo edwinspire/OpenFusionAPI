@@ -34,8 +34,8 @@ function base64_decode(encoded) {
   return bytes;
 }
 export {
-  base64_decode as a,
-  base64_encode as b,
+  base64_encode as a,
+  base64_decode as b,
   get_relative_path as g,
   text_encoder as t
 };

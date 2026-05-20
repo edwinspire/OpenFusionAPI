@@ -1,4 +1,4 @@
-import { a3 as attr_class, a4 as bind_props, a5 as ensure_array_like, a2 as stringify, e as escape_html, a0 as attr, a6 as clsx, a7 as head } from "../../../chunks/renderer.js";
+import { J as attr_class, N as bind_props, X as ensure_array_like, ab as stringify, Y as escape_html, G as attr, O as clsx, a0 as head } from "../../../chunks/renderer.js";
 import "clsx";
 import "@edwinspire/universal-fetch";
 /* empty css                                                       */
@@ -53,13 +53,14 @@ function Notifications($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div>`);
   });
 }
-const version = "1.4.4";
+const version = "1.4.6";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let username = "";
     let password = "";
     let processing = { waiting: false, error: null };
     let mounted = false;
+    let serverVersion = "...";
     Modal($$renderer2, {
       show: true,
       children: ($$renderer3) => {
@@ -72,7 +73,7 @@ function Login($$renderer, $$props) {
           $$renderer3.push("<!--[0-->");
           $$renderer3.push(`<span class="icon svelte-ogcakf"><i class="fa-solid fa-right-to-bracket svelte-ogcakf"></i></span> <span class="svelte-ogcakf">Sign In</span>`);
         }
-        $$renderer3.push(`<!--]--></button></p></div></form> <p class="version-tag has-text-centered has-text-grey svelte-ogcakf"><span class="icon is-small svelte-ogcakf"><i class="fa-solid fa-code-branch svelte-ogcakf"></i></span> v${escape_html(version)}</p></div></div>`);
+        $$renderer3.push(`<!--]--></button></p></div></form> <p class="version-tag has-text-centered has-text-grey svelte-ogcakf"><span class="icon is-small svelte-ogcakf"><i class="fa-solid fa-code-branch svelte-ogcakf"></i></span> GUI v${escape_html(version)} <span class="version-separator svelte-ogcakf">|</span> <span class="icon is-small svelte-ogcakf"><i class="fa-solid fa-server svelte-ogcakf"></i></span> Server v${escape_html(serverVersion)}</p></div></div>`);
       },
       $$slots: { default: true }
     });

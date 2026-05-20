@@ -160,16 +160,16 @@ const validate_page_server_exports = validator(valid_page_server_exports);
 const validate_server_exports = validator(valid_server_exports);
 export {
   SCHEME as S,
-  decode_params as a,
-  validate_layout_exports as b,
-  validate_page_server_exports as c,
-  disable_search as d,
+  decode_pathname as a,
+  disable_search as b,
+  validate_layout_server_exports as c,
+  decode_params as d,
   validate_page_exports as e,
-  decode_pathname as f,
+  validate_page_server_exports as f,
   validate_server_exports as g,
   make_trackable as m,
   normalize_path as n,
   resolve as r,
-  validate_layout_server_exports as v
+  validate_layout_exports as v
 };
 //# sourceMappingURL=exports.js.map

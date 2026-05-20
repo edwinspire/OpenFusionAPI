@@ -95,6 +95,10 @@ const ASYNC = 1 << 22;
 const ERROR_VALUE = 1 << 23;
 const STATE_SYMBOL = Symbol("$state");
 const LEGACY_PROPS = Symbol("legacy props");
+const ATTRIBUTES_CACHE = Symbol("attributes");
+const CLASS_CACHE = Symbol("class");
+const STYLE_CACHE = Symbol("style");
+const TEXT_CACHE = Symbol("text");
 const STALE_REACTION = new class StaleReactionError extends Error {
   name = "StaleReactionError";
   message = "The reaction that called `getAbortSignal()` was re-run or destroyed";
@@ -113,7 +117,7 @@ const HYDRATION_ERROR = {};
 const ELEMENT_IS_NAMESPACED = 1;
 const ELEMENT_PRESERVE_ATTRIBUTE_CASE = 1 << 1;
 const ELEMENT_IS_INPUT = 1 << 2;
-const UNINITIALIZED = Symbol();
+const UNINITIALIZED = Symbol("uninitialized");
 function unresolved_hydratable(key, stack) {
   {
     console.warn(`https://svelte.dev/e/unresolved_hydratable`);
@@ -352,7 +356,7 @@ function attributes(attrs, css_hash, classes, styles, flags = 0) {
   for (name of Object.keys(attrs)) {
     if (typeof attrs[name] === "function") continue;
     if (name[0] === "$" && name[1] === "$") continue;
-    if (INVALID_ATTR_NAME_CHAR_REGEX.test(name)) continue;
+    if (name === "" || INVALID_ATTR_NAME_CHAR_REGEX.test(name)) continue;
     var value = attrs[name];
     var lower = name.toLowerCase();
     if (lowercase) name = lower;
@@ -1007,7 +1011,10 @@ class Renderer {
           } catch (error) {
             const { context, failed, transformError } = item.#boundary;
             set_ssr_context(context);
-            let transformed = await transformError(error);
+            let promise = transformError(error);
+            set_ssr_context(null);
+            let transformed = await promise;
+            set_ssr_context(context);
             const failed_renderer = new Renderer(item.global, item);
             failed_renderer.type = item.type;
             failed_renderer.#out.push(Renderer.#serialize_failed_boundary(transformed));
@@ -1182,67 +1189,71 @@ class SSRState {
   }
 }
 export {
-  derived as $,
+  get_prototype_of as $,
   ASYNC as A,
-  BOUNDARY_EFFECT as B,
-  COMMENT_NODE as C,
-  DIRTY as D,
-  ERROR_VALUE as E,
+  BLOCK_EFFECT as B,
+  CLASS_CACHE as C,
+  DERIVED as D,
+  EAGER_EFFECT as E,
   array_prototype as F,
-  get_descriptor as G,
-  HYDRATION_ERROR as H,
+  attr as G,
+  HEAD_EFFECT as H,
   INERT as I,
-  get_prototype_of as J,
-  is_array as K,
-  is_extensible as L,
-  MAYBE_DIRTY as M,
-  HEAD_EFFECT as N,
-  DESTROYING as O,
-  USER_EFFECT as P,
-  index_of as Q,
-  REACTION_RAN as R,
+  attr_class as J,
+  attr_style as K,
+  LEGACY_PROPS as L,
+  MANAGED_EFFECT as M,
+  bind_props as N,
+  clsx as O,
+  deferred as P,
+  define_property as Q,
+  REACTION_IS_UPDATING as R,
   STALE_REACTION as S,
-  define_property as T,
+  TEXT_CACHE as T,
   UNINITIALIZED as U,
-  array_from as V,
+  derived as V,
   WAS_MARKED as W,
-  is_passive_event as X,
-  LEGACY_PROPS as Y,
-  render as Z,
-  setContext as _,
-  HYDRATION_END as a,
-  attr as a0,
-  attr_style as a1,
-  stringify as a2,
-  attr_class as a3,
-  bind_props as a4,
-  ensure_array_like as a5,
-  clsx as a6,
-  head as a7,
-  HYDRATION_START as b,
-  HYDRATION_START_ELSE as c,
-  EFFECT as d,
-  escape_html as e,
+  ensure_array_like as X,
+  escape_html as Y,
+  getContext as Z,
+  get_descriptor as _,
+  ATTRIBUTES_CACHE as a,
+  head as a0,
+  includes as a1,
+  index_of as a2,
+  is_array as a3,
+  is_extensible as a4,
+  is_passive_event as a5,
+  noop as a6,
+  object_prototype as a7,
+  render as a8,
+  run_all as a9,
+  setContext as aa,
+  stringify as ab,
+  BOUNDARY_EFFECT as b,
+  BRANCH_EFFECT as c,
+  CLEAN as d,
+  COMMENT_NODE as e,
   CONNECTED as f,
-  getContext as g,
-  CLEAN as h,
-  DERIVED as i,
-  BLOCK_EFFECT as j,
-  DESTROYED as k,
-  EAGER_EFFECT as l,
-  deferred as m,
-  noop as n,
-  RENDER_EFFECT as o,
-  MANAGED_EFFECT as p,
-  ROOT_EFFECT as q,
-  run_all as r,
-  BRANCH_EFFECT as s,
-  includes as t,
-  HYDRATION_START_FAILED as u,
-  EFFECT_TRANSPARENT as v,
-  EFFECT_PRESERVED as w,
-  REACTION_IS_UPDATING as x,
-  STATE_SYMBOL as y,
-  object_prototype as z
+  DESTROYED as g,
+  DESTROYING as h,
+  DIRTY as i,
+  EFFECT as j,
+  EFFECT_PRESERVED as k,
+  EFFECT_TRANSPARENT as l,
+  ERROR_VALUE as m,
+  HYDRATION_END as n,
+  HYDRATION_ERROR as o,
+  HYDRATION_START as p,
+  HYDRATION_START_ELSE as q,
+  HYDRATION_START_FAILED as r,
+  MAYBE_DIRTY as s,
+  REACTION_RAN as t,
+  RENDER_EFFECT as u,
+  ROOT_EFFECT as v,
+  STATE_SYMBOL as w,
+  STYLE_CACHE as x,
+  USER_EFFECT as y,
+  array_from as z
 };
 //# sourceMappingURL=renderer.js.map

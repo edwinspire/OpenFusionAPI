@@ -3,10 +3,16 @@
 # Imagen LTS Debian completa, adecuada para Chromium y dependencias gráficas del sistema
 FROM node:22-bookworm
 
+# Permite ajustar memoria de Node durante la compilacion (default: 4 GB)
+ARG BUILD_NODE_OPTIONS=--max-old-space-size=4096
+# Permite ajustar memoria de Node en runtime/start (default: 4 GB)
+ARG RUNTIME_NODE_OPTIONS=--max-old-space-size=4096
+
 # Variables de Entorno
 ENV HOST=:: \
     PORT=3000 \
     BUILD_DB=true \
+    NODE_OPTIONS=${RUNTIME_NODE_OPTIONS} \
     PUPPETEER_SKIP_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
@@ -53,7 +59,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 COPY package.json package-lock.json ./
 
 # Instalar dependencias del proyecto (incluyendo siempre devDependencies)
-RUN npm ci --include=dev
+RUN npm install --include=dev
 
 # Copiar el resto del código fuente
 COPY . .
@@ -67,7 +73,7 @@ RUN pm2 install pm2-logrotate \
     && pm2 set pm2-logrotate:retain 2
 
 # Ejecutar la compilación de la aplicación
-RUN npm run build
+RUN NODE_OPTIONS=${BUILD_NODE_OPTIONS} npm run build
 
 # Exponer el puerto en el que correrá la aplicación
 EXPOSE 3000

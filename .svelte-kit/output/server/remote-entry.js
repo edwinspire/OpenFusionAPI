@@ -1,10 +1,10 @@
 import { get_request_store, with_request_store } from "@sveltejs/kit/internal/server";
 import { parse } from "devalue";
 import { error, json } from "@sveltejs/kit";
-import { j as create_remote_key, x as unfriendly_hydratable, e as noop, l as stringify, M as MUTATIVE_METHODS, y as create_field_proxy, z as normalize_issue, A as set_nested_value, B as flatten_issues, C as deep_set, D as stringify_remote_arg, h as handle_error_and_jsonify, p as parse_remote_arg } from "./chunks/shared.js";
+import { b as create_remote_key, D as unfriendly_hydratable, r as noop, B as stringify, M as MUTATIVE_METHODS, a as create_field_proxy, t as normalize_issue, y as set_nested_value, g as flatten_issues, d as deep_set, C as stringify_remote_arg, l as handle_error_and_jsonify, v as parse_remote_arg } from "./chunks/shared.js";
 import { ValidationError, HttpError, SvelteKitError } from "@sveltejs/kit/internal";
 import { D as DEV } from "./chunks/false.js";
-import { b as base, c as app_dir, p as prerendering } from "./chunks/environment.js";
+import { c as base, a as app_dir, p as prerendering } from "./chunks/environment.js";
 function create_validator(validate_or_fn, maybe_fn) {
   if (!maybe_fn) {
     return (arg) => {
@@ -538,23 +538,28 @@ function live(validate_or_fn, maybe_fn) {
 function batch(validate_or_fn, maybe_fn) {
   const fn = maybe_fn ?? validate_or_fn;
   const validate = create_validator(validate_or_fn, maybe_fn);
-  let batching = /* @__PURE__ */ new Map();
   const enqueue = (payload, get_validated) => {
     const { event, state } = get_request_store();
     return new Promise((resolve, reject) => {
-      const entry = batching.get(payload);
+      const batches = state.remote.batches ??= /** @type {NonNullable<typeof state.remote.batches>} */
+      /* @__PURE__ */ new Map();
+      let batched = batches.get(__.id);
+      if (!batched) {
+        batched = /* @__PURE__ */ new Map();
+        batches.set(__.id, batched);
+      }
+      const entry = batched.get(payload);
       if (entry) {
         entry.resolvers.push({ resolve, reject });
         return;
       }
-      batching.set(payload, {
+      batched.set(payload, {
         get_validated,
         resolvers: [{ resolve, reject }]
       });
-      if (batching.size > 1) return;
+      if (batched.size > 1) return;
       setTimeout(async () => {
-        const batched = batching;
-        batching = /* @__PURE__ */ new Map();
+        batches.delete(__.id);
         const entries = Array.from(batched.values());
         try {
           return await run_remote_function(
@@ -680,6 +685,10 @@ function create_query_resource(__, payload, state, fn) {
       return false;
     },
     refresh() {
+      const { event } = get_request_store();
+      if (!event.isRemoteRequest) {
+        return Promise.resolve();
+      }
       const refresh_context = get_refresh_context(__, "refresh", payload);
       const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
       const value = is_immediate_refresh ? get_promise() : fn();

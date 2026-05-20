@@ -102,7 +102,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "248np4"
+  version_hash: "1jp1ceu"
 };
 async function get_hooks() {
   let handle;
@@ -123,13 +123,13 @@ async function get_hooks() {
   };
 }
 export {
-  set_public_env as a,
-  set_read_implementation as b,
-  set_manifest as c,
+  set_private_env as a,
+  set_public_env as b,
+  set_read_implementation as c,
   get_hooks as g,
   options as o,
   public_env as p,
   read_implementation as r,
-  set_private_env as s
+  set_manifest as s
 };
 //# sourceMappingURL=internal.js.map

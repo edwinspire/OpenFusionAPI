@@ -21,9 +21,9 @@ function set_prerendering() {
   prerendering = true;
 }
 export {
-  assets as a,
-  base as b,
-  app_dir as c,
+  app_dir as a,
+  assets as b,
+  base as c,
   reset as d,
   set_building as e,
   set_prerendering as f,

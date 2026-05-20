@@ -2,7 +2,7 @@ import { json, text } from "@sveltejs/kit";
 import { SvelteKitError, HttpError } from "@sveltejs/kit/internal";
 import { with_request_store } from "@sveltejs/kit/internal/server";
 import * as devalue from "devalue";
-import { t as text_encoder, b as base64_encode, a as base64_decode } from "./utils.js";
+import { t as text_encoder, a as base64_encode, b as base64_decode } from "./utils.js";
 import { e as experimental_async_required, g as get_render_context, h as hydratable_serialization_failed } from "./render-context.js";
 import "clsx";
 function noop() {
@@ -391,6 +391,16 @@ function deep_get(object, path) {
   }
   return current;
 }
+function get_type_prefix(field_type, is_array, input_value) {
+  if (field_type === "number" || field_type === "range") return "n:";
+  if (field_type === "checkbox" && !is_array) return "b:";
+  if (field_type === "hidden" || field_type === "submit") {
+    const input_type = typeof input_value;
+    if (input_type === "number") return "n:";
+    if (input_type === "boolean") return "b:";
+  }
+  return "";
+}
 function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
   const get_value = () => {
     return deep_get(get_input(), path);
@@ -417,7 +427,7 @@ function create_field_proxy(target, get_input, set_input, get_issues, path = [])
       }
       if (prop === "issues" || prop === "allIssues") {
         const issues_func = () => {
-          const all_issues = get_issues()[key === "" ? "$" : key];
+          const all_issues = get_issues(path, prop === "allIssues")[key === "" ? "$" : key];
           if (prop === "allIssues") {
             return all_issues?.map((issue) => ({
               path: issue.path,
@@ -434,7 +444,7 @@ function create_field_proxy(target, get_input, set_input, get_issues, path = [])
       if (prop === "as") {
         const as_func = (type, input_value) => {
           const is_array = type === "file multiple" || type === "select multiple" || type === "checkbox" && typeof input_value === "string";
-          const prefix = type === "number" || type === "range" ? "n:" : type === "checkbox" && !is_array ? "b:" : "";
+          const prefix = get_type_prefix(type, is_array, input_value);
           const base_props = {
             name: prefix + key + (is_array ? "[]" : ""),
             get "aria-invalid"() {
@@ -786,7 +796,13 @@ function encode(key, value, unresolved) {
     if (is_promise(value2)) {
       const placeholder = `"${uid++}"`;
       const p = value2.then((v) => {
-        entry.serialized = entry.serialized.replace(placeholder, `r(${uneval(v)})`);
+        entry.serialized = entry.serialized.replace(
+          placeholder,
+          // use the function form here to prevent any string replacement characters from being interpreted
+          // in `v`, as it's potentially user-controlled and therefore potentially malicious.
+          // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#specifying_a_string_as_the_replacement
+          () => `r(${uneval(v)})`
+        );
       }).catch(
         (devalue_error) => hydratable_serialization_failed(
           key,
@@ -983,41 +999,41 @@ function unfriendly_hydratable(key, fn) {
   return hydratable(key, fn);
 }
 export {
-  set_nested_value as A,
-  flatten_issues as B,
-  deep_set as C,
-  stringify_remote_arg as D,
+  static_error_page as A,
+  stringify as B,
+  stringify_remote_arg as C,
+  unfriendly_hydratable as D,
   ENDPOINT_METHODS as E,
   INVALIDATED_PARAM as I,
   MUTATIVE_METHODS as M,
   PAGE_METHODS as P,
   SVELTE_KIT_ASSETS as S,
   TRAILING_SLASH_PARAM as T,
-  normalize_error as a,
-  get_global_name as b,
+  create_field_proxy as a,
+  create_remote_key as b,
   clarify_devalue_error as c,
-  get_node_type as d,
-  noop as e,
+  deep_set as d,
+  deserialize_binary_form as e,
   escape_html as f,
-  get_status as g,
-  handle_error_and_jsonify as h,
-  is_form_content_type as i,
-  create_remote_key as j,
-  static_error_page as k,
-  stringify as l,
-  method_not_allowed as m,
-  negotiate as n,
-  deserialize_binary_form as o,
-  parse_remote_arg as p,
-  split_remote_key as q,
-  redirect_response as r,
-  serialize_uses as s,
-  once as t,
-  has_prerendered_path as u,
-  handle_fatal_error as v,
-  format_server_error as w,
-  unfriendly_hydratable as x,
-  create_field_proxy as y,
-  normalize_issue as z
+  flatten_issues as g,
+  format_server_error as h,
+  get_global_name as i,
+  get_node_type as j,
+  get_status as k,
+  handle_error_and_jsonify as l,
+  handle_fatal_error as m,
+  has_prerendered_path as n,
+  is_form_content_type as o,
+  method_not_allowed as p,
+  negotiate as q,
+  noop as r,
+  normalize_error as s,
+  normalize_issue as t,
+  once as u,
+  parse_remote_arg as v,
+  redirect_response as w,
+  serialize_uses as x,
+  set_nested_value as y,
+  split_remote_key as z
 };
 //# sourceMappingURL=shared.js.map
