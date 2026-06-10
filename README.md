@@ -1,6 +1,8 @@
 # OpenFusion API
 
 > **Build, deploy, and govern production-ready API endpoints in minutes — without boilerplate.**
+>
+> **Crea, despliega y gobierna endpoints API listos para produccion en minutos, sin codigo repetitivo.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-v20%2B-green.svg)](https://nodejs.org)
@@ -11,9 +13,91 @@
 
 ---
 
+## ES | Resumen Comercial
+
+OpenFusion API es una plataforma **low-code e IA-friendly** para crear servicios API de forma rapida, estandarizada y con control operativo.
+
+- Ya utilizada en produccion: reduce el riesgo de adopcion y acelera decisiones tecnicas.
+- Diseñada para humanos y agentes de IA: soporta MCP, contratos con JSON Schema y configuracion reutilizable.
+- Ideal para modernizar integraciones: SQL, SOAP, REST, MongoDB, HANA y logica JavaScript en una misma plataforma.
+- Orientada a entrega: entornos `dev`, `qa`, `prd`, control de acceso por endpoint, cache y despliegue con Docker.
+
+Para equipos que necesitan velocidad sin perder gobernanza, OpenFusion API reduce el tiempo entre requerimiento y endpoint operativo.
+
+---
+
+## EN | Commercial Snapshot
+
+OpenFusion API is a **low-code, AI-friendly** platform that helps teams ship APIs faster with strong operational controls.
+
+- Production-proven: lowers adoption risk and increases implementation confidence.
+- Built for humans and AI agents: MCP support, JSON Schema contracts, and reusable configuration.
+- Strong modernization path: SQL, SOAP, REST, MongoDB, HANA, and JavaScript handlers in one platform.
+- Delivery-ready model: `dev`, `qa`, `prd` environments, per-endpoint access control, caching, and Docker deployment.
+
+For teams balancing speed and governance, OpenFusion API shortens the path from business intent to live endpoint.
+
+---
+
+## Landing Copy Kit (GitHub & Docker Hub)
+
+### GitHub short copy (ES)
+
+OpenFusion API es una plataforma open-source, low-code e IA-friendly para crear y publicar endpoints API en minutos.
+Unifica integraciones SQL, SOAP y REST, incorpora control de acceso, JSON Schema, entornos dev/qa/prd y soporte MCP para agentes de IA.
+
+CTA: **Pruebalo con Docker y publica tu primer endpoint en menos de 15 minutos.**
+
+### GitHub short copy (EN)
+
+OpenFusion API is an open-source, low-code, AI-friendly platform to create and publish API endpoints in minutes.
+It unifies SQL, SOAP, and REST integrations with per-endpoint access control, JSON Schema validation, dev/qa/prd environments, and MCP support for AI agents.
+
+CTA: **Run it with Docker and publish your first endpoint in under 15 minutes.**
+
+### Docker Hub short copy (ES)
+
+Imagen oficial de OpenFusion API para desplegar una capa de integracion API lista para produccion.
+Incluye soporte para handlers SQL, SOAP, FETCH y JavaScript, con un modelo orientado a equipos tecnicos y agentes de IA.
+
+CTA: **Descarga la imagen y habilita tu capa API en minutos.**
+
+### Docker Hub short copy (EN)
+
+Official OpenFusion API image to deploy a production-ready API integration layer.
+Includes SQL, SOAP, FETCH, and JavaScript handlers, designed for both engineering teams and AI-agent workflows.
+
+CTA: **Pull the image and launch your API layer in minutes.**
+
+---
+
 ## 🚀 What is OpenFusion API?
 
 OpenFusion API is an **open-source, low-code API platform** that lets developers and AI agents create, configure, and deploy REST endpoints through a clean web interface — without writing repetitive infrastructure code.
+
+## Production-proven platform
+
+OpenFusion API is not a conceptual prototype. It is already used in real deployments and is publicly available at **[www.openfusionapi.com](http://www.openfusionapi.com)**.
+
+Why this matters for adoption:
+
+- **Lower implementation risk**: the platform has already been validated in production-like scenarios.
+- **Faster decision cycles**: teams can evaluate with confidence beyond local demos.
+- **Operational readiness**: environment segregation, access control, and deployable packaging are already part of the platform model.
+
+---
+
+## OpenFusion ecosystem
+
+OpenFusion API delivers most of its value as an ecosystem of complementary libraries:
+
+| Component | Role in the ecosystem | Strategic benefit |
+|---|---|---|
+| [libOpenFusionAPI](https://github.com/edwinspire/libOpenFusionAPI) | Core platform engine (endpoint model, handlers, validation, governance) | Standardizes endpoint delivery and reduces repetitive backend coding |
+| [libOpenFusionAPIGUI](https://github.com/edwinspire/libOpenFusionAPIGUI) | Svelte-based management interface | Enables faster onboarding for technical and non-specialist integration teams |
+| [@edwinspire/universal-fetch](https://github.com/edwinspire/universal-fetch) | Universal HTTP layer for Node/browser and resilient batch requests | Improves reliability in integration-heavy workloads and AI-driven automation flows |
+
+Together they provide a full path from endpoint design to production operation with a model that works for developers, integration teams, and AI agents.
 
 It solves the most common friction points in API development:
 
@@ -55,6 +139,16 @@ It solves the most common friction points in API development:
 
 ---
 
+## Business and technical benefits
+
+- **Shorter time-to-integration**: move from requirement to deployed endpoint in minutes for many API patterns.
+- **Consistent governance**: enforce access level, validation, and environment scope from a unified control surface.
+- **Modernization without full rewrites**: expose legacy SOAP or heterogeneous backends as standardized REST endpoints.
+- **Scalable operating model**: centralize variables, contracts, and endpoint configuration across teams.
+- **AI-ready execution layer**: turn AI-generated intent into deployable and testable services, not only source code drafts.
+
+---
+
 ## 🧱 Available Handlers
 
 | Handler | Description |
@@ -88,6 +182,13 @@ OpenFusion API is intentionally designed for both human operators and autonomous
 5. Enable the MCP tab to make the endpoint available as an AI tool
 
 This makes OpenFusion API one of the few platforms where an agent can go from **intent to deployed service** without writing a single line of infrastructure code.
+
+### Why this is AI-friendly in practice
+
+- **Structured contracts**: JSON Schema reduces ambiguity in tool invocation.
+- **MCP-native exposure**: endpoints can be described and consumed as tools.
+- **Reusable configuration model**: app-level variables let agents reuse host/auth settings safely.
+- **Reliable network workflows**: the ecosystem can leverage `@edwinspire/universal-fetch` for robust request execution and fail-safe batch patterns.
 
 ---
 
@@ -230,6 +331,29 @@ Each environment can be independently enabled or disabled via environment variab
 - DevOps teams that want a manageable, container-ready API layer
 - Teams using AI tools that need a deployment surface for agent-generated services
 - Organizations building internal tooling without dedicated backend headcount
+- Technical product teams launching API-backed features under tight delivery windows
+- Consultancies and SI teams that must deliver repeatable integrations for multiple clients
+
+---
+
+## Positioning summary
+
+OpenFusion API is an **AI-friendly integration and API delivery platform** that combines low-code speed with production governance. It is designed for organizations that need to ship reliable services quickly while keeping architecture standards, security controls, and operational consistency.
+
+---
+
+## SEO and discoverability keywords
+
+Use and adapt these terms in your website pages, docs, and release notes to improve discoverability:
+
+- low-code API platform
+- AI-friendly API platform
+- MCP API tools
+- SOAP to REST modernization
+- SQL to REST API builder
+- production-ready API platform
+- integration platform for AI agents
+- endpoint governance and deployment
 
 ---
 

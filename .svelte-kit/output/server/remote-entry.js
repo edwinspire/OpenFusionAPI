@@ -1,10 +1,10 @@
 import { get_request_store, with_request_store } from "@sveltejs/kit/internal/server";
 import { parse } from "devalue";
 import { error, json } from "@sveltejs/kit";
-import { b as create_remote_key, D as unfriendly_hydratable, r as noop, B as stringify, M as MUTATIVE_METHODS, a as create_field_proxy, t as normalize_issue, y as set_nested_value, g as flatten_issues, d as deep_set, C as stringify_remote_arg, l as handle_error_and_jsonify, v as parse_remote_arg } from "./chunks/shared.js";
+import { c as create_remote_key, u as unfriendly_hydratable, n as noop, s as stringify, M as MUTATIVE_METHODS, a as create_field_proxy, b as normalize_issue, d as set_nested_value, f as flatten_issues, e as deep_set, g as stringify_remote_arg, h as handle_error_and_jsonify, p as parse_remote_arg } from "./chunks/utils.js";
 import { ValidationError, HttpError, SvelteKitError } from "@sveltejs/kit/internal";
 import { D as DEV } from "./chunks/false.js";
-import { c as base, a as app_dir, p as prerendering } from "./chunks/environment.js";
+import { b as base, a as app_dir, p as prerendering } from "./chunks/server.js";
 function create_validator(validate_or_fn, maybe_fn) {
   if (!maybe_fn) {
     return (arg) => {
@@ -285,6 +285,14 @@ function form(validate_or_fn, maybe_fn) {
         throw new Error("Cannot call validate() on the server");
       }
     });
+    Object.defineProperty(instance, "submit", {
+      value: () => {
+        throw new Error("Cannot call submit() on the server");
+      }
+    });
+    Object.defineProperty(instance, "element", {
+      get: () => null
+    });
     if (key == void 0) {
       Object.defineProperty(instance, "for", {
         /** @type {RemoteForm<any, any>['for']} */
@@ -447,6 +455,171 @@ function prerender(validate_or_fn, fn_or_options, maybe_options) {
   Object.defineProperty(wrapper, "__", { value: __ });
   return wrapper;
 }
+class SharedIterator {
+  /**
+   * @typedef {object} Subscriber
+   * @property {{ value: any } | null} pending
+   * @property {{ error: unknown } | null} pending_error
+   * @property {boolean} finished
+   * @property {((result: IteratorResult<any, void>) => void) | null} waiting_resolve
+   * @property {((reason: unknown) => void) | null} waiting_reject
+   */
+  /** @type {Set<Subscriber>} */
+  #subscribers = /* @__PURE__ */ new Set();
+  /** @type {((instance: SharedIterator<T>) => (() => void)) | undefined} */
+  #start = void 0;
+  /** @type {(() => void) | undefined} */
+  #stop = void 0;
+  /** Once `done()` or `fail()` has been broadcast, no new values are accepted. */
+  #closed = false;
+  /** @type {unknown} */
+  #terminal_error = void 0;
+  /**
+   * @param {(instance: SharedIterator<T>) => (() => void)} [start]
+   */
+  constructor(start) {
+    this.#start = start;
+  }
+  /** @param {T} value */
+  push(value) {
+    if (this.#closed) return;
+    for (const subscriber of this.#subscribers) {
+      if (subscriber.waiting_resolve) {
+        const resolve = subscriber.waiting_resolve;
+        subscriber.waiting_resolve = null;
+        subscriber.waiting_reject = null;
+        resolve({ value, done: false });
+      } else {
+        subscriber.pending = { value };
+      }
+    }
+  }
+  /**
+   * Signal natural completion to all current subscribers, and to any future
+   * subscriber (which will receive an immediately-done iterator).
+   */
+  done() {
+    if (this.#closed) return;
+    this.#closed = true;
+    for (const subscriber of this.#subscribers) {
+      subscriber.finished = true;
+      if (subscriber.waiting_resolve) {
+        const resolve = subscriber.waiting_resolve;
+        subscriber.waiting_resolve = null;
+        subscriber.waiting_reject = null;
+        resolve({ value: void 0, done: true });
+      }
+    }
+    this.#subscribers.clear();
+  }
+  /**
+   * Broadcast a terminal error. All current subscribers will reject their
+   * next `.next()` call with `error`. Future subscribers will also reject
+   * their first `.next()`.
+   *
+   * @param {unknown} error
+   */
+  fail(error2) {
+    if (this.#closed) return;
+    this.#closed = true;
+    this.#terminal_error = error2;
+    for (const subscriber of this.#subscribers) {
+      subscriber.finished = true;
+      if (subscriber.waiting_reject) {
+        const reject = subscriber.waiting_reject;
+        subscriber.waiting_resolve = null;
+        subscriber.waiting_reject = null;
+        reject(error2);
+      } else {
+        subscriber.pending_error = { error: error2 };
+      }
+    }
+    this.#subscribers.clear();
+  }
+  /**
+   * Subscribe to the shared stream. Returns an `AsyncGenerator<T>` that
+   * yields every value pushed after this call (and, if `initial_value` is
+   * provided, that value as the first yield).
+   *
+   * @param {{ initial_value?: { value: T } }} [options]
+   *   `initial_value` lets the caller seed the iterator with a synchronously-
+   *   available current value before any new pushes arrive (e.g. the
+   *   "last-seen value" of a reactive resource). Pass it wrapped in an
+   *   object so `undefined` can be distinguished from "no initial value".
+   * @returns {AsyncGenerator<T, void, void>}
+   */
+  subscribe(options) {
+    const subscriber = {
+      pending: options?.initial_value ? { value: options.initial_value.value } : null,
+      pending_error: this.#closed && this.#terminal_error !== void 0 ? { error: this.#terminal_error } : null,
+      finished: this.#closed && this.#terminal_error === void 0,
+      waiting_resolve: null,
+      waiting_reject: null
+    };
+    if (!subscriber.finished && subscriber.pending_error === null) {
+      this.#subscribers.add(subscriber);
+    }
+    if (!this.#closed) {
+      this.#stop ??= this.#start?.(this);
+    }
+    const unsubscribe = () => {
+      subscriber.finished = true;
+      const was_present = this.#subscribers.delete(subscriber);
+      if (was_present && this.#subscribers.size === 0) {
+        this.#stop?.();
+      }
+    };
+    const iterator = {
+      next() {
+        if (subscriber.pending_error) {
+          const { error: error2 } = subscriber.pending_error;
+          subscriber.pending_error = null;
+          unsubscribe();
+          return Promise.reject(error2);
+        }
+        if (subscriber.pending) {
+          const { value } = subscriber.pending;
+          subscriber.pending = null;
+          return Promise.resolve({ value, done: false });
+        }
+        if (subscriber.finished) {
+          return Promise.resolve({ value: void 0, done: true });
+        }
+        return new Promise((resolve, reject) => {
+          subscriber.waiting_resolve = resolve;
+          subscriber.waiting_reject = reject;
+        });
+      },
+      return(value) {
+        unsubscribe();
+        if (subscriber.waiting_resolve) {
+          const resolve = subscriber.waiting_resolve;
+          subscriber.waiting_resolve = null;
+          subscriber.waiting_reject = null;
+          resolve({ value: void 0, done: true });
+        }
+        return Promise.resolve({ value: (
+          /** @type {void} */
+          value
+        ), done: true });
+      },
+      throw(error2) {
+        unsubscribe();
+        if (subscriber.waiting_reject) {
+          const reject = subscriber.waiting_reject;
+          subscriber.waiting_resolve = null;
+          subscriber.waiting_reject = null;
+          reject(error2);
+        }
+        return Promise.reject(error2);
+      },
+      [Symbol.asyncIterator]() {
+        return iterator;
+      }
+    };
+    return iterator;
+  }
+}
 // @__NO_SIDE_EFFECTS__
 function query(validate_or_fn, maybe_fn) {
   const fn = maybe_fn ?? validate_or_fn;
@@ -489,17 +662,6 @@ function live(validate_or_fn, maybe_fn) {
   const fn = maybe_fn ?? validate_or_fn;
   const validate = create_validator(validate_or_fn, maybe_fn);
   const run = (event, state, get_input) => run_remote_generator(event, state, false, get_input, fn, __.name);
-  const first_value = async (generator) => {
-    try {
-      const { value, done } = await generator.next();
-      if (done) {
-        throw new Error(`query.live '${__.name}' did not yield a value`);
-      }
-      return value;
-    } finally {
-      await generator.return(void 0);
-    }
-  };
   const __ = {
     type: "query_live",
     id: "",
@@ -512,7 +674,8 @@ function live(validate_or_fn, maybe_fn) {
         __,
         payload,
         state,
-        () => first_value(run(event, state, () => validated_arg))
+        event.request.signal,
+        () => run(event, state, () => validated_arg)
       );
     }
   };
@@ -528,7 +691,8 @@ function live(validate_or_fn, maybe_fn) {
       __,
       payload,
       state,
-      () => first_value(run(event, state, () => validate(arg)))
+      event.request.signal,
+      () => run(event, state, () => validate(arg))
     );
   };
   Object.defineProperty(wrapper, "__", { value: __ });
@@ -694,17 +858,16 @@ function create_query_resource(__, payload, state, fn) {
       const value = is_immediate_refresh ? get_promise() : fn();
       return update_refresh_value(refresh_context, value, is_immediate_refresh);
     },
-    run() {
-      if (!state.is_in_universal_load) {
-        throw new Error(
-          "On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly"
-        );
-      }
-      return get_response(__, payload, state, fn);
-    },
     /** @param {any} value */
     set(value) {
       return update_refresh_value(get_refresh_context(__, "set", payload), value);
+    },
+    // TODO 3.0 remove this
+    // @ts-expect-error This method no longer exists
+    run() {
+      throw new Error(
+        `\`myQuery().run()\` has been removed — please replace it with \`myQuery()\`. See https://github.com/sveltejs/kit/pull/15779 for more details`
+      );
     },
     /** @type {Promise<any>['then']} */
     then(onfulfilled, onrejected) {
@@ -718,8 +881,14 @@ function create_query_resource(__, payload, state, fn) {
     }
   };
 }
-function create_live_query_resource(__, payload, state, get_first_value) {
+function create_live_query_resource(__, payload, state, signal, get_generator) {
   let promise = null;
+  const get_first_value = async () => {
+    for await (const value of get_generator()) {
+      return value;
+    }
+    throw new Error(`query.live '${__.name}' did not yield a value`);
+  };
   const get_promise = () => {
     return promise ??= get_response(__, payload, state, get_first_value);
   };
@@ -769,17 +938,62 @@ function create_live_query_resource(__, payload, state, get_first_value) {
       reconnects.set(create_remote_key(__.id, payload), get_promise());
       return Promise.resolve();
     },
+    /** @ts-expect-error This method no longer exists */
     run() {
-      throw new Error("Cannot call .run() on a live query on the server");
+      throw new Error(
+        "`.run()` has been removed from live queries. Use `for await (const value of liveQuery())` instead."
+      );
     },
     /** @type {Promise<any>['then']} */
     then(onfulfilled, onrejected) {
       return get_promise().then(onfulfilled, onrejected);
     },
+    [Symbol.asyncIterator]() {
+      const key = create_remote_key(__.id, payload);
+      const cache = state.remote.live_iterators ??= /* @__PURE__ */ new Map();
+      let cached = cache.get(key);
+      if (!cached) {
+        cached = create_shared_live_iterator(signal, get_generator);
+        cache.set(key, cached);
+      }
+      return cached.subscribe();
+    },
     get [Symbol.toStringTag]() {
       return "LiveQueryResource";
     }
   };
+}
+function create_shared_live_iterator(signal, get_generator) {
+  return new SharedIterator((instance) => {
+    if (signal.aborted) {
+      instance.done();
+      return noop;
+    }
+    const generator = get_generator();
+    let aborted = false;
+    const close = () => {
+      aborted = true;
+      void generator.return().catch(noop);
+    };
+    signal.addEventListener("abort", () => (close(), instance.done()), { once: true });
+    void (async () => {
+      try {
+        while (true) {
+          const result = await generator.next();
+          if (result.done) {
+            instance.done();
+            return;
+          }
+          instance.push(result.value);
+        }
+      } catch (error2) {
+        if (!aborted) instance.fail(error2);
+      } finally {
+        close();
+      }
+    })();
+    return close;
+  });
 }
 Object.defineProperty(query, "batch", { value: batch, enumerable: true });
 Object.defineProperty(query, "live", { value: live, enumerable: true });

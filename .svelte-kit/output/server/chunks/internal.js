@@ -1,16 +1,18 @@
 import { r as root } from "./root.js";
-import "./environment.js";
-let public_env = {};
-function set_private_env(environment) {
-}
-function set_public_env(environment) {
-  public_env = environment;
-}
+import "./server.js";
 let read_implementation = null;
 function set_read_implementation(fn) {
   read_implementation = fn;
 }
 function set_manifest(_) {
+}
+function set_env(env) {
+}
+let public_env = {};
+function set_private_env(environment) {
+}
+function set_public_env(environment) {
+  public_env = environment;
 }
 const options = {
   app_template_contains_nonce: false,
@@ -102,7 +104,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "1jp1ceu"
+  version_hash: "19ym990"
 };
 async function get_hooks() {
   let handle;
@@ -123,13 +125,14 @@ async function get_hooks() {
   };
 }
 export {
-  set_private_env as a,
-  set_public_env as b,
-  set_read_implementation as c,
+  set_public_env as a,
+  set_read_implementation as b,
+  set_env as c,
+  set_manifest as d,
   get_hooks as g,
   options as o,
   public_env as p,
   read_implementation as r,
-  set_manifest as s
+  set_private_env as s
 };
 //# sourceMappingURL=internal.js.map

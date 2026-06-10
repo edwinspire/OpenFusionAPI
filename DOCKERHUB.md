@@ -1,16 +1,30 @@
-# OpenFusionAPI Docker Image
+# OpenFusion API Docker Image
 
-OpenFusionAPI is a web-based API builder focused on SQL, REST, SOAP, JavaScript handlers, and PDF generation workflows.
+Official Docker image for OpenFusion API: a production-ready, low-code, AI-friendly platform to create and deploy integration endpoints quickly.
 
-Source repository:
+Repositorio / Repository:
 https://github.com/edwinspire/OpenFusionAPI
 
-Dockerfile used to build this image:
+Dockerfile:
 https://github.com/edwinspire/OpenFusionAPI/blob/main/Dockerfile
 
-## Supported usage
+## Landing copy (Docker Hub)
 
-This image includes:
+### ES
+
+Imagen oficial de OpenFusion API para desplegar una capa API de integracion lista para produccion.
+Integra SQL, SOAP, REST y logica JavaScript con control de acceso, cache y soporte MCP para flujos con agentes de IA.
+
+CTA: **Descarga la imagen y publica tu primer endpoint en minutos.**
+
+### EN
+
+Official OpenFusion API image to deploy a production-ready API integration layer.
+Connect SQL, SOAP, REST, and JavaScript handlers with access control, caching, and MCP support for AI-agent workflows.
+
+CTA: **Pull the image and launch your first endpoint in minutes.**
+
+## What this image includes
 
 - Node.js runtime
 - Chromium and Linux libraries required by Puppeteer-based PDF generation

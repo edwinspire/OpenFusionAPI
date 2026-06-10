@@ -58,11 +58,11 @@ function get_render_context() {
 let als = null;
 export {
   await_invalid as a,
-  invalid_id_prefix as b,
+  invalid_csp as b,
   experimental_async_required as e,
   get_render_context as g,
   hydratable_serialization_failed as h,
-  invalid_csp as i,
+  invalid_id_prefix as i,
   lifecycle_outside_component as l
 };
 //# sourceMappingURL=render-context.js.map

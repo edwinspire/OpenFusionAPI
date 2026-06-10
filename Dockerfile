@@ -1,7 +1,7 @@
 # OPEN FUSION API
 # edwinspire@gmail.com
-# Imagen LTS Debian completa, adecuada para Chromium y dependencias gráficas del sistema
-FROM node:22-bookworm
+# Imagen LTS Debian slim para reducir superficie de ataque
+FROM node:22-bookworm-slim
 
 # Permite ajustar memoria de Node durante la compilacion (default: 4 GB)
 ARG BUILD_NODE_OPTIONS=--max-old-space-size=4096
@@ -19,7 +19,7 @@ ENV HOST=:: \
 # Establecer el directorio de trabajo
 WORKDIR /app
 
-# Instalar herramientas adicionales necesarias y dependencias de Chromium
+# Instalar dependencias mínimas necesarias de Chromium
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends ca-certificates \
     chromium \
     fonts-liberation \
@@ -69,8 +69,8 @@ RUN npm install pm2 -g
 
 # Instalar el módulo de rotación de logs de PM2
 RUN pm2 install pm2-logrotate \
-    && pm2 set pm2-logrotate:max_days 2 \
-    && pm2 set pm2-logrotate:retain 2
+    && pm2 set pm2-logrotate:max_days 1 \
+    && pm2 set pm2-logrotate:retain 1
 
 # Ejecutar la compilación de la aplicación
 RUN NODE_OPTIONS=${BUILD_NODE_OPTIONS} npm run build
@@ -82,4 +82,4 @@ EXPOSE 3000
 CMD ["pm2-runtime", "start", "process.yml"]
 
 
-# docker system prune -a // Elimina todas las imágenes no utilizadas, contenedores detenidos, volúmenes y redes no utilizados
+# docker system prune -a // Elimina todas las imágenes no utilizadas, contenedores detenidos, volúmenes y redes no utilizados 

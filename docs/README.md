@@ -1,49 +1,38 @@
-# OpenFusionAPI
-
-**OpenFusionAPI** uses Svelte as a framework for the frontend in conjunction with the adapter-node.
-
-  
-
-This makes development easier by creating reusable and reactive components.
-
-  
-
-To learn about Svelte you can visit the following [tutorial](https://svelte.dev/tutorial/basics).
-
-If on the other hand you need to learn how to create APIs from the web interface you can find a detailed tutorial at [libapiserver](https://github.com/edwinspire/libapiserver).
-
-  # Tutorial
-We consider that it is easier and more intuitive to show how to use the application in video.
-We provide you with a list of videos that can help you create your own APIs in a simple way.
-
-[Preview](https://youtu.be/GpjXgEJV1bI)
-
-## Install
-Before starting, remember to have at least NodeJS v20 installed. It is also recommended to use VSCode, although you can use any text editor.
-
-[Installation process](https://youtu.be/L-DC6mIL9oM)
-
-
-## Exploring the demo
-
-## Create your own application
-
-It is common to have a large number of APIs for different projects. To keep the APIs in order it has been decided to group them into "applications", therefore the first step is to create an application.
-
-![Create app](img/create_app.png)
-
-
- 1. Press the "New App" button
- 2. Put a name in the application, keep in mind that spaces or special characters are not allowed.
- 3. Enable the application
- 4. Press "Save"
-
-Now you can search for it in the list of applications and select it.
-
-
 # OpenFusion API – Tutorial & Reference
 
 This section covers everything you need to go from zero to a running API endpoint.
+
+OpenFusion API is already used in production and this guide is focused on practical adoption for technical teams, integration specialists, and AI-assisted delivery workflows.
+
+---
+
+## Why teams adopt OpenFusion API
+
+- Reduce repetitive API boilerplate and speed up endpoint delivery
+- Standardize security, validation, and environment controls
+- Integrate SQL, SOAP, REST, MongoDB, HANA, and custom logic from one platform
+- Build API surfaces that are usable by both developers and AI agents
+- Move from "idea" to "running endpoint" with a repeatable operating model
+
+---
+
+## Ecosystem context
+
+OpenFusion API can be used standalone, but it is strongest when aligned with its ecosystem:
+
+- **libOpenFusionAPI**: core endpoint engine, handlers, access control, and governance
+- **libOpenFusionAPIGUI**: UI layer for fast endpoint management and onboarding
+- **@edwinspire/universal-fetch**: resilient HTTP execution and batch orchestration for integrations and AI workflows
+
+---
+
+## Who this guide is for
+
+- Backend and integration engineers
+- API and platform architects
+- DevOps teams deploying containerized integration services
+- Product teams building internal APIs quickly
+- Teams enabling MCP/AI agent operations over business endpoints
 
 ---
 
@@ -61,6 +50,8 @@ This section covers everything you need to go from zero to a running API endpoin
 
 - [Preview overview](https://youtu.be/GpjXgEJV1bI)
 - [Installation process](https://youtu.be/L-DC6mIL9oM)
+
+Production note: these tutorials are useful for first-time setup, but real value comes from applying the recommended workflow below with environment isolation, schema contracts, and access control.
 
 ---
 
