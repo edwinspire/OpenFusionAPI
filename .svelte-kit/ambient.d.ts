@@ -85,8 +85,6 @@ declare module '$env/static/private' {
 	export const ESET_OPTIONS: string;
 	export const EXEPATH: string;
 	export const npm_config_noproxy: string;
-	export const NPM_CLI_JS: string;
-	export const NPM_PREFIX_JS: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
 	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const npm_package_version: string;
@@ -94,6 +92,7 @@ declare module '$env/static/private' {
 	export const HOMEDRIVE: string;
 	export const HOMEPATH: string;
 	export const npm_config_npm_version: string;
+	export const npm_config_allow_scripts: string;
 	export const HOSTNAME: string;
 	export const npm_lifecycle_event: string;
 	export const INIT_CWD: string;
@@ -101,7 +100,6 @@ declare module '$env/static/private' {
 	export const JAVA_HOME: string;
 	export const LOCALAPPDATA: string;
 	export const WINDIR: string;
-	export const QIP19164: string;
 	export const npm_package_json: string;
 	export const MANPATH: string;
 	export const MINGW_CHOST: string;
@@ -110,11 +108,9 @@ declare module '$env/static/private' {
 	export const MSYSTEM: string;
 	export const MSYSTEM_PREFIX: string;
 	export const NODE: string;
-	export const NODE_EXE: string;
 	export const VSCODE_GIT_IPC_HANDLE: string;
 	export const npm_command: string;
 	export const npm_config_cache: string;
-	export const NPM_PREFIX_NPM_CLI_JS: string;
 	export const npm_config_prefix: string;
 	export const npm_lifecycle_script: string;
 	export const npm_node_execpath: string;
@@ -147,6 +143,8 @@ declare module '$env/static/private' {
 	export const PWD: string;
 	export const PYTHONSTARTUP: string;
 	export const PYTHON_BASIC_REPL: string;
+	export const QIP16924: string;
+	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
 	export const SYSTEMDRIVE: string;
@@ -301,8 +299,6 @@ declare module '$env/dynamic/private' {
 		ESET_OPTIONS: string;
 		EXEPATH: string;
 		npm_config_noproxy: string;
-		NPM_CLI_JS: string;
-		NPM_PREFIX_JS: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
 		FPS_BROWSER_USER_PROFILE_STRING: string;
 		npm_package_version: string;
@@ -310,6 +306,7 @@ declare module '$env/dynamic/private' {
 		HOMEDRIVE: string;
 		HOMEPATH: string;
 		npm_config_npm_version: string;
+		npm_config_allow_scripts: string;
 		HOSTNAME: string;
 		npm_lifecycle_event: string;
 		INIT_CWD: string;
@@ -317,7 +314,6 @@ declare module '$env/dynamic/private' {
 		JAVA_HOME: string;
 		LOCALAPPDATA: string;
 		WINDIR: string;
-		QIP19164: string;
 		npm_package_json: string;
 		MANPATH: string;
 		MINGW_CHOST: string;
@@ -326,11 +322,9 @@ declare module '$env/dynamic/private' {
 		MSYSTEM: string;
 		MSYSTEM_PREFIX: string;
 		NODE: string;
-		NODE_EXE: string;
 		VSCODE_GIT_IPC_HANDLE: string;
 		npm_command: string;
 		npm_config_cache: string;
-		NPM_PREFIX_NPM_CLI_JS: string;
 		npm_config_prefix: string;
 		npm_lifecycle_script: string;
 		npm_node_execpath: string;
@@ -363,6 +357,8 @@ declare module '$env/dynamic/private' {
 		PWD: string;
 		PYTHONSTARTUP: string;
 		PYTHON_BASIC_REPL: string;
+		QIP16924: string;
+		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
 		SYSTEMDRIVE: string;

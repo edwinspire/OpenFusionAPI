@@ -1,5 +1,4 @@
 import { clsx as clsx$1 } from "clsx";
-import { l as lifecycle_outside_component, a as await_invalid, g as get_render_context, i as invalid_id_prefix, b as invalid_csp } from "./render-context.js";
 import * as devalue from "devalue";
 const DERIVED = 1 << 1;
 const EFFECT = 1 << 2;
@@ -63,6 +62,11 @@ function deferred() {
     reject = rej;
   });
   return { promise, resolve, reject };
+}
+function lifecycle_outside_component(name) {
+  {
+    throw new Error(`https://svelte.dev/e/lifecycle_outside_component`);
+  }
 }
 const HYDRATION_START = "[";
 const HYDRATION_START_ELSE = "[!";
@@ -275,6 +279,34 @@ function abort() {
   controller?.abort(STALE_REACTION);
   controller = null;
 }
+function await_invalid() {
+  const error = new Error(`await_invalid
+Encountered asynchronous work while rendering synchronously.
+https://svelte.dev/e/await_invalid`);
+  error.name = "Svelte error";
+  throw error;
+}
+function invalid_csp() {
+  const error = new Error(`invalid_csp
+\`csp.nonce\` was set while \`csp.hash\` was \`true\`. These options cannot be used simultaneously.
+https://svelte.dev/e/invalid_csp`);
+  error.name = "Svelte error";
+  throw error;
+}
+function invalid_id_prefix() {
+  const error = new Error(`invalid_id_prefix
+The \`idPrefix\` option cannot include \`--\`.
+https://svelte.dev/e/invalid_id_prefix`);
+  error.name = "Svelte error";
+  throw error;
+}
+function server_context_required() {
+  const error = new Error(`server_context_required
+Could not resolve \`render\` context.
+https://svelte.dev/e/server_context_required`);
+  error.name = "Svelte error";
+  throw error;
+}
 var ssr_context = null;
 function set_ssr_context(v) {
   ssr_context = v;
@@ -320,6 +352,14 @@ function unresolved_hydratable(key, stack) {
     console.warn(`https://svelte.dev/e/unresolved_hydratable`);
   }
 }
+function get_render_context() {
+  const store = als?.getStore();
+  {
+    server_context_required();
+  }
+  return store;
+}
+let als = null;
 let text_encoder;
 let crypto;
 const obfuscated_import = (module_name) => import(

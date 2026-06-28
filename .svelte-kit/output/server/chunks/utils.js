@@ -1,255 +1,9 @@
 import * as devalue from "devalue";
 import { a as base64_decode, t as text_encoder, b as base64_encode } from "./utils2.js";
-import { e as experimental_async_required, g as get_render_context, h as hydratable_serialization_failed } from "./render-context.js";
-import "clsx";
 import { json, text } from "@sveltejs/kit";
 import { SvelteKitError, HttpError } from "@sveltejs/kit/internal";
 import { with_request_store } from "@sveltejs/kit/internal/server";
 import * as set_cookie_parser from "set-cookie-parser";
-function hydratable(key, fn) {
-  {
-    experimental_async_required();
-  }
-  const { hydratable: hydratable2 } = get_render_context();
-  let entry = hydratable2.lookup.get(key);
-  if (entry !== void 0) {
-    return (
-      /** @type {T} */
-      entry.value
-    );
-  }
-  const value = fn();
-  entry = encode(key, value, hydratable2.unresolved_promises);
-  hydratable2.lookup.set(key, entry);
-  return value;
-}
-function encode(key, value, unresolved) {
-  const entry = { value, serialized: "" };
-  let uid = 1;
-  entry.serialized = devalue.uneval(entry.value, (value2, uneval) => {
-    if (is_promise(value2)) {
-      const placeholder = `"${uid++}"`;
-      const p = value2.then((v) => {
-        entry.serialized = entry.serialized.replace(
-          placeholder,
-          // use the function form here to prevent any string replacement characters from being interpreted
-          // in `v`, as it's potentially user-controlled and therefore potentially malicious.
-          // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#specifying_a_string_as_the_replacement
-          () => `r(${uneval(v)})`
-        );
-      }).catch(
-        (devalue_error) => hydratable_serialization_failed(
-          key,
-          serialization_stack(entry.stack, devalue_error?.stack)
-        )
-      );
-      p.catch(() => {
-      }).finally(() => unresolved?.delete(p));
-      (entry.promises ??= []).push(p);
-      return placeholder;
-    }
-  });
-  return entry;
-}
-function is_promise(value) {
-  return Object.prototype.toString.call(value) === "[object Promise]";
-}
-function serialization_stack(root_stack, uneval_stack) {
-  let out = "";
-  if (root_stack) {
-    out += root_stack + "\n";
-  }
-  if (uneval_stack) {
-    out += "Caused by:\n" + uneval_stack + "\n";
-  }
-  return out || "<missing stack trace>";
-}
-function noop() {
-}
-function once(fn) {
-  let done = false;
-  let result;
-  return () => {
-    if (done) return result;
-    done = true;
-    return result = fn();
-  };
-}
-const INVALIDATED_PARAM = "x-sveltekit-invalidated";
-const TRAILING_SLASH_PARAM = "x-sveltekit-trailing-slash";
-function stringify(data, transport) {
-  const encoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.encode]));
-  return devalue.stringify(data, encoders);
-}
-const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype).sort().join("\0");
-function is_plain_object(thing) {
-  if (typeof thing !== "object" || thing === null) return false;
-  const proto = Object.getPrototypeOf(thing);
-  return proto === Object.prototype || proto === null || Object.getPrototypeOf(proto) === null || Object.getOwnPropertyNames(proto).sort().join("\0") === object_proto_names;
-}
-function to_sorted(value, clones) {
-  const clone = Object.getPrototypeOf(value) === null ? /* @__PURE__ */ Object.create(null) : {};
-  clones.set(value, clone);
-  Object.defineProperty(clone, remote_arg_marker, { value: true });
-  for (const key of Object.keys(value).sort()) {
-    const property = value[key];
-    Object.defineProperty(clone, key, {
-      value: clones.get(property) ?? property,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  }
-  return clone;
-}
-const remote_object = "__skrao";
-const remote_map = "__skram";
-const remote_set = "__skras";
-const remote_file = "__skraf";
-const remote_regex_guard = "__skrag";
-const remote_arg_marker = Symbol(remote_object);
-function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
-  const remote_fns_reducers = {
-    /** @param {unknown} value */
-    [remote_regex_guard]: (value) => {
-      if (value instanceof RegExp) {
-        throw new Error("Regular expressions are not valid remote function arguments");
-      }
-    }
-  };
-  {
-    remote_fns_reducers[remote_map] = (value) => {
-      if (!(value instanceof Map)) {
-        return;
-      }
-      const entries = [];
-      for (const [key, val] of value) {
-        entries.push([stringify2(key), stringify2(val)]);
-      }
-      return entries.sort(([a1, a2], [b1, b2]) => {
-        if (a1 < b1) return -1;
-        if (a1 > b1) return 1;
-        if (a2 < b2) return -1;
-        if (a2 > b2) return 1;
-        return 0;
-      });
-    };
-    remote_fns_reducers[remote_set] = (value) => {
-      if (!(value instanceof Set)) {
-        return;
-      }
-      const items = [];
-      for (const item of value) {
-        items.push(stringify2(item));
-      }
-      items.sort();
-      return items;
-    };
-    remote_fns_reducers[remote_object] = (value) => {
-      if (!is_plain_object(value)) {
-        return;
-      }
-      if (Object.hasOwn(value, remote_arg_marker)) {
-        return;
-      }
-      if (remote_arg_clones.has(value)) {
-        return remote_arg_clones.get(value);
-      }
-      return to_sorted(value, remote_arg_clones);
-    };
-  }
-  const user_reducers = Object.fromEntries(
-    Object.entries(transport).map(([k, v]) => [k, v.encode])
-  );
-  const all_reducers = { ...user_reducers, ...remote_fns_reducers };
-  const stringify2 = (value) => devalue.stringify(value, all_reducers);
-  return all_reducers;
-}
-function create_remote_arg_revivers(transport) {
-  const remote_fns_revivers = {
-    /** @type {(value: unknown) => unknown} */
-    [remote_object]: (value) => value,
-    /** @type {(value: unknown) => Map<unknown, unknown>} */
-    [remote_map]: (value) => {
-      if (!Array.isArray(value)) {
-        throw new Error("Invalid data for Map reviver");
-      }
-      const map = /* @__PURE__ */ new Map();
-      for (const item of value) {
-        if (!Array.isArray(item) || item.length !== 2 || typeof item[0] !== "string" || typeof item[1] !== "string") {
-          throw new Error("Invalid data for Map reviver");
-        }
-        const [key, val] = item;
-        map.set(parse(key), parse(val));
-      }
-      return map;
-    },
-    /** @type {(value: unknown) => Set<unknown>} */
-    [remote_set]: (value) => {
-      if (!Array.isArray(value)) {
-        throw new Error("Invalid data for Set reviver");
-      }
-      const set = /* @__PURE__ */ new Set();
-      for (const item of value) {
-        if (typeof item !== "string") {
-          throw new Error("Invalid data for Set reviver");
-        }
-        set.add(parse(item));
-      }
-      return set;
-    },
-    /** @type {(value: any) => File} */
-    [remote_file]: (value) => {
-      if (!value || typeof value !== "object" || typeof value.name !== "string" || typeof value.type !== "string" || typeof value.size !== "number" || typeof value.lastModified !== "number" || !(value.data instanceof ArrayBuffer)) {
-        throw new Error("Invalid data for File reviver");
-      }
-      const { data, name, ...meta } = value;
-      return new File([data], name, meta);
-    }
-  };
-  const user_revivers = Object.fromEntries(
-    Object.entries(transport).map(([k, v]) => [k, v.decode])
-  );
-  const all_revivers = { ...user_revivers, ...remote_fns_revivers };
-  const parse = (data) => devalue.parse(data, all_revivers);
-  return all_revivers;
-}
-function stringify_remote_arg(value, transport) {
-  if (value === void 0) return "";
-  const json2 = devalue.stringify(value, create_remote_arg_reducers(transport, true, /* @__PURE__ */ new Map()));
-  return url_friendly_base64_encode(json2);
-}
-function url_friendly_base64_encode(string) {
-  const bytes = text_encoder.encode(string);
-  return base64_encode(bytes).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
-}
-function parse_remote_arg(string, transport) {
-  if (!string) return void 0;
-  const json_string = new TextDecoder().decode(
-    // no need to add back `=` characters, atob can handle it
-    base64_decode(string.replaceAll("-", "+").replaceAll("_", "/"))
-  );
-  return devalue.parse(json_string, create_remote_arg_revivers(transport));
-}
-function create_remote_key(id, payload) {
-  return id + "/" + payload;
-}
-function split_remote_key(key) {
-  const i = key.lastIndexOf("/");
-  if (i === -1) {
-    throw new Error(`Invalid remote key: ${key}`);
-  }
-  return {
-    id: key.slice(0, i),
-    payload: key.slice(i + 1)
-  };
-}
-function unfriendly_hydratable(key, fn) {
-  if (!hydratable) {
-    throw new Error("Remote functions require Svelte 5.44.0 or later");
-  }
-  return hydratable(key, fn);
-}
 const SVELTE_KIT_ASSETS = "/_svelte_kit_assets";
 const ENDPOINT_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"];
 const MUTATIVE_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
@@ -271,12 +25,10 @@ function convert_formdata(data) {
     const is_array = key.endsWith("[]");
     let values = data.getAll(key);
     if (is_array) key = key.slice(0, -2);
-    if (values.length > 1 && !is_array) {
-      throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-    }
     values = values.filter(
       (entry) => typeof entry === "string" || entry.name !== "" || entry.size > 0
     );
+    if (values.length === 0 && !is_array) continue;
     if (key.startsWith("n:")) {
       key = key.slice(2);
       values = values.map((v) => v === "" ? void 0 : parseFloat(
@@ -286,6 +38,9 @@ function convert_formdata(data) {
     } else if (key.startsWith("b:")) {
       key = key.slice(2);
       values = values.map((v) => v === "on");
+    }
+    if (values.length > 1 && !is_array) {
+      throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
     }
     set_nested_value(result, key, is_array ? values : values[0]);
   }
@@ -622,9 +377,26 @@ function get_type_prefix(field_type, is_array, input_value) {
   }
   return "";
 }
+function deep_clone(value) {
+  if (value !== null && typeof value === "object") {
+    if (value instanceof File) {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return value.map(deep_clone);
+    }
+    const clone = {};
+    for (const key of Object.keys(value)) {
+      clone[key] = deep_clone(value[key]);
+    }
+    return clone;
+  }
+  return value;
+}
 function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
   const get_value = () => {
-    return deep_get(get_input(), path);
+    const value = deep_get(get_input(), path);
+    return deep_clone(value);
   };
   return new Proxy(target, {
     get(target2, prop) {
@@ -788,6 +560,186 @@ function build_path_string(path) {
     }
   }
   return result;
+}
+const INVALIDATED_PARAM = "x-sveltekit-invalidated";
+const TRAILING_SLASH_PARAM = "x-sveltekit-trailing-slash";
+function stringify(data, transport) {
+  const encoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.encode]));
+  return devalue.stringify(data, encoders);
+}
+const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype).sort().join("\0");
+function is_plain_object(thing) {
+  if (typeof thing !== "object" || thing === null) return false;
+  const proto = Object.getPrototypeOf(thing);
+  return proto === Object.prototype || proto === null || Object.getPrototypeOf(proto) === null || Object.getOwnPropertyNames(proto).sort().join("\0") === object_proto_names;
+}
+function to_sorted(value, clones) {
+  const clone = Object.getPrototypeOf(value) === null ? /* @__PURE__ */ Object.create(null) : {};
+  clones.set(value, clone);
+  Object.defineProperty(clone, remote_arg_marker, { value: true });
+  for (const key of Object.keys(value).sort()) {
+    const property = value[key];
+    Object.defineProperty(clone, key, {
+      value: clones.get(property) ?? property,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  }
+  return clone;
+}
+const remote_object = "__skrao";
+const remote_map = "__skram";
+const remote_set = "__skras";
+const remote_file = "__skraf";
+const remote_regex_guard = "__skrag";
+const remote_arg_marker = Symbol(remote_object);
+function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
+  const remote_fns_reducers = {
+    /** @param {unknown} value */
+    [remote_regex_guard]: (value) => {
+      if (value instanceof RegExp) {
+        throw new Error("Regular expressions are not valid remote function arguments");
+      }
+    }
+  };
+  {
+    remote_fns_reducers[remote_map] = (value) => {
+      if (!(value instanceof Map)) {
+        return;
+      }
+      const entries = [];
+      for (const [key, val] of value) {
+        entries.push([stringify2(key), stringify2(val)]);
+      }
+      return entries.sort(([a1, a2], [b1, b2]) => {
+        if (a1 < b1) return -1;
+        if (a1 > b1) return 1;
+        if (a2 < b2) return -1;
+        if (a2 > b2) return 1;
+        return 0;
+      });
+    };
+    remote_fns_reducers[remote_set] = (value) => {
+      if (!(value instanceof Set)) {
+        return;
+      }
+      const items = [];
+      for (const item of value) {
+        items.push(stringify2(item));
+      }
+      items.sort();
+      return items;
+    };
+    remote_fns_reducers[remote_object] = (value) => {
+      if (!is_plain_object(value)) {
+        return;
+      }
+      if (Object.hasOwn(value, remote_arg_marker)) {
+        return;
+      }
+      if (remote_arg_clones.has(value)) {
+        return remote_arg_clones.get(value);
+      }
+      return to_sorted(value, remote_arg_clones);
+    };
+  }
+  const user_reducers = Object.fromEntries(
+    Object.entries(transport).map(([k, v]) => [k, v.encode])
+  );
+  const all_reducers = { ...user_reducers, ...remote_fns_reducers };
+  const stringify2 = (value) => devalue.stringify(value, all_reducers);
+  return all_reducers;
+}
+function create_remote_arg_revivers(transport) {
+  const remote_fns_revivers = {
+    /** @type {(value: unknown) => unknown} */
+    [remote_object]: (value) => value,
+    /** @type {(value: unknown) => Map<unknown, unknown>} */
+    [remote_map]: (value) => {
+      if (!Array.isArray(value)) {
+        throw new Error("Invalid data for Map reviver");
+      }
+      const map = /* @__PURE__ */ new Map();
+      for (const item of value) {
+        if (!Array.isArray(item) || item.length !== 2 || typeof item[0] !== "string" || typeof item[1] !== "string") {
+          throw new Error("Invalid data for Map reviver");
+        }
+        const [key, val] = item;
+        map.set(parse(key), parse(val));
+      }
+      return map;
+    },
+    /** @type {(value: unknown) => Set<unknown>} */
+    [remote_set]: (value) => {
+      if (!Array.isArray(value)) {
+        throw new Error("Invalid data for Set reviver");
+      }
+      const set = /* @__PURE__ */ new Set();
+      for (const item of value) {
+        if (typeof item !== "string") {
+          throw new Error("Invalid data for Set reviver");
+        }
+        set.add(parse(item));
+      }
+      return set;
+    },
+    /** @type {(value: any) => File} */
+    [remote_file]: (value) => {
+      if (!value || typeof value !== "object" || typeof value.name !== "string" || typeof value.type !== "string" || typeof value.size !== "number" || typeof value.lastModified !== "number" || !(value.data instanceof ArrayBuffer)) {
+        throw new Error("Invalid data for File reviver");
+      }
+      const { data, name, ...meta } = value;
+      return new File([data], name, meta);
+    }
+  };
+  const user_revivers = Object.fromEntries(
+    Object.entries(transport).map(([k, v]) => [k, v.decode])
+  );
+  const all_revivers = { ...user_revivers, ...remote_fns_revivers };
+  const parse = (data) => devalue.parse(data, all_revivers);
+  return all_revivers;
+}
+function stringify_remote_arg(value, transport) {
+  if (value === void 0) return "";
+  const json2 = devalue.stringify(value, create_remote_arg_reducers(transport, true, /* @__PURE__ */ new Map()));
+  return url_friendly_base64_encode(json2);
+}
+function url_friendly_base64_encode(string) {
+  const bytes = text_encoder.encode(string);
+  return base64_encode(bytes).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
+}
+function parse_remote_arg(string, transport) {
+  if (!string) return void 0;
+  const json_string = new TextDecoder().decode(
+    // no need to add back `=` characters, atob can handle it
+    base64_decode(string.replaceAll("-", "+").replaceAll("_", "/"))
+  );
+  return devalue.parse(json_string, create_remote_arg_revivers(transport));
+}
+function create_remote_key(id, payload) {
+  return id + "/" + payload;
+}
+function split_remote_key(key) {
+  const i = key.lastIndexOf("/");
+  if (i === -1) {
+    throw new Error(`Invalid remote key: ${key}`);
+  }
+  return {
+    id: key.slice(0, i),
+    payload: key.slice(i + 1)
+  };
+}
+function noop() {
+}
+function once(fn) {
+  let done = false;
+  let result;
+  return () => {
+    if (done) return result;
+    done = true;
+    return result = fn();
+  };
 }
 function coalesce_to_error(err) {
   return err instanceof Error || err && /** @type {any} */
@@ -1013,43 +965,42 @@ function create_replacer(transport) {
   return replacer;
 }
 export {
-  split_remote_key as A,
-  once as B,
-  has_prerendered_path as C,
-  get_set_cookies as D,
+  once as A,
+  has_prerendered_path as B,
+  get_set_cookies as C,
+  handle_fatal_error as D,
   ENDPOINT_METHODS as E,
-  handle_fatal_error as F,
-  format_server_error as G,
+  format_server_error as F,
   INVALIDATED_PARAM as I,
   MUTATIVE_METHODS as M,
   PAGE_METHODS as P,
   SVELTE_KIT_ASSETS as S,
   TRAILING_SLASH_PARAM as T,
-  create_field_proxy as a,
-  normalize_issue as b,
-  create_remote_key as c,
-  set_nested_value as d,
-  deep_set as e,
+  stringify_remote_arg as a,
+  noop as b,
+  create_field_proxy as c,
+  deep_set as d,
+  stringify as e,
   flatten_issues as f,
-  stringify_remote_arg as g,
+  create_remote_key as g,
   handle_error_and_jsonify as h,
   negotiate as i,
   get_status as j,
   is_form_content_type as k,
   normalize_error as l,
   method_not_allowed as m,
-  noop as n,
+  normalize_issue as n,
   create_replacer as o,
   parse_remote_arg as p,
   get_global_name as q,
   serialize_uses as r,
-  stringify as s,
+  set_nested_value as s,
   clarify_devalue_error as t,
-  unfriendly_hydratable as u,
-  get_node_type as v,
-  escape_html as w,
-  static_error_page as x,
-  redirect_response as y,
-  deserialize_binary_form as z
+  get_node_type as u,
+  escape_html as v,
+  deserialize_binary_form as w,
+  split_remote_key as x,
+  static_error_page as y,
+  redirect_response as z
 };
 //# sourceMappingURL=utils.js.map

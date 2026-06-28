@@ -24,10 +24,7 @@
   },
   "_index.js": {
     "file": "chunks/index.js",
-    "name": "index",
-    "imports": [
-      "_render-context.js"
-    ]
+    "name": "index"
   },
   "_index2.js": {
     "file": "chunks/index2.js",
@@ -45,10 +42,6 @@
       "_server.js"
     ]
   },
-  "_render-context.js": {
-    "file": "chunks/render-context.js",
-    "name": "render-context"
-  },
   "_root.js": {
     "file": "chunks/root.js",
     "name": "root",
@@ -63,15 +56,14 @@
     "name": "server"
   },
   "_start_page.svelte_svelte_type_style_lang.js": {
-    "file": "_app/immutable/assets/start_page.CV9gC7yj.css",
+    "file": "_app/immutable/assets/start_page.n-K-K9Mb.css",
     "src": "_start_page.svelte_svelte_type_style_lang.js"
   },
   "_utils.js": {
     "file": "chunks/utils.js",
     "name": "utils",
     "imports": [
-      "_utils2.js",
-      "_render-context.js"
+      "_utils2.js"
     ]
   },
   "_utils2.js": {
@@ -87,16 +79,20 @@
     "src": "node_modules/@edwinspire/libopenfusionapigui/dist/OpenFusionAPI/img/flame.png"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2": {
-    "file": "_app/immutable/assets/fa-brands-400.BP5tdqmh.woff2",
+    "file": "_app/immutable/assets/fa-brands-400.BK5CuonO.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2": {
-    "file": "_app/immutable/assets/fa-regular-400.nyy7hhHF.woff2",
+    "file": "_app/immutable/assets/fa-regular-400.WLfxSHV3.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2": {
-    "file": "_app/immutable/assets/fa-solid-900.DRAAbZTg.woff2",
+    "file": "_app/immutable/assets/fa-solid-900.Iz_TytpP.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
+  },
+  "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2": {
+    "file": "_app/immutable/assets/fa-v4compatibility.CMhGCN2W.woff2",
+    "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "node_modules/@sveltejs/kit/src/runtime/app/server/remote/index.js": {
     "file": "remote-entry.js",
@@ -158,14 +154,15 @@
       "_index.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.CV9gC7yj.css"
+      "_app/immutable/assets/start_page.n-K-K9Mb.css"
     ],
     "assets": [
       "_app/immutable/assets/android-chrome-512x512.Dq1KWJkx.png",
       "_app/immutable/assets/flame.pI4vnDs3.png",
-      "_app/immutable/assets/fa-brands-400.BP5tdqmh.woff2",
-      "_app/immutable/assets/fa-regular-400.nyy7hhHF.woff2",
-      "_app/immutable/assets/fa-solid-900.DRAAbZTg.woff2"
+      "_app/immutable/assets/fa-brands-400.BK5CuonO.woff2",
+      "_app/immutable/assets/fa-regular-400.WLfxSHV3.woff2",
+      "_app/immutable/assets/fa-solid-900.Iz_TytpP.woff2",
+      "_app/immutable/assets/fa-v4compatibility.CMhGCN2W.woff2"
     ]
   },
   "src/routes/openfusionapi/+page.svelte": {
@@ -178,12 +175,19 @@
       "_index2.js"
     ],
     "css": [
-      "_app/immutable/assets/start_page.CV9gC7yj.css"
+      "_app/immutable/assets/start_page.n-K-K9Mb.css"
     ],
     "assets": [
-      "_app/immutable/assets/fa-brands-400.BP5tdqmh.woff2",
-      "_app/immutable/assets/fa-regular-400.nyy7hhHF.woff2",
-      "_app/immutable/assets/fa-solid-900.DRAAbZTg.woff2"
+      "_app/immutable/assets/fa-brands-400.BK5CuonO.woff2",
+      "_app/immutable/assets/fa-regular-400.WLfxSHV3.woff2",
+      "_app/immutable/assets/fa-solid-900.Iz_TytpP.woff2",
+      "_app/immutable/assets/fa-v4compatibility.CMhGCN2W.woff2"
     ]
+  },
+  "virtual:__sveltekit/env": {
+    "file": "env.js",
+    "name": "env",
+    "src": "virtual:__sveltekit/env",
+    "isEntry": true
   }
 }
