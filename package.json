@@ -1,6 +1,6 @@
 {
 	"name": "openfusionapi",
-	"version": "2.1.0",
+	"version": "3.0.0",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "node --max-old-space-size=6144 ./node_modules/vite/bin/vite.js build",
